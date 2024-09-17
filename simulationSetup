@@ -10,13 +10,20 @@ NodesMusclesFileOrPreviousRunsFile = 0;
 Name of the files that holds the nodes and muscles. 
 Line11
 Circle24
+Circle200
 CSphere340
 CSphere5680
+IdealLeftAtrium2.3K
 IdealLeftAtrium13.0KNotTriangle
+LeftAtriumRealBase
 LeftAtriumRealRemovedAppendage
+LeftAtriumRealPartialAppendage
+3DIdealLAtrium2.3K
+3DIdealLAtrium13K
+TheRock
 
 Place the Nodes and Mucsle file you would like to run here.
-InputFileName = IdealLeftAtrium13.0KNotTriangle
+InputFileName = 3DIdealLAtrium13K
 
 Place the name of the previous run file you would like to run here.
 The three run files below are just examples for demonstration purposes.
@@ -30,10 +37,10 @@ Note: you will only read from a (nodes and muscle file) or from a (previuos run 
 
 Connection width for for the lines that represent muscles connecting the nodes. 
 1.0 to 3.0 looks good for spheres and 5.0 to 10.0 for circles. (float)	
-LineWidth = 4.0;
+LineWidth = 3.0;
 
 Set the size of the node sphere here. It is scaled by the RadiusOfAtria a good value is 0.01.
-NodeRadiusAdjustment = 0.015;
+NodeRadiusAdjustment = 0.01;
 
 What we are using for the mass of a myocyte. Myocytes are approximately 80-100 micrometers or 0.08-.1 millimeters in length
 and 10-20 micrometers or 0.01-0.02 millimeters in width (Chapter 12 - Cardiovascular and Skeletal Muscle Systems
@@ -66,6 +73,7 @@ RadiusOfAtria = 17.8;
 The strength of a relaxed muscle. Probably zero but I gave it a little strength to help it return to its natural length. 
 This will be multiplied by the muscle mass to scale it. This should be much less than contraction force.
 I will check it in the code and kill the program if it is greater than the contraction strength (10.0). (float)
+???????????????? Should make this a percent of contration strength.
 BaseMuscleRelaxedStrength = 2.0;
 
 The fraction of a muscles natural length once it is contracted. 
@@ -74,16 +82,16 @@ BaseMuscleCompresionStopFraction = 0.7;
 
 The length of time a muscle is contracted. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleContractionDuration = 40.0;
+BaseMuscleContractionDuration = 200.0;
 
 The length of time a muscle must relaxed before it can contract again. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleRechargeDuration = 40.0;
+BaseMuscleRechargeDuration = 200.0;
 
 The speed of the conduction velocity across a muscle. 
 This will scaled by the muscle length to get the time it takes to cross a muscle.
 We think this should be around 0.5 millimeters/milliseconds. (float) (0.00125 for micro)
-BaseMuscleConductionVelocity = 0.05;
+BaseMuscleConductionVelocity = 0.5;
 
 The number of ectopic periodic events allowed. The first ectopic period will be the sinus beat.
 MaxNumberOfperiodicEctopicEvents = 50;
