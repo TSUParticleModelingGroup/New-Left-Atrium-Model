@@ -247,7 +247,7 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 					// the transition.
 					if(contractionType == 3) // cosine force
 					{
-						force = contractionStrength*cos(timer*PI/(totalDuration));
+						force = contractionStrength*sin(timer*PI/(totalDuration));
 						Node[i].force.x += force*dx/d;
 						Node[i].force.y += force*dy/d;
 						Node[i].force.z += force*dz/d;
