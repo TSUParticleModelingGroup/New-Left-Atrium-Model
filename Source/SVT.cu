@@ -86,6 +86,7 @@ int NumberOfMuscles;
 int LinksPerNode;
 int MaxNumberOfperiodicEctopicEvents;
 
+int ContractionType;
 float BaseMuscleRelaxedStrength;
 float BaseMuscleCompresionStopFraction;
 float BaseMuscleConductionVelocity;
@@ -95,10 +96,12 @@ float BaseMuscleContractionDurationAdjustmentMultiplier;
 float BaseMuscleRechargeDuration;
 float BaseMuscleRechargeDurationAdjustmentMultiplier;
 float BaseMuscleContractionStrength;
+float PercentRelativeRefractoryPeriod;
 
 float4 ReadyColor;
 float4 ContractingColor;
 float4 RestingColor;
+float4 RelativeColor;
 float4 DeadColor;
 
 float BackGroundRed;
@@ -226,7 +229,7 @@ float4 findCenterOfMass();
 void setView(int);
 void adjustView();
 // Cuda prototyping
-void __global__ getForces(muscleAtributesStructure*, nodeAtributesStructure*, int*, float, int, int, float4, float, float, float);
+void __global__ getForces(muscleAtributesStructure*, nodeAtributesStructure*, int*, float, int, int, float4, float, float, float, int);
 void __global__ updateNodes(nodeAtributesStructure*, int, int, ectopicEventStructure*, int, muscleAtributesStructure*, int*, float, float);
 void __global__ updateMuscles(muscleAtributesStructure*, nodeAtributesStructure*, int*, ectopicEventStructure*, int, int, int, int, float);
 void __global__ recenter(nodeAtributesStructure*, int, float4, float4);
@@ -273,6 +276,9 @@ void readSimulationParameters()
 		data >> RadiusOfAtria;
 		
 		getline(data,name,'=');
+		data >> ContractionType;
+		
+		getline(data,name,'=');
 		data >> BaseMuscleRelaxedStrength;
 		
 		getline(data,name,'=');
@@ -283,6 +289,9 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> BaseMuscleRechargeDuration;
+		
+		getline(data,name,'=');
+		data >> PercentRelativeRefractoryPeriod;
 		
 		getline(data,name,'=');
 		data >> BaseMuscleConductionVelocity;
@@ -328,6 +337,15 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> RestingColor.z;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.x;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.y;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.z;
 		
 		getline(data,name,'=');
 		data >> DeadColor.x;
@@ -646,15 +664,18 @@ void n_body(float dt)
 {	
 	if(Pause != 1)
 	{	
-		getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, dt, NumberOfNodes, LinksPerNode, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, BloodPressure);
-		errorCheck("getForces");
-		cudaDeviceSynchronize();
+		if(ContractionType != 0)
+		{
+			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, dt, NumberOfNodes, LinksPerNode, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, BloodPressure, ContractionType);
+			errorCheck("getForces");
+			cudaDeviceSynchronize();
+		}
 		
 		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, LinksPerNode, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents, MuscleGPU, ConnectingMusclesGPU, dt, RunTime);
 		errorCheck("updateNodes");
 		cudaDeviceSynchronize();
 		
-		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, EctopicEventsGPU, NumberOfMuscles, NumberOfNodes, LinksPerNode, MaxNumberOfperiodicEctopicEvents, dt, ReadyColor, ContractingColor, RestingColor);
+		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, EctopicEventsGPU, NumberOfMuscles, NumberOfNodes, LinksPerNode, MaxNumberOfperiodicEctopicEvents, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor, PercentRelativeRefractoryPeriod);
 		errorCheck("updateMuscles");
 		cudaDeviceSynchronize();
 		

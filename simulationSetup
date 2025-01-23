@@ -23,7 +23,7 @@ LeftAtriumRealPartialAppendage
 TheRock
 
 Place the Nodes and Mucsle file you would like to run here.
-InputFileName = 3DIdealLAtrium13K
+InputFileName = IdealLeftAtrium2.3K
 
 Place the name of the previous run file you would like to run here.
 The three run files below are just examples for demonstration purposes.
@@ -70,6 +70,13 @@ MassOfAtria = 25.0;
 This should be the radius of the atria. The atria holds around 23640 cubic millimeters of blood which gives a radius of 17.8 millimeters. (float) 
 RadiusOfAtria = 17.8;
 
+Type of muscle contraction. 
+0 turns the muscle contraction off. This will speed the simulation up if you are just studing the electrical action.
+1 implements a constant value contraction. It is set at full strength for the first half of the refractory period and then turned off.
+2 implements a linear contration that linearly goes from zero to full strength during the first half of the refratory period then back to zero on the second half.
+3 implements a cosine contraction that has an amplitude of full strength and a half period the length of the refractory period.
+ContractionType = 2;
+
 The strength of a relaxed muscle. Probably zero but I gave it a little strength to help it return to its natural length. 
 This will be multiplied by the muscle mass to scale it. This should be much less than contraction force.
 I will check it in the code and kill the program if it is greater than the contraction strength (10.0). (float)
@@ -82,11 +89,19 @@ BaseMuscleCompresionStopFraction = 0.7;
 
 The length of time a muscle is contracted. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleContractionDuration = 200.0;
+BaseMuscleContractionDuration = 100.0;
 
 The length of time a muscle must relaxed before it can contract again. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleRechargeDuration = 200.0;
+BaseMuscleRechargeDuration = 100.0;
+
+In the code we will set the total refractory period of a mucle to be
+The sum of the muscle's ContractionDuration and its RechargeDuration.
+Part of this total refractory period should be absolute refractory period
+and the rest should be the relative refractory period. So enter the 
+fraction of the total refractory period you want to be the relative refractory period
+and we will calculate the persent absolute refractory period in the code.
+PercentRelativeRefractoryPeriod = 0.1;
 
 The speed of the conduction velocity across a muscle. 
 This will scaled by the muscle length to get the time it takes to cross a muscle.
@@ -119,10 +134,16 @@ ContractingRed = 1.0;
 ContractingGreen = 1.0;
 ContractingBlue = 0.0;
 
-Resting color red, green, blue. (floats)
+Resting (second portion of the absolute refractory period 
+contracting color took up the first part) color red, green, blue. (floats)
 RestingRed = 1.0;
-RestingGreen = 0.71;
-RestingBlue = 0.75;
+RestingGreen = 0.65;
+RestingBlue = 0.0;
+
+Relative Refractory Period color red, green, blue. (floats)
+RelativeRed = 1.0;
+RelativeGreen = 0.71;
+RelativeBlue = 0.75;
 
 Dead color red, green, blue. (floats)
 DeadRed = 1.0;
