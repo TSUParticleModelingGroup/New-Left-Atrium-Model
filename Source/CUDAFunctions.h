@@ -80,11 +80,11 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 		}
 		
 		// When done modeling you always need to build in some way to remove 
-		// excess energy from the system or the energy may biuld up and disturbe your simulation.
-		// In nature this is usually expereced as heat and/or fliud resistance (drag).
-		// We are using a fliud drag force here to remove energy biuld up.
-		// We are using a sphere moving through blood here because it felt relavent
-		// and we can scale it to tjhe problem but you could use any energy remove sceam you 
+		// excess energy from the system or the energy may build up and disturb your simulation.
+		// In nature this is usually experienced as heat and/or fliud resistance (drag).
+		// We are using a fluid drag force here to remove energy biuld up.
+		// We are using a sphere moving through blood here because it felt relevant
+		// and we can scale it to the problem but you could use any energy remove scheme you 
 		// like as long as it is scaled to the problem.   
 		// 
 		// The drag force in a fluid is F = (1/2)*c*p*A*v*v
@@ -93,16 +93,16 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 		// p is the density of the fluid: p for blood is 1/1000 grams/mm^3
 		// v is the velocity of the object
 		// A is the area of the object facing the fluid.
-		// This force did not seem to be strong enough and the Atium quivered 
-		// and moved around a great deal. This might be acurate if you placed 
-		// an isolated beating atrium in contaner of blood. In reality the atrium 
+		// This force did not seem to be strong enough and the Atrium quivered 
+		// and moved around a great deal. This might be accurate if you placed 
+		// an isolated beating atrium in a contaner of blood. In reality the atrium 
 		// is conected to other parts of the body which keep it in space.
-		// For our purposses we just needed it to remain in place a little better 
+		// For our purposes we just needed it to remain in place a little better 
 		// so we removed the (1/2)*c*p from the force function.
-		// This added enough resitance so that the model's center of mass and oriantation
+		// This added enough resistance so that the models' center of mass and orientation
 		// moved around much less.
 		velocity = sqrt(Node[i].velocity.x*Node[i].velocity.x + Node[i].velocity.y*Node[i].velocity.y + Node[i].velocity.z*Node[i].velocity.z);
-		// Checking to make sure the node is moving or you would get a divition by zero.
+		// Checking to make sure the node is moving or you would get a division by zero.
 		if(0.00001 < velocity)
 		{
 			//float cc = 0.47;
@@ -110,16 +110,16 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 			//force = Node[i].area*0.5*cc*pp*velocity*velocity;
 			force = Node[i].area*velocity*velocity;
 			
-			// Despersing the force relative to the velocity vector.
+			// Dispersing the force relative to the velocity vector.
 			Node[i].force.x   += -force*Node[i].velocity.x/velocity;
 			Node[i].force.y   += -force*Node[i].velocity.y/velocity;
 			Node[i].force.z   += -force*Node[i].velocity.z/velocity;
 		}
 		
-		// Now we are getting the node to node forces caused by there connecting muscles.
+		// Now we are getting the node to node forces caused by their connecting muscles.
 		for(int j = 0; j < LinksPerNode; j++)
 		{
-			// This is the number of the muscle that connects node "i" to node "nodeNumber".
+			// This is the number of the muscles that connect node "i" to node "nodeNumber".
 			muscleNumber = ConnectingMuscles[i*LinksPerNode + j];
 			if(muscleNumber != -1)
 			{
