@@ -26,6 +26,8 @@ void saveSettings();
 void helpMenu();
 void KeyPressed(unsigned char, int, int);
 void mymouse(int, int, int, int);
+void centerObject();
+float4 findCenterOfMass();
 
 void clearStdin();
 
@@ -1201,3 +1203,46 @@ void mymouse(int button, int state, int x, int y)
 	}
 }
 
+float4 findCenterOfMass()
+{
+	float4 centerOfMass;
+	
+	centerOfMass.x = 0.0;
+	centerOfMass.y = 0.0;
+	centerOfMass.z = 0.0;
+	centerOfMass.w = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		 centerOfMass.x += Node[i].position.x*Node[i].mass;
+		 centerOfMass.y += Node[i].position.y*Node[i].mass;
+		 centerOfMass.z += Node[i].position.z*Node[i].mass;
+		 centerOfMass.w += Node[i].mass;
+	}
+	if(centerOfMass.w < 0.00001)
+	{
+		printf("\n Mass is too small\n");
+		printf("\nw Good Bye\n");
+		exit(0);
+	}
+	else
+	{
+		centerOfMass.x /= centerOfMass.w;
+		centerOfMass.y /= centerOfMass.w;
+		centerOfMass.z /= centerOfMass.w;
+	}
+	return(centerOfMass);
+}
+
+void centerObject()
+{
+	float4 centerOfMass = findCenterOfMass();
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		Node[i].position.x -= centerOfMass.x;
+		Node[i].position.y -= centerOfMass.y;
+		Node[i].position.z -= centerOfMass.z;
+	}
+	CenterOfSimulation.x = 0.0;
+	CenterOfSimulation.y = 0.0;
+	CenterOfSimulation.z = 0.0;
+}

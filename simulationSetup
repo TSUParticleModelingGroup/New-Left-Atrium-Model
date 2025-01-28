@@ -39,7 +39,7 @@ Connection width for for the lines that represent muscles connecting the nodes.
 1.0 to 3.0 looks good for spheres and 5.0 to 10.0 for circles. (float)	
 LineWidth = 3.0;
 
-Set the size of the node sphere here. It is scaled by the RadiusOfAtria a good value is 0.01.
+Set the size of the node sphere here. It is scaled by the RadiusOfAtria a good value is 0.01. (float)
 NodeRadiusAdjustment = 0.01;
 
 What we are using for the mass of a myocyte. Myocytes are approximately 80-100 micrometers or 0.08-.1 millimeters in length
@@ -51,6 +51,7 @@ This gives the mass of a myocyte as 1.6779E-8 grams
 The contraction force of myocyte is about 10 micro Newtons (not sure where Avery got this need to site it.) This 1e-5 g*mm/ms^2.
 This gives force per mass of a myocyte as 596 mm/ms^2. I will use this to scale the contraction force of our muscles. (float)
 MyocyteForcePerMass = 596.0;
+MyocyteForcePerMassMultiplier = 1.0;
 
 This will be the strength of the central push back force which will simulate blood pressure.
 Our units for pressure are grams/(Millimeters*(Millisecons^2)).
@@ -61,8 +62,10 @@ Here just enter the pressure in the left or right atrium in millimeters of Mercu
 To get the force on the node we will need an area to multiply the pressure by.
 We used a circle of half the average distance to all the connected nodes as the area.
 You are losing some area so we divided the lost area proportionally amount the nodes by (area of node)/(total area of sphere).
-A reasonable pressure for the right Atrium is 5 millimeterrs of mercury and for the left is 8 millimeterrs of mercury.
-BloodPressure = 80.0;
+A reasonable pressure range for the left Atrium is 4 to 12 mmHg.
+DiastolicPressureLA = 4.0;
+SystolicPressureLA = 12.0;
+PressureMultiplier = 10.0;
 
 A good mass for the Left atria is 25 grams and a good mass for the right atrium is 22 grams. (float) 
 MassOfAtria = 25.0;
@@ -70,18 +73,23 @@ MassOfAtria = 25.0;
 This should be the radius of the atria. The atria holds around 23640 cubic millimeters of blood which gives a radius of 17.8 millimeters. (float) 
 RadiusOfAtria = 17.8;
 
+We set the drag using the viscusity of a sphere moving through blood. It let the AL move around a little more than disired so this
+value is multiplied by the drag so the user can adjust there simulation as desired. The initial drag calculation just gets you in
+the ballpark.
+DragMultiplier = 100.0;
+
 Type of muscle contraction. 
 0 turns the muscle contraction off. This will speed the simulation up if you are just studing the electrical action.
 1 implements a constant value contraction. It is set at full strength for the first half of the refractory period and then turned off.
 2 implements a linear contration that linearly goes from zero to full strength during the first half of the refratory period then back to zero on the second half.
-3 implements a cosine contraction that has an amplitude of full strength and a half period the length of the refractory period.
-ContractionType = 2;
+3 implements a sine contraction that has an amplitude of full strength and a half period the length of the refractory period.
+4 implements a sine squared contraction that has an amplitude of full strength and a half period the length of the refractory period.
+ContractionType = 4;
 
-The strength of a relaxed muscle. Probably zero but I gave it a little strength to help it return to its natural length. 
-This will be multiplied by the muscle mass to scale it. This should be much less than contraction force.
-I will check it in the code and kill the program if it is greater than the contraction strength (10.0). (float)
-???????????????? Should make this a percent of contration strength.
-BaseMuscleRelaxedStrength = 2.0;
+The strength of a relaxed muscle. It is opposite the contraction to help it return to its natural length. 
+This should be a small fraction of the contraction force.
+It must be less than 1.0 or you will get a relaxed strength greater than your contraction strength. (float)
+BaseMuscleRelaxedStrengthFraction = 0.2;
 
 The fraction of a muscles natural length once it is contracted. 
 We think it will lose 30% of its length so this should be 0.7. (float)
@@ -89,11 +97,11 @@ BaseMuscleCompresionStopFraction = 0.7;
 
 The length of time a muscle is contracted. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleContractionDuration = 100.0;
+BaseMuscleContractionDuration = 200.0;
 
 The length of time a muscle must relaxed before it can contract again. 
 We think this should be around 200 milliseconds. (float)
-BaseMuscleRechargeDuration = 100.0;
+BaseMuscleRechargeDuration = 200.0;
 
 In the code we will set the total refractory period of a mucle to be
 The sum of the muscle's ContractionDuration and its RechargeDuration.
@@ -101,7 +109,7 @@ Part of this total refractory period should be absolute refractory period
 and the rest should be the relative refractory period. So enter the 
 fraction of the total refractory period you want to be the relative refractory period
 and we will calculate the persent absolute refractory period in the code.
-PercentRelativeRefractoryPeriod = 0.1;
+RelativeRefractoryPeriodFraction = 0.1;
 
 The speed of the conduction velocity across a muscle. 
 This will scaled by the muscle length to get the time it takes to cross a muscle.
@@ -113,7 +121,7 @@ MaxNumberOfperiodicEctopicEvents = 50;
 
 The length of time between heart beats. 
 A 1000 milliseconds is 60 beats per minute. (float)
-BeatPeriod = 500.0;
+BeatPeriod = 600.0;
 
 How often you print the time to the terminal, in milliseconds. (float)
 PrintRate = 100.0;

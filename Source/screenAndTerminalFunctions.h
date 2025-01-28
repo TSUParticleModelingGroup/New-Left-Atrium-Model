@@ -313,3 +313,166 @@ void drawPicture()
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
 	}
 }
+
+void terminalPrint()
+{
+	system("clear");
+	//printf("\033[0;34m"); // blue.
+	//printf("\033[0;36m"); // cyan
+	//printf("\033[0;33m"); // yellow
+	//printf("\033[0;31m"); // red
+	//printf("\033[0;32m"); // green
+	printf("\033[0m"); // back to white.
+	
+	printf("\n");
+	printf("\033[0;33m");
+	printf("\n **************************** Simulation Stats ****************************");
+	printf("\033[0m");
+	
+	printf("\n Total run time = %7.2f milliseconds", RunTime);
+	
+	//printf("\n Driving beat node is %d.", EctopicEvents[0].node);
+	printf("\n The beat rate is %f milliseconds.", EctopicEvents[0].period);
+	
+	if(AdjustMuscleOnOff == 1) 
+	{
+		printf("\n Base muscle contraction multiplier =");
+		printf("\033[0;36m");
+		printf(" %f", BaseMuscleContractionDurationAdjustmentMultiplier);
+		printf("\033[0m");
+		printf("\n Base muscle recharge multiplier =");
+		printf("\033[0;36m");
+		printf(" %f", BaseMuscleRechargeDurationAdjustmentMultiplier);
+		printf("\033[0m");
+		printf("\n Base muscle electrical conduction speed multiplier =");
+		printf("\033[0;36m");
+		printf(" %f", BaseMuscleConductionVelocityAdjustmentMultiplier);
+		printf("\033[0m");
+	}
+	
+	for(int i = 1; i < MaxNumberOfperiodicEctopicEvents; i++)
+	{
+		if(EctopicEvents[i].node != -1)
+		{
+			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", EctopicEvents[i].node, EctopicEvents[i].period);
+		}
+	}
+	
+	printf("\n");
+	printf("\033[0;33m");
+	printf("\n **************************** Terminal Comands ****************************");
+	printf("\033[0m");
+	printf("\n h: Help");
+	printf("\n c: Recenter View");
+	printf("\n S: Screenshot");
+	printf("\n k: Save Current Run");
+	printf("\n B: Lengthen Beat");
+	printf("\n b: Shorten Beat");
+	printf("\n ?: Find Front and Top Nodes");
+	printf("\n");
+	
+	printf("\n Toggles");
+	printf("\n r: Run/Pause            - ");
+	if (Pause == 0) 
+	{
+		printf("\033[0;32m");
+		printf(BOLD_ON "Simulation Running" BOLD_OFF);
+	} 
+	else 
+	{
+		printf("\033[0;31m");
+		printf(BOLD_ON "Simulation Paused" BOLD_OFF);
+	}
+	printf("\n g: Front/Full           - ");
+	if (DrawFrontHalfFlag == 0) printf(BOLD_ON "Full" BOLD_OFF); else printf(BOLD_ON "Front" BOLD_OFF);
+	printf("\n n: Nodes Off/Half/Full  - ");
+	if (DrawNodesFlag == 0) printf(BOLD_ON "Off" BOLD_OFF); else if (DrawNodesFlag == 1) printf(BOLD_ON "Half" BOLD_OFF); else printf(BOLD_ON "Full" BOLD_OFF);
+	printf("\n v: Orthogonal/Frustum   - ");
+	if (ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustrum" BOLD_OFF);
+	printf("\n m: Video On/Off         - ");
+	if (MovieFlag == 0) 
+	{
+		printf("\033[0;31m");
+		printf(BOLD_ON "Video Recording Off" BOLD_OFF); 
+	}
+	else 
+	{
+		printf("\033[0;32m");
+		printf(BOLD_ON "Video Recording On" BOLD_OFF);
+	}
+	printf("\n");
+	printf("\n Views" );
+	
+	printf("\n 7 8 9 | LL  SUP RL" );
+	printf("\n 4 5 6 | PA  INF Ref" );
+	printf("\n 1 2 3 | LOA AP  ROA" );
+	
+	printf("   You are in");
+	printf("\033[0;36m");
+	printf(BOLD_ON " %s", ViewName);
+	printf("\033[0m" BOLD_OFF);
+	printf(" view");
+	
+	printf("\n");
+	printf("\n Adjust views");
+	printf("\n w/s: CCW/CW x-axis");
+	printf("\n d/a: CCW/CW y-axis");
+	printf("\n z/Z: CCW/CW z-axis");
+	printf("\n e/E: In/Out Zoom");
+	printf("\n");
+	printf("\n Set Mouse actions");
+	
+	printf("\n !: Ablate            - ");
+	if (AblateOnOff == 1) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n @: Ectoic Beat       - ");
+	if (EctopicBeatOnOff == 1) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n #: Ectopic Trigger   - ");
+	if (EctopicSingleOnOff == 1) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n $: Muscle Adjustment - ");
+	if (AdjustMuscleOnOff == 1) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n ^: Identify Node     - ");
+	if (FindNodeOnOff == 1) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n ): Turns all Mouse functions off");
+	printf("\n");
+	printf("\n [/]: (left/right bracket) Increase/Decrease mouse selection area.");
+	printf("\n      The current selection area is");
+	printf("\033[0;36m");
+	printf(" %f", HitMultiplier);
+	printf("\033[0m");
+	printf(" times the radius of atrium.");
+	printf("\033[0;33m");
+	printf("\n ********************************************************************");
+	printf("\033[0m");
+	printf("\n");
+}
+
