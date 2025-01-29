@@ -1,4 +1,20 @@
 /*
+ This file contains all the CUDA and CUDA related function. 
+ They are listed below in the order they appear.
+ 
+ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int);
+ __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, int *, float dt, int, int, float4, float, float, float, float, int);
+ __global__ void updateNodes(nodeAtributesStructure *, int, int, ectopicEventStructure *, int, muscleAtributesStructure *, int *, float, float, double, int);
+ __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
+ __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
+ void errorCheck(const char *);
+ void cudaErrorCheck(const char *, int);
+ void copyNodesMusclesToGPU();
+ void copyNodesMusclesFromGPU();
+*/
+
+
+/*
  This CUDA function tries to turn on every muscle that is connected to a node.
  First it checks to see if this is a beat node. 
  ??? I'm not sure what to do withit if it is ???? I think we might should just return.
@@ -7,11 +23,11 @@
  see if a muscle is dead here because if it is dead turning it on will do nothing, so
  checking would just be a wasted check in the if statement.
 */
-__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int NumberOfNodes, int linksPerNode, muscleAtributesStructure *Muscle, nodeAtributesStructure *Node, int *connectingMuscles, ectopicEventStructure *ectopicEvent, int maxNumberOfperiodicEctopicEvents)
+__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int linksPerNode, muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, ectopicEventStructure *ectopicEvent, int maxNumberOfperiodicEctopicEvents)
 {
 	// Make sure that the AP duration is shorter than the contration+recharge duration or a muscle will turn itself on.
 	int muscleNumber;
-	if(Node[nodeToTurnOn].ablatedYesNo != 1) // If the node is ablated just return.
+	if(node[nodeToTurnOn].ablatedYesNo != 1) // If the node is ablated just return.
 	{
 		for(int j = 0; j < maxNumberOfperiodicEctopicEvents; j++)
 		{
@@ -24,7 +40,7 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int NumberOfNodes, int li
 		
 		for(int j = 0; j < linksPerNode; j++) // Looping through all muscle connected to this node.
 		{
-			if(NumberOfNodes*linksPerNode <= (nodeToTurnOn*linksPerNode + j))
+			if(numberOfNodes*linksPerNode <= (nodeToTurnOn*linksPerNode + j))
 			{
 				printf("\nTSU Error: number of ConnectingMuscles is out of bounds in turnOnNodeMusclesGPU\n");
 			}
@@ -32,11 +48,11 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int NumberOfNodes, int li
 			
 			if((muscleNumber != -1)) // Is this really a muscle. If it is -1 it is not.
 			{
-				if(Muscle[muscleNumber].onOff == 0) // If muscle is off turn it on.
+				if(muscle[muscleNumber].onOff == 0) // If muscle is off turn it on.
 				{
-					Muscle[muscleNumber].apNode = nodeToTurnOn;  //This is the node where the AP wave will now start moving away from.
-					Muscle[muscleNumber].onOff = 1; // Set to on.
-					Muscle[muscleNumber].timer = 0.0; // Set timer.
+					muscle[muscleNumber].apNode = nodeToTurnOn;  //This is the node where the AP wave will now start moving away from.
+					muscle[muscleNumber].onOff = 1; // Set to on.
+					muscle[muscleNumber].timer = 0.0; // Set timer.
 				}
 			}
 		}
@@ -61,8 +77,8 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int NumberOfNodes, int li
  	In a circle simulation it helps return the nodes out to a circle after a beat.
  	For the 3-D shell simulations we use force = presure*area. The area of a node is calculated in the 
  	setMuscleAttributesAndNodeMasses() function. The pressure is is a linear function that starts from
- 	DiastolicPressureLA when the node is a full RadiusOfAtria and increases to SystolicPressureLA
- 	when a node is at its contracted length of muscleCompresionStopFraction*RadiusOfAtria. We also use 
+ 	DiastolicPressureLA when the node is a full radiusOfAtria and increases to SystolicPressureLA
+ 	when a node is at its contracted length of muscleCompresionStopFraction*radiusOfAtria. We also use 
  	a multilier so the user can adjust this force to fit their needs.
  
  This next set of functions gets the forces on a node caused by a muscles at all times not just when it
@@ -125,7 +141,7 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int NumberOfNodes, int li
  	function to acheive this.
  
 */
-__global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructure *Node, int *ConnectingMuscles, float dt, int NumberOfNodes, int LinksPerNode, float4 centerOfSimulation, float muscleCompresionStopFraction, float RadiusOfAtria, float diastolicPressureLA, float systolicPressureLA, int contractionType)
+__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, float dt, int numberOfNodes, int linksPerNode, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfAtria, float diastolicPressureLA, float systolicPressureLA, int contractionType)
 {
 	float dx, dy, dz, d;
 	int muscleNumber, nodeNumber;
@@ -134,56 +150,56 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 	
 	int i = threadIdx.x + blockDim.x*blockIdx.x; // This is the node number we will be working on.
 	
-	if(i < NumberOfNodes) // checking to see if this node is in range.
+	if(i < numberOfNodes) // checking to see if this node is in range.
 	{
 		// Zeroing out the forces on this node so we can start summing them.
-		Node[i].force.x   = 0.0;
-		Node[i].force.y   = 0.0;
-		Node[i].force.z   = 0.0;
+		node[i].force.x   = 0.0;
+		node[i].force.y   = 0.0;
+		node[i].force.z   = 0.0;
 		
 		// 1. Central push back force
-		dx = Node[i].position.x - centerOfSimulation.x;
-		dy = Node[i].position.y - centerOfSimulation.y;
-		dz = Node[i].position.z - centerOfSimulation.z;
+		dx = node[i].position.x - centerOfSimulation.x;
+		dy = node[i].position.y - centerOfSimulation.y;
+		dz = node[i].position.z - centerOfSimulation.z;
 		d  = sqrt(dx*dx + dy*dy + dz*dz);
 		if(0.00001 < d) // To keep from getting numeric overflow just jump over this if d is too small.
 		{
-			float r2 = muscleCompresionStopFraction*RadiusOfAtria;
-			m = (systolicPressureLA - diastolicPressureLA)/(r2 - RadiusOfAtria);
-			float bp = m*d + diastolicPressureLA - m*RadiusOfAtria;
-			force  = bp*Node[i].area;
-			Node[i].force.x  += force*dx/d;
-			Node[i].force.y  += force*dy/d;
-			Node[i].force.z  += force*dz/d;
+			float r2 = muscleCompresionStopFraction*radiusOfAtria;
+			m = (systolicPressureLA - diastolicPressureLA)/(r2 - radiusOfAtria);
+			float bp = m*d + diastolicPressureLA - m*radiusOfAtria;
+			force  = bp*node[i].area;
+			node[i].force.x  += force*dx/d;
+			node[i].force.y  += force*dy/d;
+			node[i].force.z  += force*dz/d;
 		}
 		else
 		{
 			printf("\n TSU Error: Node %d has gotten really close to the center of the LA. Take a look at this!\n", i);
 		}
 		
-		for(int j = 0; j < LinksPerNode; j++) // Going through every muscle that is connected to the ith node.
+		for(int j = 0; j < linksPerNode; j++) // Going through every muscle that is connected to the ith node.
 		{
-			muscleNumber = ConnectingMuscles[i*LinksPerNode + j];
+			muscleNumber = connectingMuscles[i*linksPerNode + j];
 			if(muscleNumber != -1) // Checking to see if this is a valid muscle.
 			{
-				float contractionDuration = Muscle[muscleNumber].contractionDuration;
-				float rechargeDuration = Muscle[muscleNumber].rechargeDuration;
+				float contractionDuration = muscle[muscleNumber].contractionDuration;
+				float rechargeDuration = muscle[muscleNumber].rechargeDuration;
 				float totalDuration = contractionDuration + rechargeDuration;
-				float timer = Muscle[muscleNumber].timer;
-				float contractionStrength = Muscle[muscleNumber].contractionStrength;
-				float relaxedStrength = Muscle[muscleNumber].relaxedStrength;
-				float naturalLength = Muscle[muscleNumber].naturalLength;
-				float compresionStopFraction = Muscle[muscleNumber].compresionStopFraction;
+				float timer = muscle[muscleNumber].timer;
+				float contractionStrength = muscle[muscleNumber].contractionStrength;
+				float relaxedStrength = muscle[muscleNumber].relaxedStrength;
+				float naturalLength = muscle[muscleNumber].naturalLength;
+				float compresionStopFraction = muscle[muscleNumber].compresionStopFraction;
 				
 				// Every muscle is connected to two nodes A and B. We know it is connected to the 
 				// ith node. Now we need to find the node at the other end of the muscle.
-				nodeNumber = Muscle[muscleNumber].nodeA;
+				nodeNumber = muscle[muscleNumber].nodeA;
 				// If the node number is yourself you must have the wrong end.
-				if(nodeNumber == i) nodeNumber = Muscle[muscleNumber].nodeB; 
+				if(nodeNumber == i) nodeNumber = muscle[muscleNumber].nodeB; 
 			
-				dx = Node[nodeNumber].position.x - Node[i].position.x;
-				dy = Node[nodeNumber].position.y - Node[i].position.y;
-				dz = Node[nodeNumber].position.z - Node[i].position.z;
+				dx = node[nodeNumber].position.x - node[i].position.x;
+				dy = node[nodeNumber].position.y - node[i].position.y;
+				dz = node[nodeNumber].position.z - node[i].position.z;
 				d  = sqrt(dx*dx + dy*dy + dz*dz);
 				if(d < 0.0001) // Grabbing numeric overflow before it happens.
 				{
@@ -219,12 +235,12 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 					m = contractionStrength/transitionLength;
 					force = m*(d - naturalLength - transitionLength) + contractionStrength;
 				}
-				Node[i].force.x  += force*dx/d;
-				Node[i].force.y  += force*dy/d;
-				Node[i].force.z  += force*dz/d;
+				node[i].force.x  += force*dx/d;
+				node[i].force.y  += force*dy/d;
+				node[i].force.z  += force*dz/d;
 			
 				// One of these functions will be turned on if the muscle is contracting.
-				if(Muscle[muscleNumber].onOff == 1 && Muscle[muscleNumber].dead != 1)
+				if(muscle[muscleNumber].onOff == 1 && muscle[muscleNumber].dead != 1)
 				{
 					// 6. Constant contraction force.
 					if(contractionType == 1)
@@ -232,9 +248,9 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 						if(timer < contractionDuration)
 						{
 							force = contractionStrength;
-							Node[i].force.x += force*dx/d;
-							Node[i].force.y += force*dy/d;
-							Node[i].force.z += force*dz/d;
+							node[i].force.x += force*dx/d;
+							node[i].force.y += force*dy/d;
+							node[i].force.z += force*dz/d;
 						}
 					}
 					
@@ -244,17 +260,17 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 						if(timer < contractionDuration) 
 						{
 							force = timer*(contractionStrength/contractionDuration);
-							Node[i].force.x += force*dx/d;
-							Node[i].force.y += force*dy/d;
-							Node[i].force.z += force*dz/d;
+							node[i].force.x += force*dx/d;
+							node[i].force.y += force*dy/d;
+							node[i].force.z += force*dz/d;
 						}
 		
 						else if(timer < totalDuration)
 						{
 							force = (contractionStrength/rechargeDuration)*(totalDuration - timer);
-							Node[i].force.x += force*dx/d;
-							Node[i].force.y += force*dy/d;
-							Node[i].force.z += force*dz/d;
+							node[i].force.x += force*dx/d;
+							node[i].force.y += force*dy/d;
+							node[i].force.z += force*dz/d;
 						}
 						
 					}
@@ -263,9 +279,9 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 					if(contractionType == 3) // sine force
 					{
 						force = contractionStrength*sin(timer*PI/(totalDuration));
-						Node[i].force.x += force*dx/d;
-						Node[i].force.y += force*dy/d;
-						Node[i].force.z += force*dz/d;
+						node[i].force.x += force*dx/d;
+						node[i].force.y += force*dy/d;
+						node[i].force.z += force*dz/d;
 					}
 					
 					// 9. sine squared contraction force
@@ -273,9 +289,9 @@ __global__ void getForces(muscleAtributesStructure *Muscle, nodeAtributesStructu
 					{
 					 	float temp = sin(timer*PI/(totalDuration));
 						force = contractionStrength*temp*temp;
-						Node[i].force.x += force*dx/d;
-						Node[i].force.y += force*dy/d;
-						Node[i].force.z += force*dz/d;
+						node[i].force.x += force*dx/d;
+						node[i].force.y += force*dy/d;
+						node[i].force.z += force*dz/d;
 					}
 				}
 				
@@ -363,69 +379,69 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
  It a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmition direction set to undetermined by setting apNode to -1.
 */
-__global__ void updateMuscles(muscleAtributesStructure *Muscle, nodeAtributesStructure *Node, int *ConnectingMuscles, ectopicEventStructure *ectopicEvent, int NumberOfMuscles, int NumberOfNodes, int LinksPerNode, int maxNumberOfperiodicEctopicEvents, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor, float relativeRefractoryPeriodFraction)
+__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, ectopicEventStructure *ectopicEvent, int numberOfMuscles, int numberOfNodes, int linksPerNode, int maxNumberOfperiodicEctopicEvents, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor, float relativeRefractoryPeriodFraction)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
-	if(i < NumberOfMuscles)
+	if(i < numberOfMuscles)
 	{
-		if(Muscle[i].onOff == 1 && Muscle[i].dead != 1)
+		if(muscle[i].onOff == 1 && muscle[i].dead != 1)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
 			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not rest here
 			// and this would make this call happen every time step past conductionDuration until it was reset.
-			if((Muscle[i].conductionDuration - dt < Muscle[i].timer) && (Muscle[i].timer < Muscle[i].conductionDuration + dt))
+			if((muscle[i].conductionDuration - dt < muscle[i].timer) && (muscle[i].timer < muscle[i].conductionDuration + dt))
 			{
 				// Making the AP wave move forward through the muscle.
-				if(Muscle[i].apNode == Muscle[i].nodeA)
+				if(muscle[i].apNode == muscle[i].nodeA)
 				{
-					turnOnNodeMusclesGPU(Muscle[i].nodeB, NumberOfNodes, LinksPerNode, Muscle, Node, ConnectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
+					turnOnNodeMusclesGPU(muscle[i].nodeB, numberOfNodes, linksPerNode, muscle, node, connectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
 				}
 				else
 				{
-					turnOnNodeMusclesGPU(Muscle[i].nodeA, NumberOfNodes, LinksPerNode, Muscle, Node, ConnectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
+					turnOnNodeMusclesGPU(muscle[i].nodeA, numberOfNodes, linksPerNode, muscle, node, connectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
 				}
 			}
 			
-			float refractoryPeriod = Muscle[i].contractionDuration + Muscle[i].rechargeDuration;
+			float refractoryPeriod = muscle[i].contractionDuration + muscle[i].rechargeDuration;
 			float relativeRefractoryPeriod = refractoryPeriod*relativeRefractoryPeriodFraction;
 			float absoluteRefractoryPeriod = refractoryPeriod - relativeRefractoryPeriod;
 			
-			if(Muscle[i].timer < Muscle[i].contractionDuration)
+			if(muscle[i].timer < muscle[i].contractionDuration)
 			{
 				// Set color and update time.
-				Muscle[i].color.x = contractingColor.x; 
-				Muscle[i].color.y = contractingColor.y;
-				Muscle[i].color.z = contractingColor.z;
-				Muscle[i].timer += dt;
+				muscle[i].color.x = contractingColor.x; 
+				muscle[i].color.y = contractingColor.y;
+				muscle[i].color.z = contractingColor.z;
+				muscle[i].timer += dt;
 			}
-			else if(Muscle[i].timer < absoluteRefractoryPeriod)
+			else if(muscle[i].timer < absoluteRefractoryPeriod)
 			{ 
 				// Set color and update time.
-				Muscle[i].color.x = restingColor.x;
-				Muscle[i].color.y = restingColor.y;
-				Muscle[i].color.z = restingColor.z;
-				Muscle[i].timer += dt;
+				muscle[i].color.x = restingColor.x;
+				muscle[i].color.y = restingColor.y;
+				muscle[i].color.z = restingColor.z;
+				muscle[i].timer += dt;
 			}
-			else if(Muscle[i].timer < refractoryPeriod)
+			else if(muscle[i].timer < refractoryPeriod)
 			{ 
 				// Set color and update time.
-				Muscle[i].color.x = relativeColor.x;
-				Muscle[i].color.y = relativeColor.y;
-				Muscle[i].color.z = relativeColor.z;
-				Muscle[i].timer += dt;
+				muscle[i].color.x = relativeColor.x;
+				muscle[i].color.y = relativeColor.y;
+				muscle[i].color.z = relativeColor.z;
+				muscle[i].timer += dt;
 			}
 			else
 			{
 				// There is no time update here just setting the color and turning the muscle off.
-				Muscle[i].color.x = readyColor.x;
-				Muscle[i].color.y = readyColor.y;
-				Muscle[i].color.z = readyColor.z;
-				Muscle[i].color.w = 1.0;
+				muscle[i].color.x = readyColor.x;
+				muscle[i].color.y = readyColor.y;
+				muscle[i].color.z = readyColor.z;
+				muscle[i].color.w = 1.0;
 				
-				Muscle[i].onOff = 0;
-				Muscle[i].timer = 0.0;
-				Muscle[i].apNode = -1;
+				muscle[i].onOff = 0;
+				muscle[i].timer = 0.0;
+				muscle[i].apNode = -1;
 			}	
 		}
 	}	
@@ -435,19 +451,17 @@ __global__ void updateMuscles(muscleAtributesStructure *Muscle, nodeAtributesStr
  Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wonder because the model and
  the forces are not completely simetric. This function just moves it back to the center.
  We are doing this on one block so we do not have to jump out to sync the blocks then move the nodes to the center.
- Need to take a day and figure out what I did here.
- ???????????????????????
+ Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the seto function in
+ the SVT.cu file
+ This scheme is working fine but I believe we could do this more eficently and also have it bring in the view you are in
+ to improve the stablity of the user's view.
 */
 __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4 centerOfMass, float4 centerOfSimulation)
 {
 	int id, n, nodeId;
-	__shared__ float4 myPart[BLOCKNODES];
 	
-	if(BLOCKNODES != blockDim.x) 
-	{
-		printf("\n Error BLOCKNODES is not equal to blockDim.x %d  %d", BLOCKNODES, blockDim.x);
-		//exit(0);
-	}
+	// This needs to be a power of two or the code will not work!!!
+	__shared__ float4 myPart[BLOCKCENTEROFMASS];
 	
 	id = threadIdx.x;
 	
@@ -456,11 +470,15 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	myPart[id].z = 0.0;
 	myPart[id].w = 0.0;
 	
+	// Finding the number of strides needed to go through all of the nodes using only one block.
 	int stop = (numberOfNodes - 1)/blockDim.x + 1;
 	
+	// Suming all of the node masses*distance and total node masses into the single block we are using.
 	for(int i = 0; i < stop; i++)
 	{
 		nodeId = threadIdx.x + i*blockDim.x;
+		// Checking to make sure we are not going past the number of nodes.
+		// This will protect the sum if the number of nodes does not equally divide by the size of the block.
 		if(nodeId < numberOfNodes)
 		{
 			myPart[id].x += node[nodeId].position.x*node[nodeId].mass;
@@ -471,8 +489,11 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	}
 	__syncthreads();
 	
+	// Doing the final reduction on the value we have acumulated on the block. 
+	// This will all be stored in node zero when this while loop is done.
+	// Note: This section of code only works if block size is a power of 2.
 	n = blockDim.x;
-	while(2 < n)
+	while(1 < n)
 	{
 		n /= 2;
 		if(id < n)
@@ -484,7 +505,9 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 		}
 		__syncthreads();
 	}
+	__syncthreads();
 	
+	// Dividing by the total mass will now give us the center of mass of all the nodes.
 	if(id == 0)
 	{
 		myPart[0].x /= myPart[0].w;
@@ -493,7 +516,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	}
 	__syncthreads();
 	
-	// Moving the center of mass to the center of the simulation.
+	// Moving the nodes so that the nodes' center of mass will be at the center of the simulation.
 	for(int i = 0; i < stop; i++)
 	{
 		nodeId = threadIdx.x + i*blockDim.x;
@@ -506,17 +529,14 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	}
 }
 
-/*
- Checks for errors in the CUDA calls.
-*/
-void errorCheck(const char *message)
+void cudaErrorCheck(const char *file, int line)
 {
 	cudaError_t  error;
 	error = cudaGetLastError();
 
 	if(error != cudaSuccess)
 	{
-		printf("\n CUDA ERROR: %s = %s\n", message, cudaGetErrorString(error));
+		printf("\n CUDA ERROR: message = %s, File = %s, Line = %d\n", cudaGetErrorString(error), file, line);
 		exit(0);
 	}
 }
@@ -527,9 +547,9 @@ void errorCheck(const char *message)
 void copyNodesMusclesToGPU()
 {
 	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy Muscle up");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy Node up");
+	cudaErrorCheck(__FILE__, __LINE__);
 }
 
 /*
@@ -538,7 +558,7 @@ void copyNodesMusclesToGPU()
 void copyNodesMusclesFromGPU()
 {
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyDeviceToHost);
-	errorCheck("cudaMemcpy Muscle down");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
-	errorCheck("cudaMemcpy Node down");
+	cudaErrorCheck(__FILE__, __LINE__);
 }

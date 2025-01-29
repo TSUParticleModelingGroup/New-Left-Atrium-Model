@@ -1,3 +1,19 @@
+/*
+ This file contains all the draw and draw related function and the function that does the terminal print. 
+ In short the is file holds the functions that display to the user.
+ The functions are listed below in the order they appear.
+ 
+ void rotateXAxis(float);
+ void rotateYAxis(float);
+ void rotateZAxis(float);
+ void ReferenceView();
+ void PAView();
+ void APView();
+ void setView(int);
+ void drawPicture();
+ void terminalPrint();
+*/
+
 void rotateXAxis(float angle)
 {
 	float temp;

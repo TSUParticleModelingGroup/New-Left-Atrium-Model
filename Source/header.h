@@ -12,26 +12,34 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <unistd.h>
+
 using namespace std;
+
+// Cuda defines
+#define BLOCKNODES 256
+#define BLOCKMUSCLES 256
+#define BLOCKCENTEROFMASS 512
+
 
 // defines for terminal stuff.
 #define BOLD_ON  "\e[1m"
 #define BOLD_OFF   "\e[m"
 
-// normal defines.
+// Math defines.
 #define PI 3.141592654
-#define BLOCKNODES 256
-#define BLOCKMUSCLES 256
 
+// Globals Start ******************************************
+
+// For videos and screenshots
 FILE* MovieFile;
 int* Buffer;
 int MovieOn;
 
-// CUDA Globals
+// To setup your CUDA device
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
 
-// Timing globals
+// For Timing
 float Dt;
 float PrintRate;
 int DrawRate;
@@ -195,41 +203,77 @@ double UpX;
 double UpY;
 double UpZ;
 	
-// Prototyping functions
-void allocateMemory(int, int);
-int findNumberOfMuscles();
-void setNodesAndEdgesLine(float);
-void setNodesAndEdgesCircle(float, float); 
-void setNodesAndEdgesSphere(int, float);
-void setNodesAndEdgesAtria1(int, float, float, float);
-void setNodesAndEdgesThickAtria(int, float, float, float);
-void linkMusclesToNodes();
-void linkNodesToMuscles();
-void setMuscleAttributesAndNodeMasses();
-void setIndividualMuscleAttributes();
-void drawPicture();
-void hardCodedAblations();
-void hardCodedPeriodicEctopicEvents();
+// Prototyping functions start *****************************************************
+// Functions in the SVT.h file.
+void n_body(float);
+void allocateMemory();
+void readSimulationParameters();
+void setup();
+int main(int, char**);
+
+// Functions in the CUDAFunctions.h file.
+__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int);
+__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, int *, float dt, int, int, float4, float, float, float, float, int);
+__global__ void updateNodes(nodeAtributesStructure *, int, int, ectopicEventStructure *, int, muscleAtributesStructure *, int *, float, float, double, int);
+__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
+__global__ void recenter(nodeAtributesStructure *, int, float4, float4);
+void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
-void n_body(float);
+
+// Functions in the setNodesAndMuscles.h file.
+void setNodesAndEdgesFromBlenderFile();
+void checkNodes();
+int findNumberOfMuscles();
+void linkMusclesToNodes();
+void linkNodesToMuscles();
+double getLogNormal();
+void setMuscleAttributesAndNodeMasses();
+
+// Functions in the hardCodedNodeAndMuscleAtributes.h file.
+void hardCodedAblations();
+void hardCodedPeriodicEctopicEvents();
+void setIndividualMuscleAttributes();
+ 
+// Functions in the DrawAndTerminalFunctions.h file.
+void rotateXAxis(float);
+void rotateYAxis(float);
+void rotateZAxis(float);
+void ReferenceView();
+void PAView();
+void APView();
+void setView(int);
+void drawPicture();
 void terminalPrint();
-void setup();
+
+// Functions in the callBackFunctions.h file.
+void Display(void);
+void idle();
+void reshape(int, int);
 void orthoganialView();
 void fulstrumView();
+void mouseFunctionsOff();
+void mouseAblateMode();
+void mouseEctopicBeatMode();
+void mouseAdjustMusclesMode();
+void mouseIdentifyNodeMode();
+int setMouseMuscleAttributes();
+void setMouseMuscleContractionDuration();
+void setMouseMuscleRechargeDuration();
+void setMouseMuscleContractionVelocity();
+void setEctopicBeat(int nodeId, int event);
+void clearStdin();
+void getEctopicBeatPeriod(int);
+void getEctopicBeatOffset(int);
+string getTimeStamp();
+void movieOn();
+void movieOff();
+void screenShot();
+void saveSettings();
+void helpMenu();
 void KeyPressed(unsigned char, int, int);
-void readSimulationParameters();
-void errorCheck(const char*);
-void checkNodes();
-void setView(int);
-void adjustView();
-// Cuda prototyping
-void __global__ getForces(muscleAtributesStructure*, nodeAtributesStructure*, int*, float, int, int, float4, float, float, float, int);
-void __global__ updateNodes(nodeAtributesStructure*, int, int, ectopicEventStructure*, int, muscleAtributesStructure*, int*, float, float);
-void __global__ updateMuscles(muscleAtributesStructure*, nodeAtributesStructure*, int*, ectopicEventStructure*, int, int, int, int, float);
-void __global__ recenter(nodeAtributesStructure*, int, float4, float4);
+void mousePassiveMotionCallback(int, int);
+void mymouse(int, int, int, int);
+float4 findCenterOfMass();
+void centerObject();
 
-#include "./setNodesAndMuscles.h"
-#include "./callBackFunctions.h"
-#include "./screenAndTerminalFunctions.h"
-#include "./CUDAFunctions.h"

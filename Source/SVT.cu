@@ -1,7 +1,23 @@
 // nvcc SVT.cu -o svt -lglut -lm -lGLU -lGL
-// -lGL -lm -lX11 -lXrandr -lXi -lXxf86vm -lpthread -ldl
 
+/*
+ This file contains all the the main controller functions that setup the simulation, then run and manage the simulation.
+ The functions are listed below in the order they appear.
+ 
+ void n_body(float);
+ void allocateMemory();
+ void readSimulationParameters();
+ void setup();
+ int main(int, char**);
+*/
+
+// Local include files
 #include "./header.h"
+#include "./setNodesAndMuscles.h"
+#include "./hardCodedNodeAndMuscleAttribute.h"
+#include "./callBackFunctions.h"
+#include "./drawAndTerminalFunctions.h"
+#include "./cudaFunctions.h"
 
 void n_body(float dt)
 {	
@@ -10,16 +26,16 @@ void n_body(float dt)
 		if(ContractionType != 0)
 		{
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, dt, NumberOfNodes, LinksPerNode, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, DiastolicPressureLA, SystolicPressureLA, ContractionType);
-			errorCheck("getForces");
+			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
 		
 		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, LinksPerNode, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents, MuscleGPU, ConnectingMusclesGPU, DragMultiplier, dt, RunTime, ContractionType);
-		errorCheck("updateNodes");
+		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		
 		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, EctopicEventsGPU, NumberOfMuscles, NumberOfNodes, LinksPerNode, MaxNumberOfperiodicEctopicEvents, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor, RelativeRefractoryPeriodFraction);
-		errorCheck("updateMuscles");
+		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		
 		RecenterCount++;
@@ -30,8 +46,8 @@ void n_body(float dt)
 			centerOfMass.y = 0.0;
 			centerOfMass.z = 0.0;
 			centerOfMass.w = 0.0;
-			recenter<<<1, BlockNodes.x>>>(NodeGPU, NumberOfNodes, centerOfMass, CenterOfSimulation);
-			errorCheck("recenterGPU");
+			recenter<<<1, BLOCKCENTEROFMASS>>>(NodeGPU, NumberOfNodes, centerOfMass, CenterOfSimulation);
+			cudaErrorCheck(__FILE__, __LINE__);
 			RecenterCount = 0;
 		}
 		
@@ -97,17 +113,17 @@ void allocateMemory()
 	
 	//CPU memory is allocated in setNodesAndMuscles.h
 	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-	errorCheck("cudaMalloc MuscleGPU");
+	cudaErrorCheck(__FILE__, __LINE__);
 	//CPU memory is allocated setNodesAndMuscles.h
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
-	errorCheck("cudaMalloc NodeGPU");
+	cudaErrorCheck(__FILE__, __LINE__);
 	//CPU memory is allocated setNodesAndMuscles.h
 	cudaMalloc((void**)&ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int));
-	errorCheck("cudaMalloc ConnectingMusclesGPU");
+	cudaErrorCheck(__FILE__, __LINE__);
 	// Allocating memory for the ectopic events then setting everything to -1 so we can see that they have not been turned on.
 	EctopicEvents = (ectopicEventStructure*)malloc(MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
 	cudaMalloc((void**)&EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-	errorCheck("cudaMalloc EctopicEventsGPU");
+	cudaErrorCheck(__FILE__, __LINE__);
 	
 	for(int i = 0; i < MaxNumberOfperiodicEctopicEvents; i++)
 	{
@@ -334,13 +350,13 @@ void setup()
 		EctopicEvents = (ectopicEventStructure*)malloc(MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
 		
 		cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-		errorCheck("cudaMalloc MuscleGPU");
+		cudaErrorCheck(__FILE__, __LINE__);
 		cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
-		errorCheck("cudaMalloc NodeGPU");
+		cudaErrorCheck(__FILE__, __LINE__);
 		cudaMalloc((void**)&ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int));
-		errorCheck("cudaMalloc ConnectingMusclesGPU");
+		cudaErrorCheck(__FILE__, __LINE__);
 		cudaMalloc((void**)&EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-		errorCheck("cudaMalloc EctopicEventsGPU");
+		cudaErrorCheck(__FILE__, __LINE__);
 	
 		for(int i = 0; i < MaxNumberOfperiodicEctopicEvents; i++)
 		{
@@ -415,18 +431,27 @@ void setup()
 	setView(2);
 	
 	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy Muscle up");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy Node up");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( ConnectingMusclesGPU, ConnectingMuscles, NumberOfNodes*LinksPerNode*sizeof(int), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy ConnectingMuscles up");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
-	errorCheck("cudaMemcpy EctopicEvents up");
+	cudaErrorCheck(__FILE__, __LINE__);
 	
 	//printf("\n\n The Particle Modeling Group hopes you enjoy your interactive simulation.");
 	//printf("\n The simulation is paused type r to start the simulation and h for a help menu.");
 	//printf("\n");
 	
+	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
+	{
+        	printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
+        	printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
+        	printf("\nFix this number in the header.h file and try again.");
+        	printf("\nGood Bye.\n");
+        	exit(0);
+        }
+        
 	printf("\n");
 	terminalPrint();
 }

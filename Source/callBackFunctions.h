@@ -1,35 +1,38 @@
-void Display(void);
-void idle();
-void reshape(int, int);
-void mouseWheelCallback(int, int, int, int);
-//void mouseMotionCallback(int, int);
-void mousePassiveMotionCallback(int, int);
-void orthoganialView();
-void fulstrumView();
-void mouseFunctionsOff();
-void mouseAblateMode();
-void mouseEctopicBeatMode();
-void mouseEctopicEventMode();
-void mouseAdjustMusclesMode();
-void mouseIdentifyNodeMode();
-int setMouseMuscleAttributes();
-void setMouseMuscleContractionDuration();
-void setMouseMuscleRechargeDuration();
-void setMouseMuscleContractionVelocity();
-void setEctopicBeat(int, int);
-void getEctopicBeatPeriod(int);
-void getEctopicBeatOffset(int);
-void movieOn();
-void movieOff();
-void screenShot();
-void saveSettings();
-void helpMenu();
-void KeyPressed(unsigned char, int, int);
-void mymouse(int, int, int, int);
-void centerObject();
-float4 findCenterOfMass();
-
-void clearStdin();
+/*
+ This file contains all the callBack functions and function that it calls to do its work.
+ 
+ The functions in this file are listed below and it is order.
+ 
+ void Display(void);
+ void idle();
+ void reshape(int, int);
+ void orthoganialView();
+ void fulstrumView();
+ void mouseFunctionsOff();
+ void mouseAblateMode();
+ void mouseEctopicBeatMode();
+ void mouseAdjustMusclesMode();
+ void mouseIdentifyNodeMode();
+ int setMouseMuscleAttributes();
+ void setMouseMuscleContractionDuration();
+ void setMouseMuscleRechargeDuration();
+ void setMouseMuscleContractionVelocity();
+ void setEctopicBeat(int nodeId, int event);
+ void clearStdin();
+ void getEctopicBeatPeriod(int);
+ void getEctopicBeatOffset(int);
+ string getTimeStamp();
+ void movieOn();
+ void movieOff();
+ void screenShot();
+ void saveSettings();
+ void helpMenu();
+ void KeyPressed(unsigned char, int, int);
+ void mousePassiveMotionCallback(int, int);
+ void mymouse(int, int, int, int);
+ float4 findCenterOfMass();
+ void centerObject();
+*/
 
 void Display(void)
 {
@@ -420,13 +423,13 @@ void screenShot()
 void saveSettings()
 {
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
-	errorCheck("cudaMemcpy Node down");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyDeviceToHost);
-	errorCheck("cudaMemcpy Muscle down");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( ConnectingMuscles, ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int), cudaMemcpyDeviceToHost );
-	errorCheck("cudaMemcpy ConnectingMuscles down");
+	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( EctopicEvents, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyDeviceToHost );
-	errorCheck("cudaMemcpy EctopicEvents down");
+	cudaErrorCheck(__FILE__, __LINE__);
 	
 	chdir("./PreviousRunsFile");
 	   	
@@ -619,7 +622,7 @@ void KeyPressed(unsigned char key, int x, int y)
 		EctopicEvents[0].period += 10;
 		//EctopicEvents[0].time = EctopicEvents[0].period;
 		cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
-		errorCheck("cudaMemcpy EctopicEvents up");
+		cudaErrorCheck(__FILE__, __LINE__);
 		terminalPrint();
 	}
 	if(key == 'b')  // Lowering the beat period
@@ -630,7 +633,7 @@ void KeyPressed(unsigned char key, int x, int y)
 			EctopicEvents[0].period = 0;  // You don't want the beat to negative
 		}
 		cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
-		errorCheck("cudaMemcpy EctopicEvents up");
+		cudaErrorCheck(__FILE__, __LINE__);
 		//EctopicEvents[0].time = EctopicEvents[0].period;
 		terminalPrint();
 	}
@@ -1004,7 +1007,7 @@ void mymouse(int button, int state, int x, int y)
 					if(EctopicBeatOnOff == 1)
 					{
 						cudaMemcpy( EctopicEvents, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyDeviceToHost);
-						errorCheck("cudaMemcpy EctopicEvents down");
+						cudaErrorCheck(__FILE__, __LINE__);
 						
 						Pause = 1;
 						
@@ -1023,7 +1026,7 @@ void mymouse(int button, int state, int x, int y)
 						}
 					
 						cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
-						errorCheck("cudaMemcpy EctopicEvents up");
+						cudaErrorCheck(__FILE__, __LINE__);
 					}
 					if(AdjustMuscleOnOff == 1)
 					{
