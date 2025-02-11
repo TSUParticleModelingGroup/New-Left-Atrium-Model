@@ -393,12 +393,14 @@ int main(int argc, char** argv)
 	UpX = 0.0;
 	UpY = 1.0;
 	UpZ = 0.0;
-	
+
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
 	glutInitWindowSize(XWindowSize,YWindowSize);
 	glutInitWindowPosition(5,5);
 	Window = glutCreateWindow("SVT");
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	
 	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
 	glMatrixMode(GL_PROJECTION);
@@ -408,13 +410,13 @@ int main(int argc, char** argv)
 	glClearColor(BackGroundRed, BackGroundGreen, BackGroundBlue, 0.0);
 	
 	//GLfloat light_position[] = {EyeX, EyeY, EyeZ, 0.0};
-	GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0};
-	GLfloat light_ambient[]  = {0.0, 0.0, 0.0, 1.0};
-	GLfloat light_diffuse[]  = {1.0, 1.0, 1.0, 1.0};
-	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
-	GLfloat lmodel_ambient[] = {0.2, 0.2, 0.2, 1.0};
-	GLfloat mat_specular[]   = {1.0, 1.0, 1.0, 1.0};
-	GLfloat mat_shininess[]  = {10.0};
+	GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
+	GLfloat light_ambient[]  = {1.0, 1.0, 1.0, 1.0}; //what color is the ambient light, {r,g,b,a}, a= opacity 1.0 is fully visible, 0.0 is invisible
+	GLfloat light_diffuse[]  = {1.0, 1.0, 1.0, 1.0}; //does light reflect off of the object, {r,g,b,a}, a has no effect
+	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0}; //does light highlight shiny surfaces, {r,g,b,a}. i.e what light reflects to viewer
+	GLfloat lmodel_ambient[] = {1.0, 1.0, 1.0, 1.0}; //global ambient light, {r,g,b,a}, applies uniformly to all objects in the scene
+	GLfloat mat_specular[]   = {1.0, 1.0, 1.0, 1.0}; //reflective properties of an object, {r,g,b,a}, highlights are currently white
+	GLfloat mat_shininess[]  = {128.0}; //how shiny is the surface of an object, 0.0 is dull, 128.0 is very shiny
 	glShadeModel(GL_SMOOTH);
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
@@ -424,8 +426,7 @@ int main(int argc, char** argv)
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_DEPTH_TEST);
 	
