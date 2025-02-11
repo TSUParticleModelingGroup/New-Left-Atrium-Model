@@ -17,7 +17,7 @@
  void setMouseMuscleContractionDuration();
  void setMouseMuscleRechargeDuration();
  void setMouseMuscleContractionVelocity();
- void setEctopicBeat(int nodeId, int event);
+ void setEctopicBeat(int nodeId);
  void clearStdin();
  void getEctopicBeatPeriod(int);
  void getEctopicBeatOffset(int);
@@ -74,7 +74,7 @@ void mouseFunctionsOff()
 	Pause = 1;
 	AblateOnOff = 0;
 	EctopicBeatOnOff = 0;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 0;
 	MouseFunctionOnOff = 0;
@@ -88,7 +88,7 @@ void mouseAblateMode()
 	Pause = 1;
 	AblateOnOff = 1;
 	EctopicBeatOnOff = 0;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 0;
 	MouseFunctionOnOff = 1;
@@ -103,7 +103,7 @@ void mouseEctopicBeatMode()
 	Pause = 1;
 	AblateOnOff = 0;
 	EctopicBeatOnOff = 1;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 0;
 	MouseFunctionOnOff = 1;
@@ -123,7 +123,7 @@ void mouseEctopicEventMode()
 	Pause = 1;
 	AblateOnOff = 0;
 	EctopicBeatOnOff = 0;
-	EctopicSingleOnOff = 1;
+	EctopicEventOnOff = 1;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 0;
 	MouseFunctionOnOff = 1;
@@ -139,7 +139,7 @@ void mouseAdjustMusclesMode()
 	Pause = 1;
 	AblateOnOff = 0;
 	EctopicBeatOnOff = 0;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	AdjustMuscleOnOff = 1;
 	FindNodeOnOff = 0;
 	MouseFunctionOnOff = 1;
@@ -160,7 +160,7 @@ void mouseIdentifyNodeMode()
 	Pause = 1;
 	AblateOnOff = 0;
 	EctopicBeatOnOff = 0;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 1;
 	MouseFunctionOnOff = 1;
@@ -238,20 +238,21 @@ void setMouseMuscleContractionVelocity()
 	}
 }
 
-void setEctopicBeat(int nodeId, int event)
+void setEctopicBeat(int nodeId)
 {
-	EctopicEvents[event].node = nodeId;
-	if(Node[nodeId].ablatedYesNo != 1)
+	Node[nodeId].beatNode = true;
+	
+	if(Node[nodeId].ablated == false)
 	{
-		Node[nodeId].drawFlag = 1;
+		Node[nodeId].drawNode = true;
 		Node[nodeId].color.x = 1.0;
 		Node[nodeId].color.y = 1.0;
 		Node[nodeId].color.z = 0.0;
 	}
 	drawPicture();
 	
-	getEctopicBeatPeriod(event);
-	getEctopicBeatOffset(event);
+	getEctopicBeatPeriod(nodeId);
+	getEctopicBeatOffset(nodeId);
 	
 	// We only let you set 1 ectopic beat at a time.
 	EctopicBeatOnOff = 0;
@@ -267,31 +268,36 @@ void clearStdin()
     }
 }
 
-void getEctopicBeatPeriod(int event)
+void getEctopicBeatPeriod(int nodeId)
 {
+	float period;
 	fflush(stdin);
 	system("clear");
 	printf("\n The current driving beat Period = %f.", BeatPeriod);
 	printf("\n Enter the period of your ectopic beat.");
 	
 	printf("\n\n Ectopic period = ");
-	scanf("%f", &EctopicEvents[event].period);
-	if(EctopicEvents[event].period <= 0)
+	scanf("%f", &period);
+	if(period <= 0)
 	{
 		system("clear");
-		printf("\n You entered %f.", EctopicEvents[event].period);
+		printf("\n You entered %f.", Node[nodeId].beatPeriod);
 		printf("\n You cannot have a beat period that is a nonpositive number.");
 		printf("\n Retry\n");
 		exit(0);
-		getEctopicBeatPeriod(event);
+		getEctopicBeatPeriod(nodeId);
+	}
+	else
+	{
+		Node[nodeId].beatPeriod = period;
 	}
 	clearStdin();
 }
 
-void getEctopicBeatOffset(int event)
+void getEctopicBeatOffset(int nodeId)
 {
 	system("clear");
-	printf("\n The current Time into the beat is %f.", EctopicEvents[0].time);
+	printf("\n The current Time into the beat is %f.", Node[nodeId].beatTimer);
 	printf("\n Enter the time offset of your ectopic event.");
 	printf("\n This will allow you to time your ectopic beat with the driving beat.");
 	printf("\n Zero will start the ectopic beat now.");
@@ -305,9 +311,12 @@ void getEctopicBeatOffset(int event)
 		system("clear");
 		printf("\n You cannot have a time delay that is a negative number.");
 		printf("\n Retry\n");
-		getEctopicBeatOffset(event);
+		getEctopicBeatOffset(nodeId);
 	}
-	EctopicEvents[event].time = EctopicEvents[event].period - timeDelay;
+	else
+	{
+		Node[nodeId].beatTimer = Node[nodeId].beatPeriod - timeDelay;
+	}
 }
 
 /*
@@ -426,10 +435,6 @@ void saveSettings()
 	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( ConnectingMuscles, ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int), cudaMemcpyDeviceToHost );
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( EctopicEvents, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyDeviceToHost );
-	cudaErrorCheck(__FILE__, __LINE__);
 	
 	chdir("./PreviousRunsFile");
 	   	
@@ -470,12 +475,10 @@ void saveSettings()
   	fwrite(&FrontNode, sizeof(int), 1, settingFile);
   	fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
   	fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
-  	fwrite(&LinksPerNode, sizeof(int), 1, settingFile);
-  	fwrite(&MaxNumberOfperiodicEctopicEvents, sizeof(int), 1, settingFile);
+  	int linksPerNode = MUSCLES_PER_NODE;
+  	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
   	fwrite(Node, sizeof(nodeAtributesStructure), NumberOfNodes, settingFile);
   	fwrite(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, settingFile);
-  	fwrite(ConnectingMuscles, sizeof(int), NumberOfNodes*LinksPerNode, settingFile);
-  	fwrite(EctopicEvents, sizeof(ectopicEventStructure), MaxNumberOfperiodicEctopicEvents, settingFile);
 	fclose(settingFile);
 	
 	//Copying the simulationSetup file into this directory so you will know how it was initally setup.
@@ -619,22 +622,20 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'B')  // Raising the beat period
 	{
-		EctopicEvents[0].period += 10;
-		//EctopicEvents[0].time = EctopicEvents[0].period;
-		cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
+		Node[PulsePointNode].beatPeriod += 10;
+		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
 		cudaErrorCheck(__FILE__, __LINE__);
 		terminalPrint();
 	}
 	if(key == 'b')  // Lowering the beat period
 	{
-		EctopicEvents[0].period -= 10;
-		if(EctopicEvents[0].period < 0) 
+		Node[PulsePointNode].beatPeriod -= 10;
+		if(Node[PulsePointNode].beatPeriod < 0) 
 		{
-			EctopicEvents[0].period = 0;  // You don't want the beat to negative
+			Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
 		}
-		cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
+		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
 		cudaErrorCheck(__FILE__, __LINE__);
-		//EctopicEvents[0].time = EctopicEvents[0].period;
 		terminalPrint();
 	}
 	if(key == 'v') // Orthoganal/Fulstrium view
@@ -979,7 +980,6 @@ void mymouse(int button, int state, int x, int y)
 	float dx, dy, dz;
 	float hit;
 	int muscleId;
-	int event;
 	
 	if(state == GLUT_DOWN)
 	{
@@ -998,41 +998,31 @@ void mymouse(int button, int state, int x, int y)
 				{
 					if(AblateOnOff == 1)
 					{
-						Node[i].ablatedYesNo = 1;
-						Node[i].drawFlag = 1;
+						Node[i].ablated = true;
+						Node[i].drawNode = true;
 						Node[i].color.x = 1.0;
 						Node[i].color.y = 1.0;
 						Node[i].color.z = 1.0;
 					}
 					if(EctopicBeatOnOff == 1)
 					{
-						cudaMemcpy( EctopicEvents, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyDeviceToHost);
+						cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
 						cudaErrorCheck(__FILE__, __LINE__);
 						
 						Pause = 1;
 						
-						event = 1; // 0 is the sinus beat.
-						while(EctopicEvents[event].node != -1 && event < MaxNumberOfperiodicEctopicEvents)
-						{
-							event++;
-						}
-						if(event < MaxNumberOfperiodicEctopicEvents)
-						{
-							setEctopicBeat(i, event);
-						}
-						else
-						{
-							printf("\n You are past the number of ectopic signals you can generate.\n");
-						}
-					
-						cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
+						printf("\n Node number = %d", i);
+						
+						setEctopicBeat(i);
+						
+						cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
 						cudaErrorCheck(__FILE__, __LINE__);
 					}
 					if(AdjustMuscleOnOff == 1)
 					{
-						for(int j = 0; j < LinksPerNode; j++)
+						for(int j = 0; j < MUSCLES_PER_NODE; j++)
 						{
-							muscleId = ConnectingMuscles[i*LinksPerNode + j];
+							muscleId = Node[i].muscle[j];
 							if(muscleId != -1)
 							{
 								Muscle[muscleId].contractionDuration = BaseMuscleContractionDuration*BaseMuscleContractionDurationAdjustmentMultiplier;
@@ -1047,8 +1037,8 @@ void mymouse(int button, int state, int x, int y)
 								if((Muscle[muscleId].contractionDuration + Muscle[muscleId].rechargeDuration) < Muscle[muscleId].conductionDuration)
 								{
 								 	printf("\n Conduction duration is shorter than the (contraction plus recharge) duration in muscle number %d", muscleId);
-								 	printf("\n Muscle %d will be killed \n", muscleId);
-								 	Muscle[muscleId].dead = 1;
+								 	printf("\n Muscle %d will be disabled. \n", muscleId);
+								 	Muscle[muscleId].disabled = true;
 								 	Muscle[muscleId].color.x = DeadColor.x;
 									Muscle[muscleId].color.y = DeadColor.y;
 									Muscle[muscleId].color.z = DeadColor.z;
@@ -1057,50 +1047,27 @@ void mymouse(int button, int state, int x, int y)
 							}
 						}
 						
-						Node[i].drawFlag = 1;
-						if(Node[i].ablatedYesNo != 1) // If it is not ablated color it.
+						Node[i].drawNode = true;
+						if(Node[i].ablated == false) // If it is not ablated color it.
 						{
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
 						}
 					}
-					if(EctopicSingleOnOff == 1)
+					if(EctopicEventOnOff == 1)
 					{
-						//Turning on the muscles associated with node i.
-						if(Node[i].ablatedYesNo != 1) // If the node is ablated just return.
-						{
-							int nodeNumber;
-							int muscleNumber;
-							for(int j = 0; j < LinksPerNode; j++)
-							{
-								if(NumberOfNodes*LinksPerNode <= (i*LinksPerNode + j))
-								{
-									printf("\nTSU Error: number of ConnectingMuscles is out of bounds\n");
-									exit(0);
-								}
-								muscleNumber = ConnectingMuscles[i*LinksPerNode + j];
-								// Making sure there is a connection then making sure you do not turn on the muscle you just left.
-								if((muscleNumber != -1)) 
-								{
-									if(i != Muscle[muscleNumber].apNode)
-									{
-										nodeNumber = Muscle[muscleNumber].nodeA;
-										if(nodeNumber == i) nodeNumber = Muscle[muscleNumber].nodeB;
-										if(Muscle[muscleNumber].onOff == 0)
-										{
-											Muscle[muscleNumber].apNode = i;  //This is the node where the AP wave started.
-											Muscle[muscleNumber].onOff = 1;
-											Muscle[muscleNumber].timer = 0.0;
-										}
-									}
-								}
-							}
-						}
+						cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+						cudaErrorCheck(__FILE__, __LINE__);
+						
+						Node[i].fire = true; // Setting the ith node to fire the next time in the next time step.
+						
+						cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+						cudaErrorCheck(__FILE__, __LINE__);
 					}
 					if(FindNodeOnOff == 1)
 					{
-						Node[i].drawFlag = 1;
+						Node[i].drawNode = true;
 						Node[i].color.x = 1.0;
 						Node[i].color.y = 0.0;
 						Node[i].color.z = 1.0;
@@ -1120,17 +1087,17 @@ void mymouse(int button, int state, int x, int y)
 				{
 					if(AblateOnOff == 1)
 					{
-						Node[i].ablatedYesNo = 0;
-						Node[i].drawFlag = 0;
+						Node[i].ablated = false;
+						Node[i].drawNode = false;
 						Node[i].color.x = 0.0;
 						Node[i].color.y = 1.0;
 						Node[i].color.z = 0.0;
 					}
 					if(AdjustMuscleOnOff == 1)
 					{
-						for(int j = 0; j < LinksPerNode; j++)
+						for(int j = 0; j < MUSCLES_PER_NODE; j++)
 						{
-							muscleId = ConnectingMuscles[i*LinksPerNode + j];
+							muscleId = Node[i].muscle[j];
 							if(muscleId != -1)
 							{
 								Muscle[muscleId].contractionDuration = BaseMuscleContractionDuration;
@@ -1142,15 +1109,15 @@ void mymouse(int button, int state, int x, int y)
 								Muscle[muscleId].color.z = 0.0;
 								Muscle[muscleId].color.w = 0.0;
 								
-								// Turning the muscle back on if it was dead.
-								Muscle[muscleId].dead = 0;
+								// Turning the muscle back on if it was disabled.
+								Muscle[muscleId].disabled = false;
 								
 								// Checking to see if the muscle needs to be killed.
 								if((Muscle[muscleId].contractionDuration + Muscle[muscleId].rechargeDuration) < Muscle[muscleId].conductionDuration)
 								{
 								 	printf("\n Conduction duration is shorter than the (contraction plus recharge) duration in muscle number %d", muscleId);
-								 	printf("\n Muscle %d will be killed \n", muscleId);
-								 	Muscle[muscleId].dead = 1;
+								 	printf("\n Muscle %d will be disabled. \n", muscleId);
+								 	Muscle[muscleId].disabled = true;
 								 	Muscle[muscleId].color.x = DeadColor.x;
 									Muscle[muscleId].color.y = DeadColor.y;
 									Muscle[muscleId].color.z = DeadColor.z;
@@ -1159,8 +1126,8 @@ void mymouse(int button, int state, int x, int y)
 							}
 						}
 						
-						Node[i].drawFlag = 1;
-						if(Node[i].ablatedYesNo != 1) // If it is not ablated color it.
+						Node[i].drawNode = true;
+						if(Node[i].ablated == false) // If it is not ablated color it.
 						{
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 1.0;

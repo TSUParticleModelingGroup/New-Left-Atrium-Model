@@ -5,7 +5,7 @@
  The functions are listed below in the order they appear.
  
  void n_body(float);
- void allocateMemory();
+ void setupCudaInvironment();
  void readSimulationParameters();
  void setup();
  int main(int, char**);
@@ -23,21 +23,19 @@ void n_body(float dt)
 {	
 	if(Pause != 1)
 	{	
+	 	//printf("\n GridNodes = %d %d %d BlockNodes = %d %d %d\n", GridNodes.x, GridNodes.y, GridNodes.z,BlockNodes.x,BlockNodes.y,BlockNodes.z);
 		if(ContractionType != 0)
 		{
-			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, dt, NumberOfNodes, LinksPerNode, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, DiastolicPressureLA, SystolicPressureLA, ContractionType);
+			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, DiastolicPressureLA, SystolicPressureLA, ContractionType);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
-		
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, LinksPerNode, EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents, MuscleGPU, ConnectingMusclesGPU, DragMultiplier, dt, RunTime, ContractionType);
+		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, DragMultiplier, dt, RunTime, ContractionType);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
-		
-		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, ConnectingMusclesGPU, EctopicEventsGPU, NumberOfMuscles, NumberOfNodes, LinksPerNode, MaxNumberOfperiodicEctopicEvents, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor, RelativeRefractoryPeriodFraction);
+		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor, RelativeRefractoryPeriodFraction);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
-		
 		RecenterCount++;
 		if(RecenterCount == RecenterRate) 
 		{
@@ -74,27 +72,8 @@ void n_body(float dt)
 	}
 }
 
-void allocateMemory()
+void setupCudaInvironment()
 {
-	int numberOfMusclesTest;
-	setNodesAndEdgesFromBlenderFile();
-	
-	numberOfMusclesTest = findNumberOfMuscles();
-	if(numberOfMusclesTest != NumberOfMuscles)
-	{
-		printf("\n\nNumber of muscles do not matchup. Something is wrong!\n\n");
-		//printf("%d != %d\n\n", numberOfMusclesTest, NumberOfMuscles);
-		exit(0);
-	}
-	Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-	ConnectingMuscles = (int*)malloc(NumberOfNodes*LinksPerNode*sizeof(int));
-	linkMusclesToNodes();
-	linkNodesToMuscles();
-	
-	printf("\n number of nodes = %d", NumberOfNodes);
-	printf("\n number of muscles = %d", NumberOfMuscles);
-	printf("\n number of links per node = %d", LinksPerNode);
-	
 	BlockNodes.x = BLOCKNODES;
 	BlockNodes.y = 1;
 	BlockNodes.z = 1;
@@ -111,27 +90,14 @@ void allocateMemory()
 	GridMuscles.y = 1;
 	GridMuscles.z = 1;
 	
-	//CPU memory is allocated in setNodesAndMuscles.h
-	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	//CPU memory is allocated setNodesAndMuscles.h
-	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	//CPU memory is allocated setNodesAndMuscles.h
-	cudaMalloc((void**)&ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int));
-	cudaErrorCheck(__FILE__, __LINE__);
-	// Allocating memory for the ectopic events then setting everything to -1 so we can see that they have not been turned on.
-	EctopicEvents = (ectopicEventStructure*)malloc(MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-	cudaMalloc((void**)&EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	for(int i = 0; i < MaxNumberOfperiodicEctopicEvents; i++)
+	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
 	{
-		EctopicEvents[i].node = -1;
-		EctopicEvents[i].period = -1.0;
-		EctopicEvents[i].time = -1.0;
-	}
-	printf("\n Memory has been allocated");
+        	printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
+        	printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
+        	printf("\nFix this number in the header.h file and try again.");
+        	printf("\nGood Bye.\n");
+        	exit(0);
+        }
 }
 
 void readSimulationParameters()
@@ -202,9 +168,6 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> BaseMuscleConductionVelocity;
-		
-		getline(data,name,'=');
-		data >> MaxNumberOfperiodicEctopicEvents;
 		
 		getline(data,name,'=');
 		data >> BeatPeriod;
@@ -278,20 +241,10 @@ void readSimulationParameters()
 		exit(0);
 	}
 	
-	/*
-	if(NodesMusclesFileOrPreviousRunsFile == 0)
-	{
-		printf("\n Object Name = %s", NodesMusclesFileName);
-	}
-	else if(NodesMusclesFileOrPreviousRunsFile == 1)
-	{
-		printf("\n Object Name = %s", PreviousRunFileName);
-	}
-	*/
-	
 	RecenterRate = 10; 
 	
 	data.close();
+	
 	// Adjusting blood presure from millimeters of Mercury to our units.
 	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
 	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
@@ -302,9 +255,13 @@ void readSimulationParameters()
 void setup()
 {	
 	readSimulationParameters();
+	
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
-		allocateMemory();
+		setNodesFromBlenderFile();
+		checkNodes();
+		setMusclesFromBlenderFile();
+		linkNodesToMuscles();
 		setMuscleAttributesAndNodeMasses();
 		setIndividualMuscleAttributes();
 		hardCodedAblations();
@@ -319,7 +276,6 @@ void setup()
 		strcat(fileName,"./PreviousRunsFile/");
 		strcat(fileName,PreviousRunFileName);
 		strcat(fileName,"/run");
-		//printf("\n fileName = %s\n", fileName);
 
 		inFile = fopen(fileName,"rb");
 		if(inFile == NULL)
@@ -339,56 +295,27 @@ void setup()
 		printf("\n NumberOfNodes = %d", NumberOfNodes);
 		fread(&NumberOfMuscles, sizeof(int), 1, inFile);
 		printf("\n NumberOfMuscles = %d", NumberOfMuscles);
-		fread(&LinksPerNode, sizeof(int), 1, inFile);
-		printf("\n LinksPerNode = %d", LinksPerNode);
-		fread(&MaxNumberOfperiodicEctopicEvents, sizeof(int), 1, inFile);
-		printf("\n MaxNumberOfperiodicEctopicEvents = %d", MaxNumberOfperiodicEctopicEvents);
-		
+		int linksPerNode;
+		fread(&linksPerNode, sizeof(int), 1, inFile);
+		printf("\n linksPerNode = %d", linksPerNode);
+		if(linksPerNode != MUSCLES_PER_NODE)
+		{
+			printf("\n The number Of muscle per node do not match");
+			printf("\n You will have to set the #define MUSCLES_PER_NODE");
+			printf("\n to %d in header.h then recompile the code", linksPerNode);
+			printf("\n Good Bye\n");
+			exit(0);
+		}
 		Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
-		Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-		ConnectingMuscles = (int*)malloc(NumberOfNodes*LinksPerNode*sizeof(int));
-		EctopicEvents = (ectopicEventStructure*)malloc(MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-		
-		cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-		cudaErrorCheck(__FILE__, __LINE__);
 		cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
 		cudaErrorCheck(__FILE__, __LINE__);
-		cudaMalloc((void**)&ConnectingMusclesGPU, NumberOfNodes*LinksPerNode*sizeof(int));
+		Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
+		cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
 		cudaErrorCheck(__FILE__, __LINE__);
-		cudaMalloc((void**)&EctopicEventsGPU, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure));
-		cudaErrorCheck(__FILE__, __LINE__);
-	
-		for(int i = 0; i < MaxNumberOfperiodicEctopicEvents; i++)
-		{
-			EctopicEvents[i].node = -1;
-			EctopicEvents[i].period = -1.0;
-			EctopicEvents[i].time = -1.0;
-		}
-		printf("\n Memory has been allocated");
-	
-		
 		fread(Node, sizeof(nodeAtributesStructure), NumberOfNodes, inFile);
 	  	fread(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, inFile);
-	  	fread(ConnectingMuscles, sizeof(int), NumberOfNodes*LinksPerNode, inFile);
-	  	fread(EctopicEvents, sizeof(ectopicEventStructure), MaxNumberOfperiodicEctopicEvents, inFile);
 		fclose(inFile);
 		printf("\n Nodes and Muscles have been read in.");
-		
-		BlockNodes.x = BLOCKNODES;
-		BlockNodes.y = 1;
-		BlockNodes.z = 1;
-		
-		GridNodes.x = (NumberOfNodes - 1)/BlockNodes.x + 1;
-		GridNodes.y = 1;
-		GridNodes.z = 1;
-		
-		BlockMuscles.x = BLOCKMUSCLES;
-		BlockMuscles.y = 1;
-		BlockMuscles.z = 1;
-		
-		GridMuscles.x = (NumberOfMuscles - 1)/BlockMuscles.x + 1;
-		GridMuscles.y = 1;
-		GridMuscles.z = 1;
 	}
 	else
 	{
@@ -396,6 +323,8 @@ void setup()
 		printf("\n Good Bye.");
 		exit(0);
 	}
+	
+	setupCudaInvironment();
 	
 	AngleOfSimulation.x = 0.0;
 	AngleOfSimulation.y = 1.0;
@@ -417,7 +346,7 @@ void setup()
 	EctopicBeatOnOff = 0;
 	AdjustMuscleOnOff = 0;
 	FindNodeOnOff = 0;
-	EctopicSingleOnOff = 0;
+	EctopicEventOnOff = 0;
 	MouseFunctionOnOff = 0;
 	ViewFlag = 1;
 	MovieFlag = 0;
@@ -430,27 +359,10 @@ void setup()
 	centerObject();
 	setView(2);
 	
-	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice );
+	cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice);
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+	cudaMemcpy(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice);
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( ConnectingMusclesGPU, ConnectingMuscles, NumberOfNodes*LinksPerNode*sizeof(int), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( EctopicEventsGPU, EctopicEvents, MaxNumberOfperiodicEctopicEvents*sizeof(ectopicEventStructure), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	//printf("\n\n The Particle Modeling Group hopes you enjoy your interactive simulation.");
-	//printf("\n The simulation is paused type r to start the simulation and h for a help menu.");
-	//printf("\n");
-	
-	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
-	{
-        	printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
-        	printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
-        	printf("\nFix this number in the header.h file and try again.");
-        	printf("\nGood Bye.\n");
-        	exit(0);
-        }
         
 	printf("\n");
 	terminalPrint();

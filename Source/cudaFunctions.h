@@ -2,10 +2,10 @@
  This file contains all the CUDA and CUDA related function. 
  They are listed below in the order they appear.
  
- __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int);
- __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, int *, float dt, int, int, float4, float, float, float, float, int);
- __global__ void updateNodes(nodeAtributesStructure *, int, int, ectopicEventStructure *, int, muscleAtributesStructure *, int *, float, float, double, int);
- __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
+ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
+ __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float dt, int, float4, float, float, float, float, int);
+ __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
+ __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
  __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
  void errorCheck(const char *);
  void cudaErrorCheck(const char *, int);
@@ -16,45 +16,29 @@
 
 /*
  This CUDA function tries to turn on every muscle that is connected to a node.
- First it checks to see if this is a beat node. 
- ??? I'm not sure what to do withit if it is ???? I think we might should just return.
- Next it goes through all the muscle connected to that node, checks to see if it really 
- is a muscle, if it is it sees if it is off if it is it turns it on. There is no need to 
- see if a muscle is dead here because if it is dead turning it on will do nothing, so
- checking would just be a wasted check in the if statement.
+ It loops through all the muscle connected to the node with index = nodeToTurnOn.
+ 1: Checks to see if it really is a muscle (muscle number not equal to -1).
+    and Checks to see if the muscle is on or off. If it is off it is ready to turn on. 
+    There is no need to see if a muscle is dead here because if it is dead turning it on will do nothing.
+    Then it: 
+ 	a. Sets which node turned it on so it can send the conduction signal in the proper direction. 
+ 	b. Sets the muscle to on.
+ 	c. Sets the muscle's timer to 0.0.
 */
-__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int linksPerNode, muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, ectopicEventStructure *ectopicEvent, int maxNumberOfperiodicEctopicEvents)
+__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, nodeAtributesStructure *node)
 {
-	// Make sure that the AP duration is shorter than the contration+recharge duration or a muscle will turn itself on.
 	int muscleNumber;
-	if(node[nodeToTurnOn].ablatedYesNo != 1) // If the node is ablated just return.
+	
+	for(int j = 0; j < musclesPerNode; j++) // Looping through all muscle connected to this node.
 	{
-		for(int j = 0; j < maxNumberOfperiodicEctopicEvents; j++)
-		{
-			// Should we do this or just return. FInd out !!!!!!!!!! ????????????
-			if(nodeToTurnOn == ectopicEvent[j].node)
-			{
-				ectopicEvent[j].time = 0.0; 
-			}
-		}
+		muscleNumber = node[nodeToTurnOn].muscle[j];
 		
-		for(int j = 0; j < linksPerNode; j++) // Looping through all muscle connected to this node.
+		// 1: Is this a legit muscle and is it ready to turn on.
+		if((muscleNumber != -1) && (muscle[muscleNumber].on == false))
 		{
-			if(numberOfNodes*linksPerNode <= (nodeToTurnOn*linksPerNode + j))
-			{
-				printf("\nTSU Error: number of ConnectingMuscles is out of bounds in turnOnNodeMusclesGPU\n");
-			}
-			muscleNumber = connectingMuscles[nodeToTurnOn*linksPerNode + j];
-			
-			if((muscleNumber != -1)) // Is this really a muscle. If it is -1 it is not.
-			{
-				if(muscle[muscleNumber].onOff == 0) // If muscle is off turn it on.
-				{
-					muscle[muscleNumber].apNode = nodeToTurnOn;  //This is the node where the AP wave will now start moving away from.
-					muscle[muscleNumber].onOff = 1; // Set to on.
-					muscle[muscleNumber].timer = 0.0; // Set timer.
-				}
-			}
+			muscle[muscleNumber].apNode = nodeToTurnOn;  //1 This is the node where the AP wave will now start moving away from.
+			muscle[muscleNumber].on = true; // Set to on.
+			muscle[muscleNumber].timer = 0.0; // Set timer.
 		}
 	}
 }
@@ -141,12 +125,23 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int li
  	function to acheive this.
  
 */
-__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, float dt, int numberOfNodes, int linksPerNode, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfAtria, float diastolicPressureLA, float systolicPressureLA, int contractionType)
+__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, float dt, int numberOfNodes, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfAtria, float diastolicPressureLA, float systolicPressureLA, int contractionType)
 {
 	float dx, dy, dz, d;
-	int muscleNumber, nodeNumber;
-	float x1,x2,y1,y2,m, transitionLength;
+	int muscleNumber;
+	int opposingNodeNumber;
+	float x1,x2,y1,y2,m;
 	float force;
+	float timer;
+	float contractionDuration;
+	float rechargeDuration;
+	float totalDuration;
+	float contractionStrength;
+	float relaxedStrength;
+	float naturalLength;
+	float compresionStopFraction;
+	float contractedLength;
+	float transitionLength;
 	
 	int i = threadIdx.x + blockDim.x*blockIdx.x; // This is the node number we will be working on.
 	
@@ -177,41 +172,47 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 			printf("\n TSU Error: Node %d has gotten really close to the center of the LA. Take a look at this!\n", i);
 		}
 		
-		for(int j = 0; j < linksPerNode; j++) // Going through every muscle that is connected to the ith node.
+		for(int j = 0; j < MUSCLES_PER_NODE; j++) // Going through every muscle that is connected to the ith node.
 		{
-			muscleNumber = connectingMuscles[i*linksPerNode + j];
-			if(muscleNumber != -1) // Checking to see if this is a valid muscle.
+			muscleNumber = node[i].muscle[j];
+			// Checking to see if this is a valid muscle.
+			if(muscleNumber != -1) 
 			{
-				float contractionDuration = muscle[muscleNumber].contractionDuration;
-				float rechargeDuration = muscle[muscleNumber].rechargeDuration;
-				float totalDuration = contractionDuration + rechargeDuration;
-				float timer = muscle[muscleNumber].timer;
-				float contractionStrength = muscle[muscleNumber].contractionStrength;
-				float relaxedStrength = muscle[muscleNumber].relaxedStrength;
-				float naturalLength = muscle[muscleNumber].naturalLength;
-				float compresionStopFraction = muscle[muscleNumber].compresionStopFraction;
+				timer = muscle[muscleNumber].timer;
+				contractionDuration = muscle[muscleNumber].contractionDuration;
+				rechargeDuration = muscle[muscleNumber].rechargeDuration;
+				totalDuration = contractionDuration + rechargeDuration;
+				
+				contractionStrength = muscle[muscleNumber].contractionStrength;
+				relaxedStrength = muscle[muscleNumber].relaxedStrength;
+				
+				naturalLength = muscle[muscleNumber].naturalLength;
+				compresionStopFraction = muscle[muscleNumber].compresionStopFraction;
+				contractedLength = naturalLength*compresionStopFraction;
+				transitionLength = 0.1*(naturalLength - contractedLength);
 				
 				// Every muscle is connected to two nodes A and B. We know it is connected to the 
 				// ith node. Now we need to find the node at the other end of the muscle.
-				nodeNumber = muscle[muscleNumber].nodeA;
+				opposingNodeNumber = muscle[muscleNumber].nodeA;
 				// If the node number is yourself you must have the wrong end.
-				if(nodeNumber == i) nodeNumber = muscle[muscleNumber].nodeB; 
+				if(opposingNodeNumber == i) opposingNodeNumber = muscle[muscleNumber].nodeB; 
 			
-				dx = node[nodeNumber].position.x - node[i].position.x;
-				dy = node[nodeNumber].position.y - node[i].position.y;
-				dz = node[nodeNumber].position.z - node[i].position.z;
+				dx = node[opposingNodeNumber].position.x - node[i].position.x;
+				dy = node[opposingNodeNumber].position.y - node[i].position.y;
+				dz = node[opposingNodeNumber].position.z - node[i].position.z;
 				d  = sqrt(dx*dx + dy*dy + dz*dz);
 				if(d < 0.0001) // Grabbing numeric overflow before it happens.
 				{
-					printf("\n TSU Error: In generalMuscleForces d is very small between nodeNumbers %d and %d the seperation is %f. Take a look at this!\n", i, nodeNumber, d);
+					printf("\n TSU Error: In generalMuscleForces d is very small between opposingNodeNumbers %d and %d the seperation is %f. Take a look at this!\n", i, opposingNodeNumber, d);
 				}
 				
-				transitionLength = 0.1*(1.0 - compresionStopFraction)*naturalLength;
-				// The following (2-5) force functions are always on.
-				if(d < (compresionStopFraction*naturalLength + transitionLength))
+				// The following (2-5) force functions are always on
+				// even if the muscle is disable. This just keeps the muscle 
+				// at it natural length.
+				if(d < (contractedLength + transitionLength))
 				{
-					// 2. Muscle is too short force
-					x1 = compresionStopFraction*naturalLength;
+					// 2. Muscle is getting too short force
+					x1 = contractedLength;
 					x2 = x1 + transitionLength;
 					y1 = -contractionStrength;
 					y2 = -relaxedStrength;
@@ -235,12 +236,14 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 					m = contractionStrength/transitionLength;
 					force = m*(d - naturalLength - transitionLength) + contractionStrength;
 				}
+				
 				node[i].force.x  += force*dx/d;
 				node[i].force.y  += force*dy/d;
 				node[i].force.z  += force*dz/d;
 			
 				// One of these functions will be turned on if the muscle is contracting.
-				if(muscle[muscleNumber].onOff == 1 && muscle[muscleNumber].dead != 1)
+				// But first we check to see if the muscle is on and have not been disabled.
+				if(muscle[muscleNumber].on == true && muscle[muscleNumber].disabled == false)
 				{
 					// 6. Constant contraction force.
 					if(contractionType == 1)
@@ -272,7 +275,6 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 							node[i].force.y += force*dy/d;
 							node[i].force.z += force*dz/d;
 						}
-						
 					}
 					
 					// 8. sinusoidal contraction force
@@ -322,13 +324,12 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
  parts of the body which keep it in space. For our purposes we just needed it to remain in place a little better 
  so we added a multiplier so the user can adjust it in the simulation setup file.
 */
-__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int linksPerNode, ectopicEventStructure *ectopicEvent, int maxNumberOfperiodicEctopicEvents, muscleAtributesStructure *muscle, int *connectingMuscles, float dragMultiplier, float dt, double time, int contractionType)
+__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float dragMultiplier, float dt, double time, int contractionType)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(i < numberOfNodes)
 	{
-	
 		if(contractionType != 0)
 		{
 			// Calculating the drag.
@@ -354,21 +355,28 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 			node[i].position.z += node[i].velocity.z*dt;
 		}
 		
-		// Sending out a signal if the node is an beat node and the time is right.
-		int j = 0;
-		while(ectopicEvent[j].node != -1 && j < maxNumberOfperiodicEctopicEvents) // If it is -1 it is not set and no others after this will be set.
+		if(node[i].ablated == false) // If node is not ablated do some work on it.
 		{
-			if(i == ectopicEvent[j].node)
+		
+			if(node[i].beatNode == true)
 			{
-				ectopicEvent[j].time += dt;
-				if(ectopicEvent[j].period < ectopicEvent[j].time)
+				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period set it to fire and reset it internal clock.
+				{	
+					node[i].fire = true;		
+					node[i].beatTimer = 0.0; 
+				}
+				else
 				{
-					turnOnNodeMusclesGPU(i, numberOfNodes, linksPerNode, muscle, node, connectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);				
-					ectopicEvent[j].time = 0.0;
-					break;
+					node[i].beatTimer += dt;
 				}
 			}
-			j++;
+			
+			// Turning on the muscle to any node that is ready to fire. Then setting fire to false so it will not fire again until it is ready.
+			if(node[i].fire == true)
+			{
+				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, muscle, node);
+				node[i].fire = false;
+			}
 		}
 	}	
 }
@@ -379,13 +387,14 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
  It a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmition direction set to undetermined by setting apNode to -1.
 */
-__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int *connectingMuscles, ectopicEventStructure *ectopicEvent, int numberOfMuscles, int numberOfNodes, int linksPerNode, int maxNumberOfperiodicEctopicEvents, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor, float relativeRefractoryPeriodFraction)
+__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor, float relativeRefractoryPeriodFraction)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
+	int nodeId;
 	
 	if(i < numberOfMuscles)
 	{
-		if(muscle[i].onOff == 1 && muscle[i].dead != 1)
+		if(muscle[i].on == true && muscle[i].disabled == false)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
 			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not rest here
@@ -395,14 +404,25 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 				// Making the AP wave move forward through the muscle.
 				if(muscle[i].apNode == muscle[i].nodeA)
 				{
-					turnOnNodeMusclesGPU(muscle[i].nodeB, numberOfNodes, linksPerNode, muscle, node, connectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
+					nodeId = muscle[i].nodeB;
 				}
 				else
 				{
-					turnOnNodeMusclesGPU(muscle[i].nodeA, numberOfNodes, linksPerNode, muscle, node, connectingMuscles, ectopicEvent, maxNumberOfperiodicEctopicEvents);
+					nodeId = muscle[i].nodeA;
+				}
+				
+				if(node[nodeId].beatNode == false)
+				{
+					node[nodeId].fire = true;
+				}
+				else
+				{
+					// If you want to do something with a beat node when it is hit by a signal, 
+					// like reset its internal clock, do it here.
+					// Currently we are simply ignoring the signal.
 				}
 			}
-			
+		
 			float refractoryPeriod = muscle[i].contractionDuration + muscle[i].rechargeDuration;
 			float relativeRefractoryPeriod = refractoryPeriod*relativeRefractoryPeriodFraction;
 			float absoluteRefractoryPeriod = refractoryPeriod - relativeRefractoryPeriod;
@@ -425,6 +445,7 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 			}
 			else if(muscle[i].timer < refractoryPeriod)
 			{ 
+				// If you want to do something different in the relative refractory period do it here.
 				// Set color and update time.
 				muscle[i].color.x = relativeColor.x;
 				muscle[i].color.y = relativeColor.y;
@@ -433,16 +454,17 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 			}
 			else
 			{
-				// There is no time update here just setting the color and turning the muscle off.
+				// Set color and turning the muscle off, reset timer, and apNode to unknown.
 				muscle[i].color.x = readyColor.x;
 				muscle[i].color.y = readyColor.y;
 				muscle[i].color.z = readyColor.z;
 				muscle[i].color.w = 1.0;
 				
-				muscle[i].onOff = 0;
+				muscle[i].on = false;
 				muscle[i].timer = 0.0;
 				muscle[i].apNode = -1;
-			}	
+			}
+				
 		}
 	}	
 }

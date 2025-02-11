@@ -41,9 +41,9 @@ void hardCodedAblations()
 void hardCodedPeriodicEctopicEvents()
 {	
 	// This is the sinus beat.
-	EctopicEvents[0].node = PulsePointNode;
-	EctopicEvents[0].period = BeatPeriod;
-	EctopicEvents[0].time = BeatPeriod;
+	Node[PulsePointNode].beatNode = true;
+	Node[PulsePointNode].beatPeriod = BeatPeriod;
+	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
 	
 	// To set a recurrent ectopic event set your index(node) and event(which ectopic event) and uncomment the following lines.
 	// Note event must be less than the MaxNumberOfperiodicEctopicEvents and don't use event = 0, that is reserved for the sinus beat.
@@ -63,7 +63,7 @@ void hardCodedPeriodicEctopicEvents()
 	*/
 	
 	// If you want to setup a random set of ectopic beats remove the ???s and uncomment these lines.
-	
+	/*
 	int id;
 	int numberOfRandomEctopicBeats = 0; // Must be less than the MaxNumberOfperiodicEctopicEvents.
 	float beatPeriodUpperBound = 1000;
@@ -92,6 +92,7 @@ void hardCodedPeriodicEctopicEvents()
 		EctopicEvents[i].time = ((float)rand()/(float)RAND_MAX)*EctopicEvents[i].period;
 		printf("\nectopic event %d node = %d period = %f, time = %f\n", i, EctopicEvents[i].node, EctopicEvents[i].period, EctopicEvents[i].time);
 	}
+	*/
 
 }
 
@@ -138,8 +139,8 @@ void setIndividualMuscleAttributes()
 		if((Muscle[i].contractionDuration + Muscle[i].rechargeDuration) < Muscle[i].contractionDuration)
 		{
 		 	printf("\n Conduction duration is shorter than the (contraction plus recharge) duration in muscle number %d", i);
-		 	printf("\nThis muscle will be killed. \n");
-		 	Muscle[i].dead = 1;
+		 	printf("\nThis muscle will be disabled. \n");
+		 	Muscle[i].disabled = true;
 		 	Muscle[i].color.x = DeadColor.x;
 			Muscle[i].color.y = DeadColor.y;
 			Muscle[i].color.z = DeadColor.z;

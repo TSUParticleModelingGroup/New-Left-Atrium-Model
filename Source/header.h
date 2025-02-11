@@ -20,13 +20,15 @@ using namespace std;
 #define BLOCKMUSCLES 256
 #define BLOCKCENTEROFMASS 512
 
-
-// defines for terminal stuff.
+// defines for terminal print
 #define BOLD_ON  "\e[1m"
 #define BOLD_OFF   "\e[m"
 
 // Math defines.
 #define PI 3.141592654
+
+// Structure defines.
+#define MUSCLES_PER_NODE 20
 
 // Globals Start ******************************************
 
@@ -56,12 +58,14 @@ int FrontNode;
 
 int AblateOnOff;
 int EctopicBeatOnOff;
+int EctopicEventOnOff;
 int AdjustMuscleOnOff;
 int FindNodeOnOff;
-int EctopicSingleOnOff;
 int MouseFunctionOnOff;
 int ViewFlag; // 0 orthoganal, 1 fulstum
 int MovieFlag; // 0 movie off, 1 movie on
+
+
 float HitMultiplier;
 int ScrollSpeedToggle;
 float ScrollSpeed;
@@ -89,8 +93,6 @@ float RadiusOfAtria;
 
 int NumberOfNodes;
 int NumberOfMuscles;
-int LinksPerNode;
-int MaxNumberOfperiodicEctopicEvents;
 
 int ContractionType;
 float BaseMuscleRelaxedStrengthFraction;
@@ -124,8 +126,8 @@ struct muscleAtributesStructure
 	int nodeA;
 	int nodeB;    
 	int apNode;
-	int onOff;
-	int dead;
+	bool on;
+	bool disabled;
 	float timer;
 	float mass;
 	float naturalLength;
@@ -149,31 +151,23 @@ struct nodeAtributesStructure
 	float4 force;
 	float mass;
 	float area;
-	int ablatedYesNo;
-	int drawFlag;
+	bool beatNode;
+	float beatPeriod;
+	float beatTimer;
+	bool fire;
+	bool ablated;
+	bool drawNode;
 	float4 color;
+	int muscle[MUSCLES_PER_NODE];
 };
 
 nodeAtributesStructure *Node;
 nodeAtributesStructure *NodeGPU;
 
-struct ectopicEventStructure
-{
-	int node;
-	float period;
-	float time;
-};
-
-ectopicEventStructure *EctopicEvents;
-ectopicEventStructure *EctopicEventsGPU;
-
+// FFFFFFFFFFFFFFFFFFFFFFFF remove this.
 // This is a list of all the nodes a node is connected to. It is biuld in the initial structure and used to setup the nodes and the muscles
 // then it is not used anymore.
-int *ConnectingNodes;  
-
-// This is a list of the muscles that each node is connected to.
-int *ConnectingMuscles;
-int *ConnectingMusclesGPU;
+//int *ConnectingNodes;  
 
 // This will hold the center of mass on the GPU so the center of mass can be adjusted on the GPU. 
 // This will keep us from having to copy the nodes down and up to do this on the CPU.
@@ -212,20 +206,20 @@ void setup();
 int main(int, char**);
 
 // Functions in the CUDAFunctions.h file.
-__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int);
-__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, int *, float dt, int, int, float4, float, float, float, float, int);
-__global__ void updateNodes(nodeAtributesStructure *, int, int, ectopicEventStructure *, int, muscleAtributesStructure *, int *, float, float, double, int);
-__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int *, ectopicEventStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
+__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
+__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float dt, int, float4, float, float, float, float, int);
+__global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
+__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4, float);
 __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
+
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
 
 // Functions in the setNodesAndMuscles.h file.
-void setNodesAndEdgesFromBlenderFile();
+void setNodesFromBlenderFile();
 void checkNodes();
-int findNumberOfMuscles();
-void linkMusclesToNodes();
+void setMusclesFromBlenderFile();
 void linkNodesToMuscles();
 double getLogNormal();
 void setMuscleAttributesAndNodeMasses();
@@ -261,7 +255,7 @@ int setMouseMuscleAttributes();
 void setMouseMuscleContractionDuration();
 void setMouseMuscleRechargeDuration();
 void setMouseMuscleContractionVelocity();
-void setEctopicBeat(int nodeId, int event);
+void setEctopicBeat(int);
 void clearStdin();
 void getEctopicBeatPeriod(int);
 void getEctopicBeatOffset(int);

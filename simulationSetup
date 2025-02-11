@@ -116,9 +116,6 @@ This will scaled by the muscle length to get the time it takes to cross a muscle
 We think this should be around 0.5 millimeters/milliseconds. (float) (0.00125 for micro)
 BaseMuscleConductionVelocity = 0.5;
 
-The number of ectopic periodic events allowed. The first ectopic period will be the sinus beat.
-MaxNumberOfperiodicEctopicEvents = 50;
-
 The length of time between heart beats. 
 A 1000 milliseconds is 60 beats per minute. (float)
 BeatPeriod = 600.0;

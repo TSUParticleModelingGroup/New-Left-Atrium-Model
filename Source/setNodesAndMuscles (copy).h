@@ -3,19 +3,21 @@
  sets up the node and muscle atributes, and asigns them there values in our units.
  The functions are listed below in the order they appear.
  
- void setNodesFromBlenderFile();
+ void setNodesAndEdgesFromBlenderFile();
  void checkNodes();
- void setMusclesFromBlenderFile();
+ int findNumberOfMuscles();
+ void linkMusclesToNodes();
  void linkNodesToMuscles();
  double getLogNormal();
  void setMuscleAttributesAndNodeMasses();
 */
 
-void setNodesFromBlenderFile()
+void setNodesAndEdgesFromBlenderFile()
 {	
 	FILE *inFile;
+
 	float x, y, z;
-	int id;
+	int id, idNode1, idNode2;
 	char fileName[256];
 	
 	// Generating the name of the file that holds the nodes.
@@ -43,26 +45,26 @@ void setNodesFromBlenderFile()
 	fscanf(inFile, "%d", &FrontNode);
 	printf("\n FrontNode = %d", FrontNode);
 	
-	// Allocating memory for the CPU and GPU nodes. 
+	// Allocating memory for the CPU nodes and connections. 
+	// Connections will be used in the functions of this file to setup the nodes and muscles then not used agian.
 	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
-	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
+	ConnectingNodes = (int*)malloc(NumberOfNodes*MUSCLES_PER_NODE*sizeof(int));
 	
 	// Setting all nodes to zero or their default settings; 
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		Node[i].position.x = 0.0;
-		Node[i].position.y = 0.0;
-		Node[i].position.z = 0.0;
-		Node[i].position.w = 0.0;
+		Node[id].position.x = 0.0;
+		Node[id].position.y = 0.0;
+		Node[id].position.z = 0.0;
+		Node[id].position.w = 0.0;
 		
-		Node[i].velocity.x = 0.0;
 		Node[i].velocity.y = 0.0;
+		Node[i].velocity.x = 0.0;
 		Node[i].velocity.z = 0.0;
 		Node[i].velocity.w = 0.0;
 		
-		Node[i].force.x = 0.0;
 		Node[i].force.y = 0.0;
+		Node[i].force.x = 0.0;
 		Node[i].force.z = 0.0;
 		Node[i].force.w = 0.0;
 		
@@ -77,8 +79,8 @@ void setNodesFromBlenderFile()
 		Node[i].drawNode = false; // This flag will allow you to draw certain nodes even when the draw nodes flag is set to off. Set it to off to start with.
 		
 		// Setting all node colors to not ablated (green)
-		Node[i].color.x = 0.0;
-		Node[i].color.y = 1.0;
+		Node[i].color.y = 0.0;
+		Node[i].color.x = 1.0;
 		Node[i].color.z = 0.0;
 		Node[i].color.w = 0.0;
 		
@@ -97,9 +99,80 @@ void setNodesFromBlenderFile()
 		Node[id].position.y = y;
 		Node[id].position.z = z;
 	}
+
+	fclose(inFile);
+    
+	// Setting the nodes to -1 so you can tell the nodes that where not used.
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
+		{
+			ConnectingNodes[i*MUSCLES_PER_NODE + j] = -1;
+		}	
+	}
+	
+	// Generating the name of the file that holds the muscles.
+	strcpy(fileName, "");
+	strcat(fileName, directory);
+	strcat(fileName, NodesMusclesFileName);
+	strcat(fileName, "/Muscles");
+	
+	// Opening the muscle file.
+	inFile = fopen(fileName,"rb");
+	if (inFile == NULL)
+	{
+		printf("\n Can't open Muscles file.\n");
+		exit(0);
+	}
+	
+	int used, linkId;
+	fscanf(inFile, "%d", &NumberOfMuscles);
+	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		fscanf(inFile, "%d", &id);
+		fscanf(inFile, "%d", &idNode1);
+		fscanf(inFile, "%d", &idNode2);
+		
+		used = 0;
+		linkId = 0;
+		while(used != 1 && linkId < MUSCLES_PER_NODE)
+		{
+			if(ConnectingNodes[idNode1*MUSCLES_PER_NODE + linkId] == -1) 
+			{
+				ConnectingNodes[idNode1*MUSCLES_PER_NODE + linkId] = idNode2;
+				used = 1;
+			}
+			else
+			{
+				linkId++;
+			}
+		}
+		
+		used = 0;
+		linkId = 0;
+		while(used != 1 && linkId < MUSCLES_PER_NODE)
+		{
+			if(ConnectingNodes[idNode2*MUSCLES_PER_NODE + linkId] == -1) 
+			{
+				ConnectingNodes[idNode2*MUSCLES_PER_NODE + linkId] = idNode1;
+				used = 1;
+			}
+			else
+			{
+				linkId++;
+			}
+		}
+	}
 	
 	fclose(inFile);
-	printf("\n Blender generated nodes have been created.");
+	
+	strcpy(fileName, "");
+	strcat(fileName,NodesMusclesFileName);
+	strcat(fileName,"/Nodes");
+	checkNodes();
+	
+	printf("\n Blender generated nodes and links have been created.");
 }
 
 /* This functions checks to see if two nodes are too close relative to all the other nodes 
@@ -111,6 +184,7 @@ void setNodesFromBlenderFile()
       average minimal distance. If it is, the nodes are printed out with thier seperation and a flag is set.
       Adjust the cutoffDivider for tighter and looser tollerances.
    3: If the flag was set the simulation is terminated so the user can correct the node file that contains the faulty nodes.
+   
 */
 void checkNodes()
 {
@@ -175,111 +249,116 @@ void checkNodes()
 	printf("\n Nodes have been checked for minimal separation.");
 }
 
-void setMusclesFromBlenderFile()
-{	
-	FILE *inFile;
-	int id, idNode1, idNode2;
-	char fileName[256];
-    
-	// Generating the name of the file that holds the muscles.
-	char directory[] = "./NodesMuscles/";
-	strcpy(fileName, "");
-	strcat(fileName, directory);
-	strcat(fileName, NodesMusclesFileName);
-	strcat(fileName, "/Muscles");
+int findNumberOfMuscles()
+{
+	int count = 0;
 	
-	// Opening the muscle file.
-	inFile = fopen(fileName,"rb");
-	if (inFile == NULL)
-	{
-		printf("\n Can't open Muscles file.\n");
-		exit(0);
-	}
-	
-	fscanf(inFile, "%d", &NumberOfMuscles);
-	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
-	
-	// Allocating memory for the CPU and GPU muscles. 
-	Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	// Setting all muscles to their default settings; 
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		Muscle[i].nodeA = -1;
-		Muscle[i].nodeB = -1;
-		Muscle[i].apNode = -1;
-		Muscle[i].on = false;
-		Muscle[i].disabled = false;
-		Muscle[i].timer = -1.0;
-		Muscle[i].mass = -1.0;
-		Muscle[i].naturalLength = -1.0;
-		Muscle[i].relaxedStrength = -1.0;
-		Muscle[i].compresionStopFraction = -1.0;
-		Muscle[i].conductionVelocity = -1.0;
-		Muscle[i].conductionDuration = -1.0;
-		Muscle[i].contractionDuration = -1.0;
-		Muscle[i].contractionStrength = -1.0;
-		Muscle[i].rechargeDuration = -1.0;
-		
-		// Setting all muscle colors to ready (red)
-		Muscle[i].color.x = 1.0;
-		Muscle[i].color.y = 0.0;
-		Muscle[i].color.z = 0.0;
-		Muscle[i].color.w = 0.0;
-	}
-	
-	// Reading in from the blender file what two nodes the muscle connect.
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		fscanf(inFile, "%d", &id);
-		fscanf(inFile, "%d", &idNode1);
-		fscanf(inFile, "%d", &idNode2);
-		
-		if(NumberOfMuscles <= id)
-		{
-			printf("\n You are trying to create a muscle that is out of bounds.\n");
-			exit(0);
-		}
-		if(NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
-		{
-			printf("\n You are trying to conect to a node that is out of bounds.\n");
-			exit(0);
-		}
-		Muscle[id].nodeA = idNode1;
-		Muscle[id].nodeB = idNode2;
-	}
-	
-	fclose(inFile);
-	printf("\n Blender generated muscles have been created.");
-}
-
-// This code connects the muscles to the nodes.
-void linkNodesToMuscles()
-{	
-	int k;
-	// Each node will have a list of muscles they are attached to.
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		k = 0;
-		for(int j = 0; j < NumberOfMuscles; j++)
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
 		{
-			if(Muscle[j].nodeA == i || Muscle[j].nodeB == i)
+			if(ConnectingNodes[i*MUSCLES_PER_NODE + j] != -1 && ConnectingNodes[i*MUSCLES_PER_NODE + j] > i)
 			{
-				if(MUSCLES_PER_NODE < k)
-				{
-					printf("\n Number of muscles connected to node %d larger than the allowed number of", i);
-					printf("\n connected to a single node.");
-					printf("\n If this is not a mistake increase MUSCLES_PER_NODE in the hearer.h file.");
-					exit(0);
-				}
-				Node[i].muscle[k] = j;
-				//printf("\n node id = %d, node muscle id = %d , muscle id = %d", i, k, j);
-				k++;
+				count++;
 			}
 		}
 	}
+	
+	return(count);
+}
+
+// This code numbers the muscles and connects each end of a muscle to a node.
+void linkMusclesToNodes()
+{
+	int nodeNumberToLinkTo;
+	//Setting the ends of the muscles to nodes
+	int index = 0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
+		{
+			if(NumberOfNodes*MUSCLES_PER_NODE <= (i*MUSCLES_PER_NODE + j))
+			{
+				printf("\n TSU Error: number of ConnectingNodes is out of bounds\n");
+				exit(0);
+			}
+			
+			nodeNumberToLinkTo = ConnectingNodes[i*MUSCLES_PER_NODE + j];
+			
+			if(nodeNumberToLinkTo != -1)
+			{
+				if(i < nodeNumberToLinkTo)
+				{
+					if(NumberOfMuscles <= index)
+					{
+						printf("\n TSU Error: number of muscles is out of bounds index = %d\n", index);
+						exit(0);
+					} 
+					Muscle[index].nodeA = i;
+					Muscle[index].nodeB = nodeNumberToLinkTo;
+					index++;
+				}
+			}
+		}
+	}
+	
+	// Uncomment this to check to see if the muscles are created correctly.
+	/*
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		printf("\n Muscle[%d].nodeA = %d  Muscle[%d].nodeB = %d", i, Muscle[i].nodeA, i, Muscle[i].nodeB);
+	}
+	*/
+	
+	printf("\n Muscles have been linked to Nodes");
+}
+
+// This code connects the newly numbered muscles to the nodes. The nodes know they are connected but they don't the number of the muscle.
+void linkNodesToMuscles()
+{	
+	int nodeNumber;
+	// Each node will have a list of muscles they are attached to.
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
+		{
+			if(NumberOfNodes*MUSCLES_PER_NODE <= (i*MUSCLES_PER_NODE + j))
+			{
+				printf("\n TSU Error: number of ConnectingNodes is out of bounds in function linkNodesToMuscles\n");
+				exit(0);
+			}
+			
+			nodeNumber = ConnectingNodes[i*MUSCLES_PER_NODE + j];
+			
+			if(nodeNumber != -1)
+			{
+				for(int k = 0; k < NumberOfMuscles; k++)
+				{
+					if((Muscle[k].nodeA == i && Muscle[k].nodeB == nodeNumber) || (Muscle[k].nodeA == nodeNumber && Muscle[k].nodeB == i))
+					{
+						Node[i].muscle[j] = k;
+					}
+				}
+			}
+			else
+			{
+				// If the link is not attached to a muscle set it to -1.
+				Node[i].muscle[j] = -1;
+			}
+		}
+	}
+	
+	// Uncomment this to check to see if the nodes are connected to the correct muscles.
+	/*
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
+		{
+			printf("\n Node = %d  link = %d linked Muscle = %d", i, j, Node[i].muscle[j]);
+		}	
+	}
+	*/
+	
 	printf("\n Nodes have been linked to muscles");
 }
 
@@ -430,6 +509,9 @@ void setMuscleAttributesAndNodeMasses()
 	// Setting muscle timing functions
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
+		Muscle[i].apNode = -1;
+		Muscle[i].on = false;
+		Muscle[i].disabled = false;
 		Muscle[i].timer = 0.0;
 		
 		muscleTest = 0;
@@ -487,6 +569,15 @@ void setMuscleAttributesAndNodeMasses()
 				exit(0);
 			}
 		}
+	}
+	
+	// Setting the display color of the muscle.
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{	
+		Muscle[i].color.x = ReadyColor.x;
+		Muscle[i].color.y = ReadyColor.y;
+		Muscle[i].color.z = ReadyColor.z;
+		Muscle[i].color.w = 0.0;
 	}
 	
 	// Setting the node masses

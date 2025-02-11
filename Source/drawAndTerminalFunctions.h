@@ -194,7 +194,7 @@ void drawPicture()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
 	// Draw Nodes
-	// Sinus node
+	// Pulse node
 	if(Pause == 0) glColor3d(0.0,1.0,0.0);
 	else glColor3d(1.0,0.0,0.0);
 	glPushMatrix();
@@ -248,7 +248,7 @@ void drawPicture()
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 					{
 						glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-						if(Node[i].drawFlag == 1)
+						if(Node[i].drawNode == true)
 						{
 							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 						}
@@ -257,7 +257,7 @@ void drawPicture()
 				else
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-					if(Node[i].drawFlag == 1)
+					if(Node[i].drawNode == true)
 					{
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 					}
@@ -270,9 +270,9 @@ void drawPicture()
 	glLineWidth(LineWidth);
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		for(int j = 0; j < LinksPerNode; j++)
+		for(int j = 0; j < MUSCLES_PER_NODE; j++)
 		{
-			muscleNumber = ConnectingMuscles[i*LinksPerNode + j];
+			muscleNumber = Node[i].muscle[j];
 			if(muscleNumber != -1)
 			{
 				k = Muscle[muscleNumber].nodeA;
@@ -348,7 +348,7 @@ void terminalPrint()
 	printf("\n Total run time = %7.2f milliseconds", RunTime);
 	
 	//printf("\n Driving beat node is %d.", EctopicEvents[0].node);
-	printf("\n The beat rate is %f milliseconds.", EctopicEvents[0].period);
+	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	
 	if(AdjustMuscleOnOff == 1) 
 	{
@@ -366,11 +366,11 @@ void terminalPrint()
 		printf("\033[0m");
 	}
 	
-	for(int i = 1; i < MaxNumberOfperiodicEctopicEvents; i++)
+	for(int i = 1; i < NumberOfNodes; i++)
 	{
-		if(EctopicEvents[i].node != -1)
+		if(Node[i].beatNode == true)
 		{
-			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", EctopicEvents[i].node, EctopicEvents[i].period);
+			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", i, Node[i].beatPeriod);
 		}
 	}
 	
@@ -455,7 +455,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger   - ");
-	if (EctopicSingleOnOff == 1) 
+	if (EctopicEventOnOff == 1) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
