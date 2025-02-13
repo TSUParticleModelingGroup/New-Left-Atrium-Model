@@ -3,9 +3,9 @@
  They are listed below in the order they appear.
  
  __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
- __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float dt, int, float4, float, float, float, float, int);
+ __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float)
  __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
- __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, int, int, float, float4, float4, float4, float4, float);
+ __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
  __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
  void errorCheck(const char *);
  void cudaErrorCheck(const char *, int);
@@ -34,11 +34,11 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
 		muscleNumber = node[nodeToTurnOn].muscle[j];
 		
 		// 1: Is this a legit muscle and is it ready to turn on.
-		if((muscleNumber != -1) && (muscle[muscleNumber].on == false))
+		if((muscleNumber != -1) && (muscle[muscleNumber].isOn == false))
 		{
-			muscle[muscleNumber].apNode = nodeToTurnOn;  //1 This is the node where the AP wave will now start moving away from.
-			muscle[muscleNumber].on = true; // Set to on.
-			muscle[muscleNumber].timer = 0.0; // Set timer.
+			muscle[muscleNumber].apNode = nodeToTurnOn;  //a: This is the node where the AP wave will now start moving away from.
+			muscle[muscleNumber].isOn = true; //b: Set to on.
+			muscle[muscleNumber].timer = 0.0; //c: Set timer.
 		}
 	}
 }
@@ -61,8 +61,8 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
  	In a circle simulation it helps return the nodes out to a circle after a beat.
  	For the 3-D shell simulations we use force = presure*area. The area of a node is calculated in the 
  	setMuscleAttributesAndNodeMasses() function. The pressure is is a linear function that starts from
- 	DiastolicPressureLA when the node is a full radiusOfAtria and increases to SystolicPressureLA
- 	when a node is at its contracted length of muscleCompresionStopFraction*radiusOfAtria. We also use 
+ 	DiastolicPressureLA when the node is a full radiusOfLeftAtrium and increases to SystolicPressureLA
+ 	when a node is at its contracted length of muscleCompresionStopFraction*radiusOfLeftAtrium. We also use 
  	a multilier so the user can adjust this force to fit their needs.
  
  This next set of functions gets the forces on a node caused by a muscles at all times not just when it
@@ -99,33 +99,17 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
 	We transition into this taking it from zero to the contractionStrength in one transitionLength. Past one transitionLength 
 	it will just keep increasing. We use contractionStrength and transitionLength here because they are already scaled 
 	to work on this muscle.
- 	
- Below we create severl type contraction forces so the user can select what works best for them. They can use the simulationSetUp 
- file to select which one they prefer. Note: only one of these functions is run in a simulation. Also the user can completly turn
- these function if they only want to watch the electrical activity across the LA by setting the contractionType to zero in the
- simulationSetUp file.
- 
- 6. Constant contraction force
- 	This contraction force just abruptly turns on with the full contractionStrength when the muscle is turned on. It then
- 	abruptly turns off when the muscle timer goes past the half the refractory period to represent the relaxation phase. 
- 	
- 7. Linear contraction force				
-	This contraction force transitions linearly from zero to full contractionStrength as the muscle timer goes from time 
-	zero to half the refractory period. It then goes from full contractionStrength to zero as the muscle timer goes from
-	half the refractory period to a full refractory period. 
-	
- 8. sinusoidal contraction force
- 	This contraction force transitions from zero to full strength and back to zero as time goes through a full refractory
- 	period using a sine function that has been adjusted to have a half period that matches the refractory period and an
- 	amplitude that matchs the full contractionStrength.
 
- 9. sine squared contraction force
+ 6. sine squared contraction force
  	This contraction force transitions from zero to full strength as time goes from zero to half the refractory period. 
  	Then goes from full strength to zero as time progresses on to the full refractory period. Here we use a sine squared 
- 	function to acheive this.
+ 	function to acheive this because it smoothly transition in and out of the contraction.
+ 	
+ 7. The user can completly turn the contraction function if they only want to watch the electrical activity across the LA 
+    by setting the contractionType to zero in the simulationSetUp file.
  
 */
-__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, float dt, int numberOfNodes, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfAtria, float diastolicPressureLA, float systolicPressureLA, int contractionType)
+__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, float dt, int numberOfNodes, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfLeftAtrium, float diastolicPressureLA, float systolicPressureLA)
 {
 	float dx, dy, dz, d;
 	int muscleNumber;
@@ -133,8 +117,6 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 	float x1,x2,y1,y2,m;
 	float force;
 	float timer;
-	float contractionDuration;
-	float rechargeDuration;
 	float totalDuration;
 	float contractionStrength;
 	float relaxedStrength;
@@ -152,16 +134,16 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 		node[i].force.y   = 0.0;
 		node[i].force.z   = 0.0;
 		
-		// 1. Central push back force
+		// 1: Central push back force
 		dx = node[i].position.x - centerOfSimulation.x;
 		dy = node[i].position.y - centerOfSimulation.y;
 		dz = node[i].position.z - centerOfSimulation.z;
 		d  = sqrt(dx*dx + dy*dy + dz*dz);
 		if(0.00001 < d) // To keep from getting numeric overflow just jump over this if d is too small.
 		{
-			float r2 = muscleCompresionStopFraction*radiusOfAtria;
-			m = (systolicPressureLA - diastolicPressureLA)/(r2 - radiusOfAtria);
-			float bp = m*d + diastolicPressureLA - m*radiusOfAtria;
+			float r2 = muscleCompresionStopFraction*radiusOfLeftAtrium;
+			m = (systolicPressureLA - diastolicPressureLA)/(r2 - radiusOfLeftAtrium);
+			float bp = m*d + diastolicPressureLA - m*radiusOfLeftAtrium;
 			force  = bp*node[i].area;
 			node[i].force.x  += force*dx/d;
 			node[i].force.y  += force*dy/d;
@@ -179,9 +161,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 			if(muscleNumber != -1) 
 			{
 				timer = muscle[muscleNumber].timer;
-				contractionDuration = muscle[muscleNumber].contractionDuration;
-				rechargeDuration = muscle[muscleNumber].rechargeDuration;
-				totalDuration = contractionDuration + rechargeDuration;
+				totalDuration = muscle[muscleNumber].refractoryPeriod;
 				
 				contractionStrength = muscle[muscleNumber].contractionStrength;
 				relaxedStrength = muscle[muscleNumber].relaxedStrength;
@@ -211,7 +191,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				// at it natural length.
 				if(d < (contractedLength + transitionLength))
 				{
-					// 2. Muscle is getting too short force
+					// 2: Muscle is getting too short force
 					x1 = contractedLength;
 					x2 = x1 + transitionLength;
 					y1 = -contractionStrength;
@@ -221,18 +201,18 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				}
 				else if(d < naturalLength - transitionLength)
 				{
-					// 3. Restoration force
+					// 3: Restoration force
 					force = -relaxedStrength;
 				}
 				else if(d < naturalLength)
 				{
-					// 4. Aproaching natural length transition force
+					// 4: Aproaching natural length transition force
 					m = relaxedStrength/transitionLength;
 					force = m*(d - naturalLength);
 				}
 				else
 				{
-					// 5. Muscle too long force
+					// 5: Muscle too long force
 					m = contractionStrength/transitionLength;
 					force = m*(d - naturalLength - transitionLength) + contractionStrength;
 				}
@@ -241,60 +221,15 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				node[i].force.y  += force*dy/d;
 				node[i].force.z  += force*dz/d;
 			
-				// One of these functions will be turned on if the muscle is contracting.
-				// But first we check to see if the muscle is on and have not been disabled.
-				if(muscle[muscleNumber].on == true && muscle[muscleNumber].disabled == false)
-				{
-					// 6. Constant contraction force.
-					if(contractionType == 1)
-					{
-						if(timer < contractionDuration)
-						{
-							force = contractionStrength;
-							node[i].force.x += force*dx/d;
-							node[i].force.y += force*dy/d;
-							node[i].force.z += force*dz/d;
-						}
-					}
-					
-					// 7. Linear contraction force
-					if(contractionType == 2) // Linear force
-					{
-						if(timer < contractionDuration) 
-						{
-							force = timer*(contractionStrength/contractionDuration);
-							node[i].force.x += force*dx/d;
-							node[i].force.y += force*dy/d;
-							node[i].force.z += force*dz/d;
-						}
-		
-						else if(timer < totalDuration)
-						{
-							force = (contractionStrength/rechargeDuration)*(totalDuration - timer);
-							node[i].force.x += force*dx/d;
-							node[i].force.y += force*dy/d;
-							node[i].force.z += force*dz/d;
-						}
-					}
-					
-					// 8. sinusoidal contraction force
-					if(contractionType == 3) // sine force
-					{
-						force = contractionStrength*sin(timer*PI/(totalDuration));
-						node[i].force.x += force*dx/d;
-						node[i].force.y += force*dy/d;
-						node[i].force.z += force*dz/d;
-					}
-					
-					// 9. sine squared contraction force
-					if(contractionType == 4) // sine force
-					{
-					 	float temp = sin(timer*PI/(totalDuration));
-						force = contractionStrength*temp*temp;
-						node[i].force.x += force*dx/d;
-						node[i].force.y += force*dy/d;
-						node[i].force.z += force*dz/d;
-					}
+				// Checking to see if the muscle is on and has not been disabled.
+				if(muscle[muscleNumber].isOn == true && muscle[muscleNumber].isDisabled == false)
+				{	
+					// 6: sine squared contraction force
+				 	float temp = sin(timer*PI/(totalDuration));
+					force = contractionStrength*temp*temp;
+					node[i].force.x += force*dx/d;
+					node[i].force.y += force*dy/d;
+					node[i].force.z += force*dz/d;
 				}
 				
 			}
@@ -324,19 +259,19 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
  parts of the body which keep it in space. For our purposes we just needed it to remain in place a little better 
  so we added a multiplier so the user can adjust it in the simulation setup file.
 */
-__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float dragMultiplier, float dt, double time, int contractionType)
+__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float dragMultiplier, float dt, double time, bool ContractionIsOn)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(i < numberOfNodes)
 	{
-		if(contractionType != 0)
+		if(ContractionIsOn == true)
 		{
 			// Calculating the drag.
 			float velocitySquared = node[i].velocity.x*node[i].velocity.x + node[i].velocity.y*node[i].velocity.y + node[i].velocity.z*node[i].velocity.z;
 			float drag = dragMultiplier*node[i].area*0.000235*velocitySquared;
 			
-			// Moving the nodes forward in time with leap-frog.
+			// Moving the nodes forward in time with the leap-frog formulas. 
 			if(time == 0.0)
 			{
 				node[i].velocity.x += (node[i].force.x/node[i].mass - drag*node[i].velocity.x)*0.5*dt;
@@ -355,14 +290,14 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 			node[i].position.z += node[i].velocity.z*dt;
 		}
 		
-		if(node[i].ablated == false) // If node is not ablated do some work on it.
+		if(node[i].isAblated == false) // If node is not ablated do some work on it.
 		{
 		
-			if(node[i].beatNode == true)
+			if(node[i].isBeatNode == true)
 			{
 				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period set it to fire and reset it internal clock.
 				{	
-					node[i].fire = true;		
+					node[i].isFiring = true;		
 					node[i].beatTimer = 0.0; 
 				}
 				else
@@ -372,10 +307,10 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 			}
 			
 			// Turning on the muscle to any node that is ready to fire. Then setting fire to false so it will not fire again until it is ready.
-			if(node[i].fire == true)
+			if(node[i].isFiring == true)
 			{
 				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, muscle, node);
-				node[i].fire = false;
+				node[i].isFiring = false;
 			}
 		}
 	}	
@@ -387,14 +322,14 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
  It a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmition direction set to undetermined by setting apNode to -1.
 */
-__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor, float relativeRefractoryPeriodFraction)
+__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	int nodeId;
 	
 	if(i < numberOfMuscles)
 	{
-		if(muscle[i].on == true && muscle[i].disabled == false)
+		if(muscle[i].isOn == true && muscle[i].isDisabled == false)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
 			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not rest here
@@ -411,9 +346,9 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 					nodeId = muscle[i].nodeA;
 				}
 				
-				if(node[nodeId].beatNode == false)
+				if(node[nodeId].isBeatNode == false)
 				{
-					node[nodeId].fire = true;
+					node[nodeId].isFiring = true;
 				}
 				else
 				{
@@ -423,11 +358,11 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 				}
 			}
 		
-			float refractoryPeriod = muscle[i].contractionDuration + muscle[i].rechargeDuration;
-			float relativeRefractoryPeriod = refractoryPeriod*relativeRefractoryPeriodFraction;
-			float absoluteRefractoryPeriod = refractoryPeriod - relativeRefractoryPeriod;
+			float refractoryPeriod = muscle[i].refractoryPeriod;
+			float absoluteRefractoryPeriod = refractoryPeriod*muscle[i].absoluteRefractoryPeriodFraction;
+			float relativeRefractoryPeriod = refractoryPeriod - absoluteRefractoryPeriod;
 			
-			if(muscle[i].timer < muscle[i].contractionDuration)
+			if(muscle[i].timer < 0.5*refractoryPeriod)
 			{
 				// Set color and update time.
 				muscle[i].color.x = contractingColor.x; 
@@ -460,7 +395,7 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 				muscle[i].color.z = readyColor.z;
 				muscle[i].color.w = 1.0;
 				
-				muscle[i].on = false;
+				muscle[i].isOn = false;
 				muscle[i].timer = 0.0;
 				muscle[i].apNode = -1;
 			}
@@ -551,6 +486,9 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	}
 }
 
+/*
+ Checks to see if an error occured in a CUDA call and returns the file name and line number where the error occured.
+*/
 void cudaErrorCheck(const char *file, int line)
 {
 	cudaError_t  error;

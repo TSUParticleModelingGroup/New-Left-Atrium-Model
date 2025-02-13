@@ -14,9 +14,8 @@
  void mouseAdjustMusclesMode();
  void mouseIdentifyNodeMode();
  int setMouseMuscleAttributes();
- void setMouseMuscleContractionDuration();
- void setMouseMuscleRechargeDuration();
- void setMouseMuscleContractionVelocity();
+ void setMouseMuscleRefractoryPeriod();
+ void setMouseMuscleConductionVelocity();
  void setEctopicBeat(int nodeId);
  void clearStdin();
  void getEctopicBeatPeriod(int);
@@ -53,7 +52,7 @@ void orthoganialView()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-RadiusOfAtria, RadiusOfAtria, -RadiusOfAtria, RadiusOfAtria, Near, Far);
+	glOrtho(-RadiusOfLeftAtrium, RadiusOfLeftAtrium, -RadiusOfLeftAtrium, RadiusOfLeftAtrium, Near, Far);
 	glMatrixMode(GL_MODELVIEW);
 	ViewFlag = 0;
 	drawPicture();
@@ -71,13 +70,13 @@ void fulstrumView()
 
 void mouseFunctionsOff()
 {
-	Pause = 1;
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 0;
-	EctopicEventOnOff = 0;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 0;
-	MouseFunctionOnOff = 0;
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = false;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = false;
 	terminalPrint();
 	glutSetCursor(GLUT_CURSOR_DESTROY);
 	drawPicture();
@@ -85,13 +84,13 @@ void mouseFunctionsOff()
 
 void mouseAblateMode()
 {
-	Pause = 1;
-	AblateOnOff = 1;
-	EctopicBeatOnOff = 0;
-	EctopicEventOnOff = 0;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 0;
-	MouseFunctionOnOff = 1;
+	PauseIs = true;
+	AblateModeIs = true;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = false;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthoganialView();
 	terminalPrint();
@@ -100,14 +99,13 @@ void mouseAblateMode()
 
 void mouseEctopicBeatMode()
 {
-	Pause = 1;
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 1;
-	EctopicEventOnOff = 0;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 0;
-	MouseFunctionOnOff = 1;
-	Pause = 1;
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = true;
+	EctopicEventModeIs = false;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthoganialView();
 	terminalPrint();
@@ -120,13 +118,13 @@ void mouseEctopicBeatMode()
 
 void mouseEctopicEventMode()
 {
-	Pause = 1;
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 0;
-	EctopicEventOnOff = 1;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 0;
-	MouseFunctionOnOff = 1;
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = true;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthoganialView();
 	drawPicture();
@@ -135,19 +133,18 @@ void mouseEctopicEventMode()
 
 void mouseAdjustMusclesMode()
 {
-	int returnCode = 0;
-	Pause = 1;
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 0;
-	EctopicEventOnOff = 0;
-	AdjustMuscleOnOff = 1;
-	FindNodeOnOff = 0;
-	MouseFunctionOnOff = 1;
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = false;
+	AdjustMuscleModeIs = true;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthoganialView();
 	drawPicture();
 	
-	returnCode = setMouseMuscleAttributes();
+	int returnCode = setMouseMuscleAttributes();
 	
 	if(returnCode == 1)
 	{
@@ -157,13 +154,13 @@ void mouseAdjustMusclesMode()
 
 void mouseIdentifyNodeMode()
 {
-	Pause = 1;
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 0;
-	EctopicEventOnOff = 0;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 1;
-	MouseFunctionOnOff = 1;
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = false;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = true;
+	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthoganialView();
 	drawPicture();
@@ -172,79 +169,58 @@ void mouseIdentifyNodeMode()
 
 int setMouseMuscleAttributes()
 {
-	setMouseMuscleContractionDuration();
-	setMouseMuscleRechargeDuration();
-	setMouseMuscleContractionVelocity();
+	setMouseMuscleRefractoryPeriod();
+	setMouseMuscleConductionVelocity();
 	return(1);
 }
 
-void setMouseMuscleContractionDuration()
+void setMouseMuscleRefractoryPeriod()
 {
 	system("clear");
-	BaseMuscleContractionDurationAdjustmentMultiplier = -1.0;
+	RefractoryPeriodAdjustmentMultiplier = -1.0;
 	
-	printf("\n\n Enter the contraction duration multiplier.");
+	printf("\n\n Enter the refractory period multiplier.");
 	printf("\n A number greater than 1 will make it longer.");
 	printf("\n A number between 0 and 1 will make it shorter.");
-	printf("\n\n Contraction duration multiplier = ");
+	printf("\n\n Refractory period multiplier = ");
 	fflush(stdin);
-	scanf("%f", &BaseMuscleContractionDurationAdjustmentMultiplier);
-	if(BaseMuscleContractionDurationAdjustmentMultiplier < 0)
+	scanf("%f", &RefractoryPeriodAdjustmentMultiplier);
+	if(RefractoryPeriodAdjustmentMultiplier < 0)
 	{
 		system("clear");
-		printf("\n You cannot adjust the the contraction duration by a negative number.");
+		printf("\n You cannot adjust the the refractory period by a negative number.");
 		printf("\n Retry\n");
-		setMouseMuscleContractionDuration();
+		setMouseMuscleRefractoryPeriod();
 	}
 }
 
-void setMouseMuscleRechargeDuration()
+void setMouseMuscleConductionVelocity()
 {
 	system("clear");
-	BaseMuscleRechargeDurationAdjustmentMultiplier = -1.0;
-	
-	printf("\n\n Enter the recharge duration multiplier.");
-	printf("\n A number greater than 1 will make it longer.");
-	printf("\n A number between 0 and 1 will make it shorter.");
-	printf("\n\n Recharge duration multiplier = ");
-	fflush(stdin);
-	scanf("%f", &BaseMuscleRechargeDurationAdjustmentMultiplier);
-	if(BaseMuscleRechargeDurationAdjustmentMultiplier < 0)
-	{
-		system("clear");
-		printf("\n You cannot adjust the the recharge duration by a negative number.");
-		printf("\n Retry\n");
-		setMouseMuscleRechargeDuration();
-	}
-}
-
-void setMouseMuscleContractionVelocity()
-{
-	system("clear");
-	BaseMuscleConductionVelocityAdjustmentMultiplier = -1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = -1.0;
 	
 	printf("\n\n Enter conduction velocity multipier.");
 	printf("\n A number between 0 and 1 will slow it down.");
 	printf("\n A number bigger than 1 will speed it up.");
 	printf("\n\n Conduction velocity multiplier = ");
 	fflush(stdin);
-	scanf("%f", &BaseMuscleConductionVelocityAdjustmentMultiplier);
-	if(BaseMuscleConductionVelocityAdjustmentMultiplier <= 0)
+	scanf("%f", &MuscleConductionVelocityAdjustmentMultiplier);
+	if(MuscleConductionVelocityAdjustmentMultiplier <= 0)
 	{
 		system("clear");
 		printf("\n You cannot adjust the the conduction velocity by a nonpositive number.");
 		printf("\n Retry\n");
-		setMouseMuscleContractionVelocity();
+		setMouseMuscleConductionVelocity();
 	}
 }
 
 void setEctopicBeat(int nodeId)
 {
-	Node[nodeId].beatNode = true;
+	Node[nodeId].isBeatNode = true;
 	
-	if(Node[nodeId].ablated == false)
+	if(Node[nodeId].isAblated == false)
 	{
-		Node[nodeId].drawNode = true;
+		Node[nodeId].drawNodeIs = true;
 		Node[nodeId].color.x = 1.0;
 		Node[nodeId].color.y = 1.0;
 		Node[nodeId].color.z = 0.0;
@@ -255,7 +231,7 @@ void setEctopicBeat(int nodeId)
 	getEctopicBeatOffset(nodeId);
 	
 	// We only let you set 1 ectopic beat at a time.
-	EctopicBeatOnOff = 0;
+	EctopicBeatModeIs = false;
 	terminalPrint();
 }
 
@@ -366,22 +342,22 @@ void movieOn()
 	MovieFile = popen(ccx, "w");
 	//Buffer = new int[XWindowSize*YWindowSize];
 	Buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
-	MovieOn = 1;
+	MovieIsOn = true;
 }
 
 void movieOff()
 {
-	if(MovieOn == 1) 
+	if(MovieIsOn == true) 
 	{
 		pclose(MovieFile);
 	}
 	free(Buffer);
-	MovieOn = 0;
+	MovieIsOn = false;
 }
 
 void screenShot()
 {	
-	int pauseFlag;
+	bool pauseFlagIs;
 	FILE* ScreenShotFile;
 	int* buffer;
 
@@ -392,14 +368,14 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
 	
-	if(Pause == 0) 
+	if(PauseIs == false) 
 	{
-		Pause = 1;
-		pauseFlag = 0;
+		PauseIs = true;
+		pauseFlagIs = false;
 	}
 	else
 	{
-		pauseFlag = 1;
+		pauseFlagIs = true;
 	}
 	
 	for(int i =0; i < 1; i++)
@@ -425,7 +401,7 @@ void screenShot()
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
 	//system("rm output1.mp4");
 	
-	Pause = pauseFlag;
+	PauseIs = pauseFlagIs;
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
@@ -560,7 +536,7 @@ void helpMenu()
 void KeyPressed(unsigned char key, int x, int y)
 {
 	float dAngle = 0.01;
-	float zoom = 0.01*RadiusOfAtria;
+	float zoom = 0.01*RadiusOfLeftAtrium;
 	float temp;
 	float4 lookVector;
 	float d;
@@ -601,8 +577,8 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'r')  // Run toggle
 	{
-		if(Pause == 0) Pause = 1;
-		else Pause = 0;
+		if(PauseIs == false) PauseIs = true;
+		else PauseIs = false;
 		terminalPrint();
 	}
 	if(key == 'n')  // Draw nodes toggle
@@ -656,14 +632,14 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'm')  // Movie on
 	{
-		if(MovieFlag == 0) 
+		if(MovieIsOn == false) 
 		{
-			MovieFlag = 1;
+			MovieIsOn = true;
 			movieOn();
 		}
 		else 
 		{
-			MovieFlag = 0;
+			MovieIsOn = false;
 			movieOff();
 		}
 		terminalPrint();
@@ -903,32 +879,32 @@ void KeyPressed(unsigned char key, int x, int y)
 	if(key == ')')  // All mouse functions are off (shift 0)
 	{
 		mouseFunctionsOff();
-		MouseFunctionOnOff = 0;
+		MouseFunctionModeIs = false;
 	}
 	if(key == '!')  // Ablate is on (shift 1)
 	{
 		mouseAblateMode();
-		MouseFunctionOnOff = 1;
+		MouseFunctionModeIs = true;
 	}
 	if(key == '@')  // Ectopic beat is on (shift 2)
 	{
 		mouseEctopicBeatMode();
-		MouseFunctionOnOff = 1;
+		MouseFunctionModeIs = true;
 	}
 	if(key == '#')  // You are in ectopic single trigger mode. (shift 3)
 	{
 		mouseEctopicEventMode();
-		MouseFunctionOnOff = 1;
+		MouseFunctionModeIs = true;
 	}
 	if(key == '$') // muscle adjustment is on (shift 4)
 	{
 		mouseAdjustMusclesMode();
-		MouseFunctionOnOff = 1;
+		MouseFunctionModeIs = true;
 	}
 	if(key == '^')  // Find node is on (shift 5)
 	{
 		mouseIdentifyNodeMode();
-		MouseFunctionOnOff = 1;
+		MouseFunctionModeIs = true;
 	}
 	
 	if(key == ']')  
@@ -968,8 +944,8 @@ void mousePassiveMotionCallback(int x, int y)
 	
 	// x and y come in as 0 to XWindowSize and 0 to YWindowSize. This traveslates them to -1 to 1 and -1 to 1.
 
-	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfAtria;
-	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfAtria;
+	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
+	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
 	//drawPicture();
 
 	//printf("\n MouseX = %f\n", MouseX);
@@ -984,7 +960,7 @@ void mymouse(int button, int state, int x, int y)
 	if(state == GLUT_DOWN)
 	{
 		copyNodesMusclesFromGPU();
-		hit = HitMultiplier*RadiusOfAtria;
+		hit = HitMultiplier*RadiusOfLeftAtrium;
 		
 		if(button == GLUT_LEFT_BUTTON)
 		{	
@@ -996,78 +972,74 @@ void mymouse(int button, int state, int x, int y)
 				
 				if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 				{
-					if(AblateOnOff == 1)
+					if(AblateModeIs == true)
 					{
-						Node[i].ablated = true;
-						Node[i].drawNode = true;
+						Node[i].isAblated = true;
+						Node[i].drawNodeIs = true;
 						Node[i].color.x = 1.0;
 						Node[i].color.y = 1.0;
 						Node[i].color.z = 1.0;
 					}
-					if(EctopicBeatOnOff == 1)
+					if(EctopicBeatModeIs == true)
 					{
-						cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
-						cudaErrorCheck(__FILE__, __LINE__);
+						//cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+						//cudaErrorCheck(__FILE__, __LINE__);
 						
-						Pause = 1;
+						PauseIs = true;
 						
 						printf("\n Node number = %d", i);
 						
 						setEctopicBeat(i);
 						
-						cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
-						cudaErrorCheck(__FILE__, __LINE__);
+						//cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+						//cudaErrorCheck(__FILE__, __LINE__);
 					}
-					if(AdjustMuscleOnOff == 1)
+					if(AdjustMuscleModeIs == 1)
 					{
 						for(int j = 0; j < MUSCLES_PER_NODE; j++)
 						{
 							muscleId = Node[i].muscle[j];
 							if(muscleId != -1)
 							{
-								Muscle[muscleId].contractionDuration = BaseMuscleContractionDuration*BaseMuscleContractionDurationAdjustmentMultiplier;
-								Muscle[muscleId].rechargeDuration = BaseMuscleRechargeDuration*BaseMuscleRechargeDurationAdjustmentMultiplier;
-								Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*BaseMuscleConductionVelocityAdjustmentMultiplier;
+								// This sets the muscle to the base value then adjusts it. 
+								Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
+								Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
+								
+								// This adjusts the muscle based on its current value.
+								//Muscle[muscleId].refractoryPeriod *= RefractoryPeriodAdjustmentMultiplier;
+								//Muscle[muscleId].conductionVelocity *= MuscleConductionVelocityAdjustmentMultiplier;
+								
 								Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
 								Muscle[muscleId].color.x = 1.0;
 								Muscle[muscleId].color.y = 0.0;
 								Muscle[muscleId].color.z = 1.0;
 								Muscle[muscleId].color.w = 0.0;
 								
-								if((Muscle[muscleId].contractionDuration + Muscle[muscleId].rechargeDuration) < Muscle[muscleId].conductionDuration)
-								{
-								 	printf("\n Conduction duration is shorter than the (contraction plus recharge) duration in muscle number %d", muscleId);
-								 	printf("\n Muscle %d will be disabled. \n", muscleId);
-								 	Muscle[muscleId].disabled = true;
-								 	Muscle[muscleId].color.x = DeadColor.x;
-									Muscle[muscleId].color.y = DeadColor.y;
-									Muscle[muscleId].color.z = DeadColor.z;
-									Muscle[muscleId].color.w = 1.0;
-								} 
+								checkMuscle(muscleId);
 							}
 						}
 						
-						Node[i].drawNode = true;
-						if(Node[i].ablated == false) // If it is not ablated color it.
+						Node[i].drawNodeIs = true;
+						if(Node[i].isAblated == false) // If it is not ablated color it.
 						{
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
 						}
 					}
-					if(EctopicEventOnOff == 1)
+					if(EctopicEventModeIs == true)
 					{
 						cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
 						cudaErrorCheck(__FILE__, __LINE__);
 						
-						Node[i].fire = true; // Setting the ith node to fire the next time in the next time step.
+						Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
 						
 						cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
 						cudaErrorCheck(__FILE__, __LINE__);
 					}
-					if(FindNodeOnOff == 1)
+					if(FindNodeModeIs == true)
 					{
-						Node[i].drawNode = true;
+						Node[i].drawNodeIs = true;
 						Node[i].color.x = 1.0;
 						Node[i].color.y = 0.0;
 						Node[i].color.z = 1.0;
@@ -1085,23 +1057,22 @@ void mymouse(int button, int state, int x, int y)
 				dz = MouseZ - Node[i].position.z;
 				if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 				{
-					if(AblateOnOff == 1)
+					if(AblateModeIs == true)
 					{
-						Node[i].ablated = false;
-						Node[i].drawNode = false;
+						Node[i].isAblated = false;
+						Node[i].drawNodeIs = false;
 						Node[i].color.x = 0.0;
 						Node[i].color.y = 1.0;
 						Node[i].color.z = 0.0;
 					}
-					if(AdjustMuscleOnOff == 1)
+					if(AdjustMuscleModeIs == true)
 					{
 						for(int j = 0; j < MUSCLES_PER_NODE; j++)
 						{
 							muscleId = Node[i].muscle[j];
 							if(muscleId != -1)
 							{
-								Muscle[muscleId].contractionDuration = BaseMuscleContractionDuration;
-								Muscle[muscleId].rechargeDuration = BaseMuscleRechargeDuration;
+								Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod;
 								Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity;
 								Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
 								Muscle[muscleId].color.x = 0.0;
@@ -1110,24 +1081,15 @@ void mymouse(int button, int state, int x, int y)
 								Muscle[muscleId].color.w = 0.0;
 								
 								// Turning the muscle back on if it was disabled.
-								Muscle[muscleId].disabled = false;
+								Muscle[muscleId].isDisabled = false;
 								
 								// Checking to see if the muscle needs to be killed.
-								if((Muscle[muscleId].contractionDuration + Muscle[muscleId].rechargeDuration) < Muscle[muscleId].conductionDuration)
-								{
-								 	printf("\n Conduction duration is shorter than the (contraction plus recharge) duration in muscle number %d", muscleId);
-								 	printf("\n Muscle %d will be disabled. \n", muscleId);
-								 	Muscle[muscleId].disabled = true;
-								 	Muscle[muscleId].color.x = DeadColor.x;
-									Muscle[muscleId].color.y = DeadColor.y;
-									Muscle[muscleId].color.z = DeadColor.z;
-									Muscle[muscleId].color.w = 1.0;
-								} 
+								checkMuscle(muscleId);
 							}
 						}
 						
-						Node[i].drawNode = true;
-						if(Node[i].ablated == false) // If it is not ablated color it.
+						Node[i].drawNodeIs = true;
+						if(Node[i].isAblated == false) // If it is not ablated color it.
 						{
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 1.0;

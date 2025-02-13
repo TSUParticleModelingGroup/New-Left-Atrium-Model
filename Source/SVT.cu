@@ -21,19 +21,25 @@
 
 void n_body(float dt)
 {	
-	if(Pause != 1)
+/*
+	printf("\n ReadyColor %f %f %f ", ReadyColor.x,ReadyColor.y,ReadyColor.z);
+	printf("\n ContractingColor %f %f %f ", ContractingColor.x,ContractingColor.y,ContractingColor.z);
+	printf("\n RestingColor %f %f %f ", RestingColor.x,RestingColor.y,RestingColor.z);
+	printf("\n RelativeColor %f %f %f \n", RelativeColor.x,RelativeColor.y,RelativeColor.z);
+	sleep(5);
+	*/
+	if(PauseIs == false)
 	{	
-	 	//printf("\n GridNodes = %d %d %d BlockNodes = %d %d %d\n", GridNodes.x, GridNodes.y, GridNodes.z,BlockNodes.x,BlockNodes.y,BlockNodes.z);
-		if(ContractionType != 0)
+		if(ContractionIsOn == true)
 		{
-			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, BaseMuscleCompresionStopFraction, RadiusOfAtria, DiastolicPressureLA, SystolicPressureLA, ContractionType);
+			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompresionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, DragMultiplier, dt, RunTime, ContractionType);
+		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, DragMultiplier, dt, RunTime, ContractionIsOn);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
-		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor, RelativeRefractoryPeriodFraction);
+		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		RecenterCount++;
@@ -131,6 +137,9 @@ void readSimulationParameters()
 		data >> MyocyteForcePerMassMultiplier;
 		
 		getline(data,name,'=');
+		data >> MyocyteForcePerMassSTD;
+		
+		getline(data,name,'=');
 		data >> DiastolicPressureLA;
 		
 		getline(data,name,'=');
@@ -140,34 +149,43 @@ void readSimulationParameters()
 		data >> PressureMultiplier;
 		
 		getline(data,name,'=');
-		data >> MassOfAtria;
+		data >> MassOfLeftAtrium;
 		
 		getline(data,name,'=');
-		data >> RadiusOfAtria;
+		data >> RadiusOfLeftAtrium;
 		
 		getline(data,name,'=');
 		data >> DragMultiplier;
 		
 		getline(data,name,'=');
-		data >> ContractionType;
+		data >> ContractionIsOn;
 		
 		getline(data,name,'=');
-		data >> BaseMuscleRelaxedStrengthFraction;
+		data >> MuscleRelaxedStrengthFraction;
 		
 		getline(data,name,'=');
-		data >> BaseMuscleCompresionStopFraction;
+		data >> MuscleCompresionStopFraction;
 		
 		getline(data,name,'=');
-		data >> BaseMuscleContractionDuration;
+		data >> MuscleCompresionStopFractionSTD;
 		
 		getline(data,name,'=');
-		data >> BaseMuscleRechargeDuration;
+		data >> BaseMuscleRefractoryPeriod;
 		
 		getline(data,name,'=');
-		data >> RelativeRefractoryPeriodFraction;
+		data >> MuscleRefractoryPeriodSTD;
+		        
+		getline(data,name,'=');
+		data >> AbsoluteRefractoryPeriodFraction;
+		
+		getline(data,name,'=');
+		data >> AbsoluteRefractoryPeriodFractionSTD;
 		
 		getline(data,name,'=');
 		data >> BaseMuscleConductionVelocity;
+		
+		getline(data,name,'=');
+		data >> MuscleConductionVelocitySTD;
 		
 		getline(data,name,'=');
 		data >> BeatPeriod;
@@ -241,14 +259,7 @@ void readSimulationParameters()
 		exit(0);
 	}
 	
-	RecenterRate = 10; 
-	
 	data.close();
-	
-	// Adjusting blood presure from millimeters of Mercury to our units.
-	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
-	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
-	
 	printf("\n Simulation Parameters have been read in.");
 }
 
@@ -262,60 +273,18 @@ void setup()
 		checkNodes();
 		setMusclesFromBlenderFile();
 		linkNodesToMuscles();
-		setMuscleAttributesAndNodeMasses();
-		setIndividualMuscleAttributes();
+		setRemainingNodeAndMuscleAttributes();
 		hardCodedAblations();
 		hardCodedPeriodicEctopicEvents();
+		setIndividualMuscleAttributes();
+		for(int i = 0; i < NumberOfMuscles; i++)
+		{	
+			checkMuscle(i);
+		}
 	}
 	else if(NodesMusclesFileOrPreviousRunsFile == 1)
 	{
-		FILE *inFile;
-		char fileName[256];
-		
-		strcpy(fileName, "");
-		strcat(fileName,"./PreviousRunsFile/");
-		strcat(fileName,PreviousRunFileName);
-		strcat(fileName,"/run");
-
-		inFile = fopen(fileName,"rb");
-		if(inFile == NULL)
-		{
-			printf(" Can't open %s file.\n", fileName);
-			exit(0);
-		}
-		
-		fread(&PulsePointNode, sizeof(int), 1, inFile);
-		printf("\n PulsePointNode = %d", PulsePointNode);
-		fread(&UpNode, sizeof(int), 1, inFile);
-		printf("\n UpNode = %d", UpNode);
-		fread(&FrontNode, sizeof(int), 1, inFile);
-		printf("\n FrontNode = %d", FrontNode);
-		
-		fread(&NumberOfNodes, sizeof(int), 1, inFile);
-		printf("\n NumberOfNodes = %d", NumberOfNodes);
-		fread(&NumberOfMuscles, sizeof(int), 1, inFile);
-		printf("\n NumberOfMuscles = %d", NumberOfMuscles);
-		int linksPerNode;
-		fread(&linksPerNode, sizeof(int), 1, inFile);
-		printf("\n linksPerNode = %d", linksPerNode);
-		if(linksPerNode != MUSCLES_PER_NODE)
-		{
-			printf("\n The number Of muscle per node do not match");
-			printf("\n You will have to set the #define MUSCLES_PER_NODE");
-			printf("\n to %d in header.h then recompile the code", linksPerNode);
-			printf("\n Good Bye\n");
-			exit(0);
-		}
-		Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
-		cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
-		cudaErrorCheck(__FILE__, __LINE__);
-		Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-		cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
-		cudaErrorCheck(__FILE__, __LINE__);
-		fread(Node, sizeof(nodeAtributesStructure), NumberOfNodes, inFile);
-	  	fread(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, inFile);
-		fclose(inFile);
-		printf("\n Nodes and Muscles have been read in.");
+		getNodesandMusclesFromPreviuosRun();
 	}
 	else
 	{
@@ -326,37 +295,42 @@ void setup()
 	
 	setupCudaInvironment();
 	
+	
 	AngleOfSimulation.x = 0.0;
 	AngleOfSimulation.y = 1.0;
 	AngleOfSimulation.z = 0.0;
 	
-	BaseMuscleContractionDurationAdjustmentMultiplier = 1.0;
-	BaseMuscleRechargeDurationAdjustmentMultiplier = 1.0;
-	BaseMuscleConductionVelocityAdjustmentMultiplier = 1.0;
+	// ??????????? why is center of mass not zeroed out here?
+	
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 
 	DrawTimer = 0; 
-	RecenterCount = 0;
 	RunTime = 0.0;
-	Pause = 1;
-	MovieOn = 0;
+	PauseIs = true;
+	
 	DrawNodesFlag = 0;
 	DrawFrontHalfFlag = 0;
 	
-	AblateOnOff = 0;
-	EctopicBeatOnOff = 0;
-	AdjustMuscleOnOff = 0;
-	FindNodeOnOff = 0;
-	EctopicEventOnOff = 0;
-	MouseFunctionOnOff = 0;
-	ViewFlag = 1;
-	MovieFlag = 0;
+	MovieIsOn = false;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	AdjustMuscleModeIs = false;
+	FindNodeModeIs = false;
+	EctopicEventModeIs = false;
+	MouseFunctionModeIs = false;
+	
 	HitMultiplier = 0.03;
-	MouseZ = RadiusOfAtria;
+	MouseZ = RadiusOfLeftAtrium;
 	ScrollSpeedToggle = 1;
 	ScrollSpeed = 1.0;
 	MouseWheelPos = 0;
 	
+	RecenterCount = 0;
+	RecenterRate = 10;
 	centerObject();
+	
+	ViewFlag = 1;
 	setView(2);
 	
 	cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice);
@@ -365,6 +339,8 @@ void setup()
 	cudaErrorCheck(__FILE__, __LINE__);
         
 	printf("\n");
+	sleep(2);
+	
 	terminalPrint();
 }
 
@@ -377,12 +353,12 @@ int main(int argc, char** argv)
 
 	// Clip plains
 	Near = 0.2;
-	Far = 80.0*RadiusOfAtria;
+	Far = 80.0*RadiusOfLeftAtrium;
 
 	//Direction here your eye is located location
-	EyeX = 0.0*RadiusOfAtria;
-	EyeY = 0.0*RadiusOfAtria;
-	EyeZ = 2.0*RadiusOfAtria;
+	EyeX = 0.0*RadiusOfLeftAtrium;
+	EyeY = 0.0*RadiusOfLeftAtrium;
+	EyeZ = 2.0*RadiusOfLeftAtrium;
 
 	//Where you are looking
 	CenterX = 0.0;
@@ -410,7 +386,7 @@ int main(int argc, char** argv)
 	glClearColor(BackGroundRed, BackGroundGreen, BackGroundBlue, 0.0);
 	
 	//GLfloat light_position[] = {EyeX, EyeY, EyeZ, 0.0};
-	GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
+	GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
 	GLfloat light_ambient[]  = {1.0, 1.0, 1.0, 1.0}; //what color is the ambient light, {r,g,b,a}, a= opacity 1.0 is fully visible, 0.0 is invisible
 	GLfloat light_diffuse[]  = {1.0, 1.0, 1.0, 1.0}; //does light reflect off of the object, {r,g,b,a}, a has no effect
 	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0}; //does light highlight shiny surfaces, {r,g,b,a}. i.e what light reflects to viewer

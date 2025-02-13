@@ -35,7 +35,7 @@ using namespace std;
 // For videos and screenshots
 FILE* MovieFile;
 int* Buffer;
-int MovieOn;
+bool MovieIsOn;
 
 // To setup your CUDA device
 dim3 BlockNodes, GridNodes;
@@ -46,7 +46,7 @@ float Dt;
 float PrintRate;
 int DrawRate;
 int RecenterRate;
-int Pause;
+bool PauseIs;
 
 // This is the node that the beat iminates from.
 int PulsePointNode;
@@ -56,15 +56,13 @@ int PulsePointNode;
 int UpNode;
 int FrontNode;
 
-int AblateOnOff;
-int EctopicBeatOnOff;
-int EctopicEventOnOff;
-int AdjustMuscleOnOff;
-int FindNodeOnOff;
-int MouseFunctionOnOff;
+bool AblateModeIs;
+bool EctopicBeatModeIs;
+bool EctopicEventModeIs;
+bool AdjustMuscleModeIs;
+bool FindNodeModeIs;
+bool MouseFunctionModeIs;
 int ViewFlag; // 0 orthoganal, 1 fulstum
-int MovieFlag; // 0 movie off, 1 movie on
-
 
 float HitMultiplier;
 int ScrollSpeedToggle;
@@ -82,29 +80,32 @@ int DrawFrontHalfFlag;
 float Viscosity;
 float MyocyteForcePerMass;
 float MyocyteForcePerMassMultiplier;
+float MyocyteForcePerMassSTD;
 float DiastolicPressureLA;
 float SystolicPressureLA;
 float PressureMultiplier;
 
 float BeatPeriod;
 
-float MassOfAtria;
-float RadiusOfAtria;
+float MassOfLeftAtrium;
+float RadiusOfLeftAtrium;
 
 int NumberOfNodes;
 int NumberOfMuscles;
 
-int ContractionType;
-float BaseMuscleRelaxedStrengthFraction;
-float BaseMuscleCompresionStopFraction;
+bool ContractionIsOn;
+float MuscleRelaxedStrengthFraction;
+float MuscleCompresionStopFraction;
+float MuscleCompresionStopFractionSTD;
+float BaseMuscleRefractoryPeriod;
+float MuscleRefractoryPeriodSTD;
+float RefractoryPeriodAdjustmentMultiplier;
 float BaseMuscleConductionVelocity;
-float BaseMuscleConductionVelocityAdjustmentMultiplier;
-float BaseMuscleContractionDuration;
-float BaseMuscleContractionDurationAdjustmentMultiplier;
-float BaseMuscleRechargeDuration;
-float BaseMuscleRechargeDurationAdjustmentMultiplier;
+float MuscleConductionVelocitySTD;
+float MuscleConductionVelocityAdjustmentMultiplier;
 float BaseMuscleContractionStrength;
-float RelativeRefractoryPeriodFraction;
+float AbsoluteRefractoryPeriodFraction;
+float AbsoluteRefractoryPeriodFractionSTD;
 
 float DragMultiplier;
 
@@ -126,8 +127,8 @@ struct muscleAtributesStructure
 	int nodeA;
 	int nodeB;    
 	int apNode;
-	bool on;
-	bool disabled;
+	bool isOn;
+	bool isDisabled;
 	float timer;
 	float mass;
 	float naturalLength;
@@ -135,9 +136,9 @@ struct muscleAtributesStructure
 	float compresionStopFraction;
 	float conductionVelocity;
 	float conductionDuration;
-	float contractionDuration;
+	float refractoryPeriod;
+	float absoluteRefractoryPeriodFraction;
 	float contractionStrength;
-	float rechargeDuration;
 	float4 color;
 };
 
@@ -151,23 +152,18 @@ struct nodeAtributesStructure
 	float4 force;
 	float mass;
 	float area;
-	bool beatNode;
+	bool isBeatNode;
 	float beatPeriod;
 	float beatTimer;
-	bool fire;
-	bool ablated;
-	bool drawNode;
+	bool isFiring;
+	bool isAblated;
+	bool drawNodeIs;
 	float4 color;
 	int muscle[MUSCLES_PER_NODE];
 };
 
 nodeAtributesStructure *Node;
 nodeAtributesStructure *NodeGPU;
-
-// FFFFFFFFFFFFFFFFFFFFFFFF remove this.
-// This is a list of all the nodes a node is connected to. It is biuld in the initial structure and used to setup the nodes and the muscles
-// then it is not used anymore.
-//int *ConnectingNodes;  
 
 // This will hold the center of mass on the GPU so the center of mass can be adjusted on the GPU. 
 // This will keep us from having to copy the nodes down and up to do this on the CPU.
@@ -207,9 +203,9 @@ int main(int, char**);
 
 // Functions in the CUDAFunctions.h file.
 __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
-__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float dt, int, float4, float, float, float, float, int);
-__global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
-__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4, float);
+__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float);
+__global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, bool);
+__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
 __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
 
 void cudaErrorCheck(const char *, int);
@@ -221,8 +217,10 @@ void setNodesFromBlenderFile();
 void checkNodes();
 void setMusclesFromBlenderFile();
 void linkNodesToMuscles();
-double getLogNormal();
-void setMuscleAttributesAndNodeMasses();
+double getLogNormal(float);
+void setRemainingNodeAndMuscleAttributes();
+void getNodesandMusclesFromPreviuosRun();
+void checkMuscle(int);
 
 // Functions in the hardCodedNodeAndMuscleAtributes.h file.
 void hardCodedAblations();
@@ -252,9 +250,8 @@ void mouseEctopicBeatMode();
 void mouseAdjustMusclesMode();
 void mouseIdentifyNodeMode();
 int setMouseMuscleAttributes();
-void setMouseMuscleContractionDuration();
-void setMouseMuscleRechargeDuration();
-void setMouseMuscleContractionVelocity();
+void setMouseMuscleRefractoryPeriod();
+void setMouseMuscleConductionVelocity();
 void setEctopicBeat(int);
 void clearStdin();
 void getEctopicBeatPeriod(int);

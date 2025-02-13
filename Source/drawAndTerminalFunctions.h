@@ -195,11 +195,11 @@ void drawPicture()
 	
 	// Draw Nodes
 	// Pulse node
-	if(Pause == 0) glColor3d(0.0,1.0,0.0);
+	if(PauseIs == false) glColor3d(0.0,1.0,0.0);
 	else glColor3d(1.0,0.0,0.0);
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
-	glutSolidSphere(0.03*RadiusOfAtria,20,20);
+	glutSolidSphere(0.03*RadiusOfLeftAtrium,20,20);
 	glPopMatrix();
 	
 	// Drawing center node
@@ -223,7 +223,7 @@ void drawPicture()
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
 					glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-					glutSolidSphere(NodeRadiusAdjustment*RadiusOfAtria,20,20);
+					glutSolidSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
 					glPopMatrix();
 				}
 			}
@@ -232,7 +232,7 @@ void drawPicture()
 				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 				glPushMatrix();
 				glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-				glutSolidSphere(NodeRadiusAdjustment*RadiusOfAtria,20,20);
+				glutSolidSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
 				glPopMatrix();
 			}	
 		}
@@ -248,7 +248,7 @@ void drawPicture()
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 					{
 						glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-						if(Node[i].drawNode == true)
+						if(Node[i].drawNodeIs == true)
 						{
 							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 						}
@@ -257,7 +257,7 @@ void drawPicture()
 				else
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-					if(Node[i].drawNode == true)
+					if(Node[i].drawNodeIs == true)
 					{
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 					}
@@ -304,7 +304,7 @@ void drawPicture()
 		}	
 	}
 	
-	if(MouseFunctionOnOff == 1)
+	if(MouseFunctionModeIs == true)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
@@ -315,7 +315,7 @@ void drawPicture()
 		glPushMatrix();
 		glTranslatef(MouseX, MouseY, MouseZ);
 		
-		glutSolidSphere(HitMultiplier*RadiusOfAtria,20,20);
+		glutSolidSphere(HitMultiplier*RadiusOfLeftAtrium,20,20);
 		//glutSolidSphere(5.0*NodeRadiusAdjustment*RadiusOfAtria,20,20);
 		glPopMatrix();
 		glDisable(GL_BLEND);
@@ -323,7 +323,7 @@ void drawPicture()
 
 	glutSwapBuffers();
 	
-	if(MovieOn == 1)
+	if(MovieIsOn == true)
 	{
 		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
@@ -350,25 +350,22 @@ void terminalPrint()
 	//printf("\n Driving beat node is %d.", EctopicEvents[0].node);
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	
-	if(AdjustMuscleOnOff == 1) 
+	if(AdjustMuscleModeIs == true) 
 	{
-		printf("\n Base muscle contraction multiplier =");
+		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
-		printf(" %f", BaseMuscleContractionDurationAdjustmentMultiplier);
+		printf(" %f", RefractoryPeriodAdjustmentMultiplier);
 		printf("\033[0m");
-		printf("\n Base muscle recharge multiplier =");
-		printf("\033[0;36m");
-		printf(" %f", BaseMuscleRechargeDurationAdjustmentMultiplier);
 		printf("\033[0m");
-		printf("\n Base muscle electrical conduction speed multiplier =");
+		printf("\n Muscle electrical conduction speed multiplier =");
 		printf("\033[0;36m");
-		printf(" %f", BaseMuscleConductionVelocityAdjustmentMultiplier);
+		printf(" %f", MuscleConductionVelocityAdjustmentMultiplier);
 		printf("\033[0m");
 	}
 	
 	for(int i = 1; i < NumberOfNodes; i++)
 	{
-		if(Node[i].beatNode == true)
+		if(Node[i].isBeatNode == true)
 		{
 			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", i, Node[i].beatPeriod);
 		}
@@ -389,7 +386,7 @@ void terminalPrint()
 	
 	printf("\n Toggles");
 	printf("\n r: Run/Pause            - ");
-	if (Pause == 0) 
+	if (PauseIs == false) 
 	{
 		printf("\033[0;32m");
 		printf(BOLD_ON "Simulation Running" BOLD_OFF);
@@ -406,7 +403,7 @@ void terminalPrint()
 	printf("\n v: Orthogonal/Frustum   - ");
 	if (ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustrum" BOLD_OFF);
 	printf("\n m: Video On/Off         - ");
-	if (MovieFlag == 0) 
+	if (MovieIsOn == false) 
 	{
 		printf("\033[0;31m");
 		printf(BOLD_ON "Video Recording Off" BOLD_OFF); 
@@ -439,7 +436,7 @@ void terminalPrint()
 	printf("\n Set Mouse actions");
 	
 	printf("\n !: Ablate            - ");
-	if (AblateOnOff == 1) 
+	if (AblateModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -447,7 +444,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n @: Ectoic Beat       - ");
-	if (EctopicBeatOnOff == 1) 
+	if (EctopicBeatModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -455,7 +452,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger   - ");
-	if (EctopicEventOnOff == 1) 
+	if (EctopicEventModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -463,7 +460,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n $: Muscle Adjustment - ");
-	if (AdjustMuscleOnOff == 1) 
+	if (AdjustMuscleModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -471,7 +468,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n ^: Identify Node     - ");
-	if (FindNodeOnOff == 1) 
+	if (FindNodeModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
