@@ -104,7 +104,7 @@ float BaseMuscleConductionVelocity;
 float MuscleConductionVelocitySTD;
 float MuscleConductionVelocityAdjustmentMultiplier;
 float BaseMuscleContractionStrength;
-float AbsoluteRefractoryPeriodFraction;
+float BaseAbsoluteRefractoryPeriodFraction;
 float AbsoluteRefractoryPeriodFractionSTD;
 
 float DragMultiplier;
@@ -217,7 +217,7 @@ void setNodesFromBlenderFile();
 void checkNodes();
 void setMusclesFromBlenderFile();
 void linkNodesToMuscles();
-double getLogNormal(float);
+double croppedRandomNumber(double, double, double);
 void setRemainingNodeAndMuscleAttributes();
 void getNodesandMusclesFromPreviuosRun();
 void checkMuscle(int);

@@ -8,7 +8,7 @@
  void checkNodes();
  void setMusclesFromBlenderFile();
  void linkNodesToMuscles();
- double getLogNormal(float);
+ double croppedRandomNumber(double, double, double);
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviuosRun();
  void checkMuscle(int);
@@ -309,59 +309,32 @@ void linkNodesToMuscles()
 }
 
 /*
- This function uses the Box-Muller meathod to create a log normal random number from two
- uniform random numbers.
+ This function: 
+ 1: Uses the Box-Muller meathod to create a standard normal random number from two uniform random numbers.
+ 2: Sets the standard deviation to what was input.
+ 3: Checks to see if the random number is between the desired numbers. If not throw it away and choose again.
 */
-double getLogNormal(float standardDeviation)
+double croppedRandomNumber(double stddev, double left, double right)
 {
-	time_t t;
-	
-	// Seading the random number generater.
-	srand((unsigned) time(&t));
 	double temp1, temp2;
 	double randomNumber;
-	int test;
-	
-	/*
-	// Using Box-Muller to get a standard normally distributed random numbers 
-				// from two uniformlly distributed random numbers.
-				randomNumber = cos(2.0*PI*temp2)*sqrt(-2 * log(temp1));
-				
-				// Log normal
-				if (DustDistributionType == 0)
-				{
-					randomNumber = exp(randomNumber);
-					diameter = BaseDustDiameter + DustDiameterStandardDeviation*randomNumber;
-					test = 1;
-				}
-	*/			
-				
-				
-	
-	// Getting two uniform random numbers in [0,1]
-	temp1 = ((double) rand() / (RAND_MAX));
-	temp2 = ((double) rand() / (RAND_MAX));
-	test = 0;
-	while(test == 0)
-	{
-		// Getting ride of the end points so now random number is in (0,1)
-		if(temp1 == 0 || temp1 == 1 || temp2 == 0 || temp2 == 1) 
-		{
-			temp1 = ((double) rand() / (RAND_MAX));
-			temp2 = ((double) rand() / (RAND_MAX));
-			test = 0;
-		}
-		else
-		{
-			// Using Box-Muller to get a standard normally distributed random numbers 
-			// from two uniformlly distributed random numbers.
-			randomNumber = cos(2.0*PI*temp2)*sqrt(-2 * log(temp1));
-			// Creating a log-normal distrobution from the normal randon number.
-			randomNumber = standardDeviation*exp(randomNumber);
+	bool test = false;
 			
-			test = 1;
-		}
-
+	while(test == false)
+	{
+		// Getting two uniform random numbers in [0,1]
+		temp1 = ((double) rand() / (RAND_MAX));
+		temp2 = ((double) rand() / (RAND_MAX));
+		
+		// Using Box-Muller to get a standard normally distributed random number (mean = 0, stddev = 1)
+		randomNumber = sqrt(-2.0 * log(temp1))*cos(2.0*PI*temp2);
+		
+		// Setting its Standard Deviation to the the desired value. 
+		randomNumber *= stddev;
+		
+		// Chopping the random number between left and right.  
+		if(randomNumber < left || right < randomNumber) test = false;
+		else test = true;
 	}
 	return(randomNumber);	
 }
@@ -388,15 +361,12 @@ double getLogNormal(float standardDeviation)
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
-//MuscleConductionVelocitySTD
-//AbsoluteRefractoryPeriodFractionSTD 
-//MuscleRefractoryPeriodSTD
-//MuscleCompresionStopFractionSTD
-//MyocyteForcePerMassSTD
-
-	time_t t;
-	// Seading the random number generater.
-	srand((unsigned) time(&t));
+	//MuscleConductionVelocitySTD
+	//AbsoluteRefractoryPeriodFractionSTD 
+	//MuscleRefractoryPeriodSTD
+	//MuscleCompresionStopFractionSTD
+	//MyocyteForcePerMassSTD
+	double stddev, left, right;
 	
 	// 1:
 	double dx, dy, dz, d;
@@ -437,14 +407,34 @@ void setRemainingNodeAndMuscleAttributes()
 	// 4:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
-		Muscle[i].conductionVelocity = BaseMuscleConductionVelocity + getLogNormal(MuscleConductionVelocitySTD);
-		Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;	
-		Muscle[i].refractoryPeriod = BaseMuscleRefractoryPeriod + getLogNormal(MuscleRefractoryPeriodSTD);
-		Muscle[i].absoluteRefractoryPeriodFraction = AbsoluteRefractoryPeriodFraction + getLogNormal(AbsoluteRefractoryPeriodFractionSTD);
+		stddev = MuscleConductionVelocitySTD;
+		left = -MuscleConductionVelocitySTD;
+		right = MuscleConductionVelocitySTD;
+		Muscle[i].conductionVelocity = BaseMuscleConductionVelocity + croppedRandomNumber(stddev, left, right);
 		
-		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMass + getLogNormal(MyocyteForcePerMassSTD))*Muscle[i].mass;
+		Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+		
+		stddev = MuscleRefractoryPeriodSTD;
+		left = -MuscleRefractoryPeriodSTD;
+		right = MuscleRefractoryPeriodSTD;	
+		Muscle[i].refractoryPeriod = BaseMuscleRefractoryPeriod + croppedRandomNumber(stddev, left, right);
+		
+		stddev = AbsoluteRefractoryPeriodFractionSTD;
+		left = -AbsoluteRefractoryPeriodFractionSTD;
+		right = AbsoluteRefractoryPeriodFractionSTD;
+		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
+		
+		stddev = MyocyteForcePerMassSTD;
+		left = -MyocyteForcePerMassSTD;
+		right = MyocyteForcePerMassSTD;
+		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMass + croppedRandomNumber(stddev, left, right))*Muscle[i].mass;
+		
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
-		Muscle[i].compresionStopFraction = MuscleCompresionStopFraction + getLogNormal(MuscleCompresionStopFractionSTD);
+		
+		stddev = MuscleCompresionStopFractionSTD;
+		left = -MuscleCompresionStopFractionSTD;
+		right = MuscleCompresionStopFractionSTD;
+		Muscle[i].compresionStopFraction = MuscleCompresionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
 	// Adjusting blood presure from millimeters of Mercury to our units.
@@ -511,6 +501,10 @@ void getNodesandMusclesFromPreviuosRun()
     wrong in the setup file. Here we kill the muscle and move on but we might should kill the simulation.
  3: If the muscle can contract past half its natural length or cannot contract down to its natural length
     something is wrong in the setup simulation file. Here we kill the muscle and move on.
+ 4: If the muscle should be greater than half the refractory period and less than the refractory period. 
+    If not something is wrong. Here we kill the muscle and move on.
+ 5: If the muscle's contration strength is negative something is wrong. Here we kill the muscle and move on.
+    
  We left each if statement as a stand alone unit incase the user wants to perform a different act in a selected
  if statement. We could have set a flag and just killed the the muscle after all checks, but this gives move
  flexability for future directions. 
@@ -527,7 +521,6 @@ void checkMuscle(int muscleId)
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
 		Muscle[muscleId].color.w = 1.0;
-		sleep(2);
 	} 
 	// 2:							
 	if(Muscle[muscleId].contractionStrength < Muscle[muscleId].relaxedStrength)
@@ -539,7 +532,6 @@ void checkMuscle(int muscleId)
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
 		Muscle[muscleId].color.w = 1.0;
-		sleep(2);
 	} 
 	// 3:
 	if(Muscle[muscleId].compresionStopFraction < 0.5 || 1.0 < Muscle[muscleId].compresionStopFraction)
@@ -551,7 +543,28 @@ void checkMuscle(int muscleId)
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
 		Muscle[muscleId].color.w = 1.0;
-		sleep(2);
+	}
+	// 4:
+	if(Muscle[muscleId].absoluteRefractoryPeriodFraction < 0.5 || 1.0 < Muscle[muscleId].absoluteRefractoryPeriodFraction)
+	{
+		printf("\n\n The absolute refractory period for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compresionStopFraction);
+	 	printf("\n Muscle %d will be disabled. \n", muscleId);
+	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].color.x = DeadColor.x;
+		Muscle[muscleId].color.y = DeadColor.y;
+		Muscle[muscleId].color.z = DeadColor.z;
+		Muscle[muscleId].color.w = 1.0;
+	}
+	// 5:
+	if(Muscle[muscleId].contractionStrength < 0.0)
+	{
+		printf("\n\n The contraction strength for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compresionStopFraction);
+	 	printf("\n Muscle %d will be disabled. \n", muscleId);
+	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].color.x = DeadColor.x;
+		Muscle[muscleId].color.y = DeadColor.y;
+		Muscle[muscleId].color.z = DeadColor.z;
+		Muscle[muscleId].color.w = 1.0;
 	}
 }
 

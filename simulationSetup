@@ -5,7 +5,7 @@ Mass gram g
 time millisecond ms
 
 Read from NodesMuscles file (0) or read from a previous run (1).
-NodesMusclesFileOrPreviousRunsFile = 1;
+NodesMusclesFileOrPreviousRunsFile = 0;
 
 Name of the files that holds the nodes and muscles. 
 Line11

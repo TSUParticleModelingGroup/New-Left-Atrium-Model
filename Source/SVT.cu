@@ -176,7 +176,7 @@ void readSimulationParameters()
 		data >> MuscleRefractoryPeriodSTD;
 		        
 		getline(data,name,'=');
-		data >> AbsoluteRefractoryPeriodFraction;
+		data >> BaseAbsoluteRefractoryPeriodFraction;
 		
 		getline(data,name,'=');
 		data >> AbsoluteRefractoryPeriodFractionSTD;
@@ -265,6 +265,10 @@ void readSimulationParameters()
 
 void setup()
 {	
+	// Seading the random number generater.
+	time_t t;
+	srand((unsigned) time(&t));
+	
 	readSimulationParameters();
 	
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
@@ -340,6 +344,13 @@ void setup()
         
 	printf("\n");
 	sleep(2);
+	
+	char temp;
+	printf("\033[0;31m");
+	printf("\n\n The simulation has not been started.");
+	printf("\n Hit any key and return to begin.\n\n");
+	printf("\033[0m");
+	scanf("%s", &temp); 
 	
 	terminalPrint();
 }
