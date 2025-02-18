@@ -14,20 +14,12 @@
 // Local include files
 #include "./header.h"
 #include "./setNodesAndMuscles.h"
-#include "./hardCodedNodeAndMuscleAttribute.h"
 #include "./callBackFunctions.h"
-#include "./drawAndTerminalFunctions.h"
+#include "./viewDrawAndTerminalFunctions.h"
 #include "./cudaFunctions.h"
 
 void n_body(float dt)
 {	
-/*
-	printf("\n ReadyColor %f %f %f ", ReadyColor.x,ReadyColor.y,ReadyColor.z);
-	printf("\n ContractingColor %f %f %f ", ContractingColor.x,ContractingColor.y,ContractingColor.z);
-	printf("\n RestingColor %f %f %f ", RestingColor.x,RestingColor.y,RestingColor.z);
-	printf("\n RelativeColor %f %f %f \n", RelativeColor.x,RelativeColor.y,RelativeColor.z);
-	sleep(5);
-	*/
 	if(PauseIs == false)
 	{	
 		if(ContractionIsOn == true)
@@ -36,23 +28,22 @@ void n_body(float dt)
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, DragMultiplier, dt, RunTime, ContractionIsOn);
+		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, ContractionIsOn);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
-		RecenterCount++;
-		if(RecenterCount == RecenterRate) 
+		
+		if(ContractionIsOn == true)
 		{
-			float4 centerOfMass;
-			centerOfMass.x = 0.0;
-			centerOfMass.y = 0.0;
-			centerOfMass.z = 0.0;
-			centerOfMass.w = 0.0;
-			recenter<<<1, BLOCKCENTEROFMASS>>>(NodeGPU, NumberOfNodes, centerOfMass, CenterOfSimulation);
-			cudaErrorCheck(__FILE__, __LINE__);
-			RecenterCount = 0;
+			RecenterCount++;
+			if(RecenterCount == RecenterRate) 
+			{
+				recenter<<<1, BLOCKCENTEROFMASS>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
+				cudaErrorCheck(__FILE__, __LINE__);
+				RecenterCount = 0;
+			}
 		}
 		
 		DrawTimer++;
@@ -155,7 +146,7 @@ void readSimulationParameters()
 		data >> RadiusOfLeftAtrium;
 		
 		getline(data,name,'=');
-		data >> DragMultiplier;
+		data >> Drag;
 		
 		getline(data,name,'=');
 		data >> ContractionIsOn;
@@ -280,7 +271,7 @@ void setup()
 		setRemainingNodeAndMuscleAttributes();
 		hardCodedAblations();
 		hardCodedPeriodicEctopicEvents();
-		setIndividualMuscleAttributes();
+		hardCodedIndividualMuscleAttributes();
 		for(int i = 0; i < NumberOfMuscles; i++)
 		{	
 			checkMuscle(i);
@@ -297,54 +288,13 @@ void setup()
 		exit(0);
 	}
 	
+	setRemainingParameters();
+	
 	setupCudaInvironment();
 	
-	
-	AngleOfSimulation.x = 0.0;
-	AngleOfSimulation.y = 1.0;
-	AngleOfSimulation.z = 0.0;
-	
-	// ??????????? why is center of mass not zeroed out here?
-	
-	RefractoryPeriodAdjustmentMultiplier = 1.0;
-	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-
-	DrawTimer = 0; 
-	RunTime = 0.0;
-	PauseIs = true;
-	
-	DrawNodesFlag = 0;
-	DrawFrontHalfFlag = 0;
-	
-	MovieIsOn = false;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	AdjustMuscleModeIs = false;
-	FindNodeModeIs = false;
-	EctopicEventModeIs = false;
-	MouseFunctionModeIs = false;
-	
-	HitMultiplier = 0.03;
-	MouseZ = RadiusOfLeftAtrium;
-	ScrollSpeedToggle = 1;
-	ScrollSpeed = 1.0;
-	MouseWheelPos = 0;
-	
-	RecenterCount = 0;
-	RecenterRate = 10;
-	centerObject();
-	
-	ViewFlag = 1;
-	setView(2);
-	
-	cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
+	copyNodesMusclesToGPU();
         
 	printf("\n");
-	sleep(2);
-	
 	char temp;
 	printf("\033[0;31m");
 	printf("\n\n The simulation has not been started.");

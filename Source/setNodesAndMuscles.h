@@ -1,6 +1,8 @@
 /*
  This file contains all the functions that read in the nodes and muscles, links them together, 
- sets up the node and muscle atributes, and asigns them there values in our units.
+ sets up the node and muscle atributes, and asigns them there values in our units. 
+ Additionally it sets any remaining run parameters to get started in the setRemainingParameters() 
+ function.
  
  The functions are listed below in the order they appear.
  
@@ -11,6 +13,10 @@
  double croppedRandomNumber(double, double, double);
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviuosRun();
+ void setRemainingParameters();
+ void hardCodedAblations();
+ void hardCodedPeriodicEctopicEvents();
+ void hardCodedIndividualMuscleAttributes();
  void checkMuscle(int);
 */
 
@@ -361,11 +367,6 @@ double croppedRandomNumber(double stddev, double left, double right)
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
-	//MuscleConductionVelocitySTD
-	//AbsoluteRefractoryPeriodFractionSTD 
-	//MuscleRefractoryPeriodSTD
-	//MuscleCompresionStopFractionSTD
-	//MyocyteForcePerMassSTD
 	double stddev, left, right;
 	
 	// 1:
@@ -437,10 +438,6 @@ void setRemainingNodeAndMuscleAttributes()
 		Muscle[i].compresionStopFraction = MuscleCompresionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
-	// Adjusting blood presure from millimeters of Mercury to our units.
-	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
-	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
-	
 	printf("\n All node and muscle attributes have been set.");
 }
 
@@ -483,13 +480,141 @@ void getNodesandMusclesFromPreviuosRun()
 	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
+	
 	Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
 	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
+	
 	fread(Node, sizeof(nodeAtributesStructure), NumberOfNodes, inFile);
   	fread(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, inFile);
 	fclose(inFile);
+	
 	printf("\n Nodes and Muscles have been read in from %s.", fileName);	
+}
+
+/*
+ This function sets any remaining parameters that are not part of the nodes or muscles structures.
+ It also sets or initializes the run parameters for this run.
+*/
+void setRemainingParameters()
+{
+	// Adjusting blood presure from millimeters of Mercury to our units.
+	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
+	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
+	
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+	
+	CenterOfSimulation.x = 0.0;
+	CenterOfSimulation.y = 0.0;
+	CenterOfSimulation.z = 0.0;
+	
+	AngleOfSimulation.x = 0.0;
+	AngleOfSimulation.y = 1.0;
+	AngleOfSimulation.z = 0.0;
+
+	DrawTimer = 0; 
+	RunTime = 0.0;
+	PauseIs = true;
+	
+	DrawNodesFlag = 0;
+	DrawFrontHalfFlag = 0;
+	
+	MovieIsOn = false;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
+	FindNodeModeIs = false;
+	EctopicEventModeIs = false;
+	MouseFunctionModeIs = false;
+	
+	HitMultiplier = 0.03;
+	MouseZ = RadiusOfLeftAtrium;
+	ScrollSpeedToggle = 1;
+	ScrollSpeed = 1.0;
+	MouseWheelPos = 0;
+	
+	RecenterCount = 0;
+	RecenterRate = 10;
+	setView(6);
+	
+	ViewFlag = 1;
+}
+
+/*
+ If you know that you want to ablated a set of nodes before the simulation
+ starts you can do it here, or just wait and do it in the running simulation.
+ Do not ablate the PulsePointNode node unless you want to have a simulation 
+ that just sets there.
+ 
+ An example is give and comented out below to work from.
+*/
+void hardCodedAblations()
+{	
+	// To ablate a slected node set your index and uncomment this line.
+	
+	/*
+	int index = ???;
+	if(0 < index && index < NumberOfNodes)
+	{
+		Node[index].isAblated = true;
+		Node[index].drawNodeIs = true;
+		Node[index].color.x = 1.0;
+		Node[index].color.y = 1.0;
+		Node[index].color.z = 1.0;
+	}
+	
+	if(index == PulsePointNode) 
+	{
+		printf("\n\n You have ablated the pulse point node in the hardCodedAblations() function.");
+		printf("\n If this is what you wanted to do fine.");
+		printf("\n If not change your sellection in the code hardCodedAblations() function.");
+		printf("\n");
+	}
+	*/
+}
+
+/*
+ If you know that you want to set a node to be a pulse node before the simulation
+ starts you can do it here, or just wait and do it in the running simulation.
+ Do not set the the PulsePointNode node because it has alread been set in the 
+ setNodesFromBlenderFile() function
+ 
+ An example is give and comented out below to work from.
+*/
+void hardCodedPeriodicEctopicEvents()
+{	
+	/*
+	int index = ???;
+	if(0 < index && index < NumberOfNodes && index != PulsePointNode)
+	{
+		Node[index].isBeatNode = true;
+		Node[index].beatPeriod = ???;
+		Node[index].beatTimer = ???;
+		Node[index].drawNodeIs = true;
+		Node[index].color.x = 1.0;
+		Node[index].color.y = 0.0;
+		Node[index].color.z = 1.0;
+	}
+	*/
+}
+
+/*
+ If you know that you want to set a muscle's atributes before the simulation
+ starts you can do it here, or just wait and do it in the running simulation.
+ 
+ An example is give and comented out below to work from.
+*/
+void hardCodedIndividualMuscleAttributes()
+{
+	/*
+	int index = 100; // Set index to the muscle number you want.
+	Muscle[index].conductionVelocity = BaseMuscleConductionVelocity*(10.0);
+	Muscle[index].conductionDuration = Muscle[index].naturalLength/Muscle[index].conductionVelocity;
+	Muscle[index].refractoryPeriod = BaseMuscleRefractoryPeriod*(10.0);
+	checkMuscle(index);
+	*/
 }		
 		
 /*

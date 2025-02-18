@@ -11,7 +11,8 @@
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
- void mouseAdjustMusclesMode();
+ void mouseAdjustMusclesAreaMode();
+ void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
  int setMouseMuscleAttributes();
  void setMouseMuscleRefractoryPeriod();
@@ -29,8 +30,6 @@
  void KeyPressed(unsigned char, int, int);
  void mousePassiveMotionCallback(int, int);
  void mymouse(int, int, int, int);
- float4 findCenterOfMass();
- void centerObject();
 */
 
 void Display(void)
@@ -74,7 +73,8 @@ void mouseFunctionsOff()
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
-	AdjustMuscleModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = false;
 	terminalPrint();
@@ -88,7 +88,8 @@ void mouseAblateMode()
 	AblateModeIs = true;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
-	AdjustMuscleModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -103,7 +104,8 @@ void mouseEctopicBeatMode()
 	AblateModeIs = false;
 	EctopicBeatModeIs = true;
 	EctopicEventModeIs = false;
-	AdjustMuscleModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -122,7 +124,8 @@ void mouseEctopicEventMode()
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = true;
-	AdjustMuscleModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -131,13 +134,36 @@ void mouseEctopicEventMode()
 	terminalPrint();
 }
 
-void mouseAdjustMusclesMode()
+void mouseAdjustMusclesAreaMode()
 {
 	PauseIs = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
-	AdjustMuscleModeIs = true;
+	AdjustMuscleAreaModeIs = true;
+	AdjustMuscleLineModeIs = false;
+	FindNodeModeIs = false;
+	MouseFunctionModeIs = true;
+	glutSetCursor(GLUT_CURSOR_NONE);
+	//orthoganialView();
+	drawPicture();
+	
+	int returnCode = setMouseMuscleAttributes();
+	
+	if(returnCode == 1)
+	{
+		terminalPrint();
+	}
+}
+
+void mouseAdjustMusclesLineMode()
+{
+	PauseIs = true;
+	AblateModeIs = false;
+	EctopicBeatModeIs = false;
+	EctopicEventModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = true;
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -158,7 +184,8 @@ void mouseIdentifyNodeMode()
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
-	AdjustMuscleModeIs = false;
+	AdjustMuscleAreaModeIs = false;
+	AdjustMuscleLineModeIs = false;
 	FindNodeModeIs = true;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -260,7 +287,6 @@ void getEctopicBeatPeriod(int nodeId)
 		printf("\n You entered %f.", Node[nodeId].beatPeriod);
 		printf("\n You cannot have a beat period that is a nonpositive number.");
 		printf("\n Retry\n");
-		exit(0);
 		getEctopicBeatPeriod(nodeId);
 	}
 	else
@@ -561,8 +587,6 @@ void KeyPressed(unsigned char key, int x, int y)
 		lookVector.z /= d;
 	}
 	
-	centerOfMass = findCenterOfMass();
-	
 	if(key == 'h')  // Help menu
 	{
 		helpMenu();
@@ -581,14 +605,16 @@ void KeyPressed(unsigned char key, int x, int y)
 		else PauseIs = false;
 		terminalPrint();
 	}
+	
 	if(key == 'n')  // Draw nodes toggle
 	{
 		if(DrawNodesFlag == 0) DrawNodesFlag = 1;
 		else if(DrawNodesFlag == 1) DrawNodesFlag = 2;
 		else DrawNodesFlag = 0;
 		drawPicture();
-	terminalPrint();
+		terminalPrint();
 	}
+	
 	if(key == 'g')  // Draw full or front half toggle
 	{
 		if(DrawFrontHalfFlag == 0) DrawFrontHalfFlag = 1;
@@ -596,6 +622,7 @@ void KeyPressed(unsigned char key, int x, int y)
 		drawPicture();
 		terminalPrint();
 	}
+	
 	if(key == 'B')  // Raising the beat period
 	{
 		Node[PulsePointNode].beatPeriod += 10;
@@ -614,6 +641,7 @@ void KeyPressed(unsigned char key, int x, int y)
 		cudaErrorCheck(__FILE__, __LINE__);
 		terminalPrint();
 	}
+	
 	if(key == 'v') // Orthoganal/Fulstrium view
 	{
 		if(ViewFlag == 0) 
@@ -749,6 +777,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'w')  // Rotate counterclockwise on the x-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -766,6 +795,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 's')  // Rotate clockwise on the x-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -783,6 +813,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'd')  // Rotate counterclockwise on the y-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -800,6 +831,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'a')  // Rotate clockwise on the y-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -817,6 +849,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'z')  // Rotate counterclockwise on the z-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -834,6 +867,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == 'Z')  // Rotate clockwise on the z-axis
 	{
+		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
 		{
 			Node[i].position.x -= centerOfMass.x;
@@ -898,7 +932,12 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 	if(key == '$') // muscle adjustment is on (shift 4)
 	{
-		mouseAdjustMusclesMode();
+		mouseAdjustMusclesAreaMode();
+		MouseFunctionModeIs = true;
+	}
+	if(key == '%') // muscle adjustment is on (shift 4)
+	{
+		mouseAdjustMusclesLineMode();
 		MouseFunctionModeIs = true;
 	}
 	if(key == '^')  // Find node is on (shift 5)
@@ -935,7 +974,6 @@ void KeyPressed(unsigned char key, int x, int y)
 	copyNodesMusclesToGPU();
 }
 
-
 void mousePassiveMotionCallback(int x, int y) 
 {
 	// This function is called when the mouse moves without any button pressed
@@ -953,7 +991,7 @@ void mousePassiveMotionCallback(int x, int y)
 
 void mymouse(int button, int state, int x, int y)
 {	
-	float dx, dy, dz;
+	float d, dx, dy, dz;
 	float hit;
 	int muscleId;
 	
@@ -964,136 +1002,307 @@ void mymouse(int button, int state, int x, int y)
 		
 		if(button == GLUT_LEFT_BUTTON)
 		{	
-			for(int i = 0; i < NumberOfNodes; i++)
+			if(AdjustMuscleLineModeIs == true)
 			{
-				dx = MouseX - Node[i].position.x;
-				dy = MouseY - Node[i].position.y;
-				dz = MouseZ - Node[i].position.z;
-				
-				if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+				// Finding the two closest nodes to the mouse.
+				int nodeId1 = -1;
+				int nodeId2 = -1;
+				int connectingMuscle = -1;
+				int test = -1;
+				float minDistance = 2.0*RadiusOfLeftAtrium;
+				for(int i = 0; i < NumberOfNodes; i++)
 				{
-					if(AblateModeIs == true)
+					dx = MouseX - Node[i].position.x;
+					dy = MouseY - Node[i].position.y;
+					dz = MouseZ - Node[i].position.z;
+					d = sqrt(dx*dx + dy*dy + dz*dz);
+					if(d < minDistance)
 					{
-						Node[i].isAblated = true;
-						Node[i].drawNodeIs = true;
-						Node[i].color.x = 1.0;
-						Node[i].color.y = 1.0;
-						Node[i].color.z = 1.0;
+						minDistance = d;
+						nodeId2 = nodeId1;
+						nodeId1 = i;
 					}
-					if(EctopicBeatModeIs == true)
+				}
+				
+				// If for some reason two nodes were not found. Not sure how this could
+				// happen, but just to be safe we put a check in here.
+				if(nodeId2 == -1)
+				{
+					printf("\n Two nodes were not found try again.\n");
+					printf("\n MouseZ = %lf.\n", MouseZ);
+				}
+				// We got the two closest nodes to the mouse. Now see if there is a muscle that
+				// connects these two nodes. If there is a connecting muscle, adjust it.
+				else
+				{
+					if(Node[nodeId1].isAblated == false)
 					{
-						//cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
-						//cudaErrorCheck(__FILE__, __LINE__);
-						
-						PauseIs = true;
-						
-						printf("\n Node number = %d", i);
-						
-						setEctopicBeat(i);
-						
-						//cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
-						//cudaErrorCheck(__FILE__, __LINE__);
+						Node[nodeId1].color.x = 1.0;
+						Node[nodeId1].color.y = 0.0;
+						Node[nodeId1].color.z = 1.0;
+						Node[nodeId1].drawNodeIs = true;
 					}
-					if(AdjustMuscleModeIs == 1)
+					
+					if(Node[nodeId2].isAblated == false)
 					{
-						for(int j = 0; j < MUSCLES_PER_NODE; j++)
+						Node[nodeId2].color.x = 1.0;
+						Node[nodeId2].color.y = 0.0;
+						Node[nodeId2].color.z = 1.0;
+						Node[nodeId2].drawNodeIs = true;
+					}
+					
+					for(int i = 0; i < MUSCLES_PER_NODE; i++) // Spinnning through muscles on node 1.
+					{
+						muscleId = Node[nodeId1].muscle[i]; 
+						if(muscleId != -1)
 						{
-							muscleId = Node[i].muscle[j];
-							if(muscleId != -1)
+							for(int j = 0; j < MUSCLES_PER_NODE; j++) // Spinnning through muscles on node 2.
 							{
-								// This sets the muscle to the base value then adjusts it. 
-								Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
-								Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
-								
-								// This adjusts the muscle based on its current value.
-								//Muscle[muscleId].refractoryPeriod *= RefractoryPeriodAdjustmentMultiplier;
-								//Muscle[muscleId].conductionVelocity *= MuscleConductionVelocityAdjustmentMultiplier;
-								
-								Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
-								Muscle[muscleId].color.x = 1.0;
-								Muscle[muscleId].color.y = 0.0;
-								Muscle[muscleId].color.z = 1.0;
-								Muscle[muscleId].color.w = 0.0;
-								
-								checkMuscle(muscleId);
+								test = Node[nodeId2].muscle[j];
+								if(muscleId == test) // Checking to see if we get a match.
+								{
+									connectingMuscle = muscleId;
+								}
+							}
+						}
+					}
+					if(connectingMuscle == -1)
+					{
+						printf("\n No connecting muscle was found try again.\n");
+					}
+					else
+					{
+						muscleId = connectingMuscle;
+						Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
+						Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
+						Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
+						Muscle[muscleId].color.x = 1.0;
+						Muscle[muscleId].color.y = 0.0;
+						Muscle[muscleId].color.z = 1.0;
+						Muscle[muscleId].color.w = 0.0;
+						
+						checkMuscle(muscleId);		
+					}
+				}
+			}
+			else
+			{
+				for(int i = 0; i < NumberOfNodes; i++)
+				{
+					dx = MouseX - Node[i].position.x;
+					dy = MouseY - Node[i].position.y;
+					dz = MouseZ - Node[i].position.z;
+					
+					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+					{
+						if(AblateModeIs == true)
+						{
+							Node[i].isAblated = true;
+							Node[i].drawNodeIs = true;
+							Node[i].color.x = 1.0;
+							Node[i].color.y = 1.0;
+							Node[i].color.z = 1.0;
+						}
+						
+						if(EctopicBeatModeIs == true)
+						{
+							PauseIs = true;
+							printf("\n Node number = %d", i);
+							setEctopicBeat(i);
+						}
+						
+						if(AdjustMuscleAreaModeIs == true)
+						{
+							for(int j = 0; j < MUSCLES_PER_NODE; j++)
+							{
+								muscleId = Node[i].muscle[j];
+								if(muscleId != -1)
+								{
+									// This sets the muscle to the base value then adjusts it. 
+									Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
+									Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
+									
+									// This adjusts the muscle based on its current value.
+									//Muscle[muscleId].refractoryPeriod *= RefractoryPeriodAdjustmentMultiplier;
+									//Muscle[muscleId].conductionVelocity *= MuscleConductionVelocityAdjustmentMultiplier;
+									
+									Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
+									Muscle[muscleId].color.x = 1.0;
+									Muscle[muscleId].color.y = 0.0;
+									Muscle[muscleId].color.z = 1.0;
+									Muscle[muscleId].color.w = 0.0;
+									
+									checkMuscle(muscleId);
+								}
+							}
+							
+							Node[i].drawNodeIs = true;
+							if(Node[i].isAblated == false) // If it is not ablated color it.
+							{
+								Node[i].color.x = 0.0;
+								Node[i].color.y = 0.0;
+								Node[i].color.z = 1.0;
 							}
 						}
 						
-						Node[i].drawNodeIs = true;
-						if(Node[i].isAblated == false) // If it is not ablated color it.
+						if(EctopicEventModeIs == true)
 						{
-							Node[i].color.x = 0.0;
+							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+							cudaErrorCheck(__FILE__, __LINE__);
+							
+							Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
+							
+							cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+							cudaErrorCheck(__FILE__, __LINE__);
+						}
+						
+						if(FindNodeModeIs == true)
+						{
+							Node[i].drawNodeIs = true;
+							Node[i].color.x = 1.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
+							printf("\n Node number = %d", i);
 						}
-					}
-					if(EctopicEventModeIs == true)
-					{
-						cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
-						cudaErrorCheck(__FILE__, __LINE__);
-						
-						Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
-						
-						cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
-						cudaErrorCheck(__FILE__, __LINE__);
-					}
-					if(FindNodeModeIs == true)
-					{
-						Node[i].drawNodeIs = true;
-						Node[i].color.x = 1.0;
-						Node[i].color.y = 0.0;
-						Node[i].color.z = 1.0;
-						printf("\n Node number = %d", i);
 					}
 				}
 			}
 		}
 		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
 		{
-			for(int i = 0; i < NumberOfNodes; i++)
+			if(AdjustMuscleLineModeIs == true)
 			{
-				dx = MouseX - Node[i].position.x;
-				dy = MouseY - Node[i].position.y;
-				dz = MouseZ - Node[i].position.z;
-				if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+				// Finding the two closest nodes to the mouse.
+				int nodeId1 = -1;
+				int nodeId2 = -1;
+				int connectingMuscle = -1;
+				int test = -1;
+				float minDistance = 2.0*RadiusOfLeftAtrium;
+				for(int i = 0; i < NumberOfNodes; i++)
 				{
-					if(AblateModeIs == true)
+					dx = MouseX - Node[i].position.x;
+					dy = MouseY - Node[i].position.y;
+					dz = MouseZ - Node[i].position.z;
+					d = sqrt(dx*dx + dy*dy + dz*dz);
+					if(d < minDistance)
 					{
-						Node[i].isAblated = false;
-						Node[i].drawNodeIs = false;
-						Node[i].color.x = 0.0;
-						Node[i].color.y = 1.0;
-						Node[i].color.z = 0.0;
+						minDistance = d;
+						nodeId2 = nodeId1;
+						nodeId1 = i;
 					}
-					if(AdjustMuscleModeIs == true)
+				}
+				
+				// If for some reason two nodes were not found. Not sure how this could
+				// happen, but just to be safe we put a check in here.
+				if(nodeId2 == -1)
+				{
+					printf("\n Two nodes were not found try again.\n");
+					printf("\n MouseZ = %lf.\n", MouseZ);
+				}
+				// We got the two closest nodes to the mouse. Now see if there is a muscle that
+				// connects these two nodes. If there is a connecting muscle, adjust it.
+				else
+				{
+					if(Node[nodeId1].isAblated == false)
 					{
-						for(int j = 0; j < MUSCLES_PER_NODE; j++)
+						Node[nodeId1].color.x = 0.0;
+						Node[nodeId1].color.y = 1.0;
+						Node[nodeId1].color.z = 0.0;
+						Node[nodeId1].drawNodeIs = false;
+					}
+					
+					if(Node[nodeId2].isAblated == false)
+					{
+						Node[nodeId2].color.x = 0.0;
+						Node[nodeId2].color.y = 1.0;
+						Node[nodeId2].color.z = 0.0;
+						Node[nodeId2].drawNodeIs = false;
+					}
+					
+					for(int i = 0; i < MUSCLES_PER_NODE; i++) // Spinnning through muscles on node 1.
+					{
+						muscleId = Node[nodeId1].muscle[i]; 
+						if(muscleId != -1)
 						{
-							muscleId = Node[i].muscle[j];
-							if(muscleId != -1)
+							for(int j = 0; j < MUSCLES_PER_NODE; j++) // Spinnning through muscles on node 2.
 							{
-								Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod;
-								Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity;
-								Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
-								Muscle[muscleId].color.x = 0.0;
-								Muscle[muscleId].color.y = 1.0;
-								Muscle[muscleId].color.z = 0.0;
-								Muscle[muscleId].color.w = 0.0;
-								
-								// Turning the muscle back on if it was disabled.
-								Muscle[muscleId].isDisabled = false;
-								
-								// Checking to see if the muscle needs to be killed.
-								checkMuscle(muscleId);
+								test = Node[nodeId2].muscle[j];
+								if(muscleId == test) // Checking to see if we get a match.
+								{
+									connectingMuscle = muscleId;
+								}
 							}
 						}
+					}
+					if(connectingMuscle == -1)
+					{
+						printf("\n No connecting muscle was found try again.\n");
+					}
+					else
+					{
+						muscleId = connectingMuscle;
+						Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod;
+						Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity;
+						Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
+						Muscle[muscleId].color.x = 0.0;
+						Muscle[muscleId].color.y = 1.0;
+						Muscle[muscleId].color.z = 0.0;
+						Muscle[muscleId].color.w = 0.0;
+						// Turning the muscle back on if it was disabled.
+						Muscle[muscleId].isDisabled = false;
 						
-						Node[i].drawNodeIs = true;
-						if(Node[i].isAblated == false) // If it is not ablated color it.
+						checkMuscle(muscleId);		
+					}
+				}
+			}
+			else
+			{
+				for(int i = 0; i < NumberOfNodes; i++)
+				{
+					dx = MouseX - Node[i].position.x;
+					dy = MouseY - Node[i].position.y;
+					dz = MouseZ - Node[i].position.z;
+					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+					{
+						if(AblateModeIs == true)
 						{
+							Node[i].isAblated = false;
+							Node[i].drawNodeIs = false;
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 1.0;
 							Node[i].color.z = 0.0;
+						}
+						
+						if(AdjustMuscleAreaModeIs == true)
+						{
+							for(int j = 0; j < MUSCLES_PER_NODE; j++)
+							{
+								muscleId = Node[i].muscle[j];
+								if(muscleId != -1)
+								{
+									Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod;
+									Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity;
+									Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
+									Muscle[muscleId].color.x = 0.0;
+									Muscle[muscleId].color.y = 1.0;
+									Muscle[muscleId].color.z = 0.0;
+									Muscle[muscleId].color.w = 0.0;
+									
+									// Turning the muscle back on if it was disabled.
+									Muscle[muscleId].isDisabled = false;
+									
+									// Checking to see if the muscle needs to be killed.
+									checkMuscle(muscleId);
+								}
+							}
+							
+							Node[i].drawNodeIs = true;
+							if(Node[i].isAblated == false) // If it is not ablated color it.
+							{
+								Node[i].color.x = 0.0;
+								Node[i].color.y = 1.0;
+								Node[i].color.z = 0.0;
+							}
 						}
 					}
 				}
@@ -1133,48 +1342,4 @@ void mymouse(int button, int state, int x, int y)
 		//printf("MouseZ = %f\n", MouseZ);
 		drawPicture();
 	}
-}
-
-float4 findCenterOfMass()
-{
-	float4 centerOfMass;
-	
-	centerOfMass.x = 0.0;
-	centerOfMass.y = 0.0;
-	centerOfMass.z = 0.0;
-	centerOfMass.w = 0.0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		 centerOfMass.x += Node[i].position.x*Node[i].mass;
-		 centerOfMass.y += Node[i].position.y*Node[i].mass;
-		 centerOfMass.z += Node[i].position.z*Node[i].mass;
-		 centerOfMass.w += Node[i].mass;
-	}
-	if(centerOfMass.w < 0.00001)
-	{
-		printf("\n Mass is too small\n");
-		printf("\nw Good Bye\n");
-		exit(0);
-	}
-	else
-	{
-		centerOfMass.x /= centerOfMass.w;
-		centerOfMass.y /= centerOfMass.w;
-		centerOfMass.z /= centerOfMass.w;
-	}
-	return(centerOfMass);
-}
-
-void centerObject()
-{
-	float4 centerOfMass = findCenterOfMass();
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		Node[i].position.x -= centerOfMass.x;
-		Node[i].position.y -= centerOfMass.y;
-		Node[i].position.z -= centerOfMass.z;
-	}
-	CenterOfSimulation.x = 0.0;
-	CenterOfSimulation.y = 0.0;
-	CenterOfSimulation.z = 0.0;
 }

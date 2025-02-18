@@ -6,7 +6,7 @@
  __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float)
  __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
  __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
- __global__ void recenter(nodeAtributesStructure *, int, float4, float4);
+ __global__ void recenter(nodeAtributesStructure *, int, float, float4);
  void errorCheck(const char *);
  void cudaErrorCheck(const char *, int);
  void copyNodesMusclesToGPU();
@@ -241,36 +241,16 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
  This CUDA function first moves the nodes then checks to see if the node is a beat node, if it is it updates its time 
  and if its time is past the beat period it sends out a signal then zeros out its timer to start a new period.
  
- Most of the forces on the node were calculated in the getForce GPU function but we need to get one more force.
- This force is based off of velocity and why we are doing it here. It is the drag force. When doing modeling you always 
- need to build in some way to remove excess energy from the system or the energy may build up and disturb your simulation.
- In nature this is usually experienced as heat and/or fliud resistance (drag). We are using a fluid drag force here to 
- remove energy biuld up. We are using a sphere moving through blood here because it felt relevant and we can scale it 
- to the problem but you could use any energy remove scheme you like as long as it is scaled to the problem.
- The drag force in a fluid is 
- F = (1/2)*c*p*A*v*v Where 
- c is the drag coefficient of the object: c for a sphere is 0.47
- p is the density of the fluid: p for blood is 1/1000 grams/mm^3
- v is the velocity of the object
- A is the area of the object facing the fluid.
- 
- This force did not seem to be strong enough and the Atrium quivered and moved around a great deal. This might be 
- accurate if you placed an isolated beating atrium in a contaner of blood. In reality the atrium is conected to other 
- parts of the body which keep it in space. For our purposes we just needed it to remain in place a little better 
- so we added a multiplier so the user can adjust it in the simulation setup file.
+ We also add some drag to the system to remove energy biuldup.
 */
-__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float dragMultiplier, float dt, double time, bool ContractionIsOn)
+__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float drag, float dt, double time, bool ContractionIsOn)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(i < numberOfNodes)
 	{
 		if(ContractionIsOn == true)
-		{
-			// Calculating the drag.
-			float velocitySquared = node[i].velocity.x*node[i].velocity.x + node[i].velocity.y*node[i].velocity.y + node[i].velocity.z*node[i].velocity.z;
-			float drag = dragMultiplier*node[i].area*0.000235*velocitySquared;
-			
+		{	
 			// Moving the nodes forward in time with the leap-frog formulas. 
 			if(time == 0.0)
 			{
@@ -413,7 +393,7 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
  This scheme is working fine but I believe we could do this more eficently and also have it bring in the view you are in
  to improve the stablity of the user's view.
 */
-__global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4 centerOfMass, float4 centerOfSimulation)
+__global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
 {
 	int id, n, nodeId;
 	
@@ -441,7 +421,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 			myPart[id].x += node[nodeId].position.x*node[nodeId].mass;
 			myPart[id].y += node[nodeId].position.y*node[nodeId].mass;
 			myPart[id].z += node[nodeId].position.z*node[nodeId].mass;
-			myPart[id].w += node[nodeId].mass;
+			//myPart[id].w += node[nodeId].mass;
 		}
 	}
 	__syncthreads();
@@ -458,7 +438,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 			myPart[id].x += myPart[id + n].x;
 			myPart[id].y += myPart[id + n].y;
 			myPart[id].z += myPart[id + n].z;
-			myPart[id].w += myPart[id + n].w;
+			//myPart[id].w += myPart[id + n].w;
 		}
 		__syncthreads();
 	}
@@ -467,9 +447,12 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float4
 	// Dividing by the total mass will now give us the center of mass of all the nodes.
 	if(id == 0)
 	{
-		myPart[0].x /= myPart[0].w;
-		myPart[0].y /= myPart[0].w;
-		myPart[0].z /= myPart[0].w;
+		//myPart[0].x /= myPart[0].w;
+		//myPart[0].y /= myPart[0].w;
+		//myPart[0].z /= myPart[0].w;
+		myPart[0].x /= massOfLA;
+		myPart[0].y /= massOfLA;
+		myPart[0].z /= massOfLA;
 	}
 	__syncthreads();
 	

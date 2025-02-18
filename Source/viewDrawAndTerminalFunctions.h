@@ -3,6 +3,8 @@
  In short the is file holds the functions that display to the user.
  The functions are listed below in the order they appear.
  
+ float4 findCenterOfMass();
+ void centerObject();
  void rotateXAxis(float);
  void rotateYAxis(float);
  void rotateZAxis(float);
@@ -13,6 +15,54 @@
  void drawPicture();
  void terminalPrint();
 */
+
+float4 findCenterOfMass()
+{
+	float4 centerOfMass;
+	
+	centerOfMass.x = 0.0;
+	centerOfMass.y = 0.0;
+	centerOfMass.z = 0.0;
+	centerOfMass.w = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		 centerOfMass.x += Node[i].position.x*Node[i].mass;
+		 centerOfMass.y += Node[i].position.y*Node[i].mass;
+		 centerOfMass.z += Node[i].position.z*Node[i].mass;
+		 centerOfMass.w += Node[i].mass;
+	}
+	if(centerOfMass.w < 0.00001)
+	{
+		printf("\n Mass is too small\n");
+		printf("\nw Good Bye\n");
+		exit(0);
+	}
+	else
+	{
+		centerOfMass.x /= centerOfMass.w;
+		centerOfMass.y /= centerOfMass.w;
+		centerOfMass.z /= centerOfMass.w;
+	}
+	return(centerOfMass);
+}
+
+void centerObject()
+{
+	float4 centerOfMass = findCenterOfMass();
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		Node[i].position.x -= centerOfMass.x;
+		Node[i].position.y -= centerOfMass.y;
+		Node[i].position.z -= centerOfMass.z;
+		
+		Node[i].velocity.x = 0.0;
+		Node[i].velocity.y = 0.0;
+		Node[i].velocity.z = 0.0;
+	}
+	CenterOfSimulation.x = 0.0;
+	CenterOfSimulation.y = 0.0;
+	CenterOfSimulation.z = 0.0;
+}
 
 void rotateXAxis(float angle)
 {
@@ -59,13 +109,7 @@ void ReferenceView()
 	
 	float angle, temp;
 	
-	float4 centerOfMass = findCenterOfMass();
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		Node[i].position.x -= centerOfMass.x;
-		Node[i].position.y -= centerOfMass.y;
-		Node[i].position.z -= centerOfMass.z;
-	}
+	centerObject();
 		
 	// Rotating until the up Node is on x-y plane above or below the positive x-axis.
 	angle = atan(Node[UpNode].position.z/Node[UpNode].position.x);
@@ -131,6 +175,7 @@ void setView(int view)
 	
 	if(view == 6)
 	{
+		// It is already in reference view from the function call above.
 		strcpy(ViewName, "Ref");
 	}
 	if(view == 4)
@@ -203,13 +248,13 @@ void drawPicture()
 	glPopMatrix();
 	
 	// Drawing center node
-	/*
+	
 	glColor3d(1.0,1.0,1.0);
 	glPushMatrix();
 	glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
-	glutSolidSphere(0.02*RadiusOfAtria,20,20);
+	glutSolidSphere(0.02*RadiusOfLeftAtrium,20,20);
 	glPopMatrix();
-	*/
+	
 
 	// Drawing other nodes
 	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)
@@ -349,8 +394,9 @@ void terminalPrint()
 	
 	//printf("\n Driving beat node is %d.", EctopicEvents[0].node);
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
+	printf("\n");
 	
-	if(AdjustMuscleModeIs == true) 
+	if(AdjustMuscleAreaModeIs == true || AdjustMuscleLineModeIs == true) 
 	{
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
@@ -363,15 +409,14 @@ void terminalPrint()
 		printf("\033[0m");
 	}
 	
-	for(int i = 1; i < NumberOfNodes; i++)
+	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		if(Node[i].isBeatNode == true)
+		if(Node[i].isBeatNode == true && i != PulsePointNode)
 		{
 			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", i, Node[i].beatPeriod);
 		}
 	}
 	
-	printf("\n");
 	printf("\033[0;33m");
 	printf("\n **************************** Terminal Comands ****************************");
 	printf("\033[0m");
@@ -435,7 +480,7 @@ void terminalPrint()
 	printf("\n");
 	printf("\n Set Mouse actions");
 	
-	printf("\n !: Ablate            - ");
+	printf("\n !: Ablate ---------------------- ");
 	if (AblateModeIs == true) 
 	{
 		printf("\033[0;36m");
@@ -443,7 +488,7 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n @: Ectoic Beat       - ");
+	printf("\n @: Ectoic Beat ----------------- ");
 	if (EctopicBeatModeIs == true) 
 	{
 		printf("\033[0;36m");
@@ -451,7 +496,7 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n #: Ectopic Trigger   - ");
+	printf("\n #: Ectopic Trigger ------------- ");
 	if (EctopicEventModeIs == true) 
 	{
 		printf("\033[0;36m");
@@ -459,15 +504,23 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n $: Muscle Adjustment - ");
-	if (AdjustMuscleModeIs == true) 
+	printf("\n $: Muscle Adjustment Area Mode - ");
+	if (AdjustMuscleAreaModeIs == true) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n ^: Identify Node     - ");
+	printf("\n %%: Muscle Adjustment Line Mode - ");
+	if (AdjustMuscleLineModeIs == true) 
+	{
+		printf("\033[0;36m");
+		printf(BOLD_ON "On" BOLD_OFF); 
+	}
+	else printf(BOLD_ON "Off" BOLD_OFF);
+	
+	printf("\n ^: Identify Node --------------- ");
 	if (FindNodeModeIs == true) 
 	{
 		printf("\033[0;36m");
@@ -475,7 +528,7 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n ): Turns all Mouse functions off");
+	printf("\n ): Turns all Mouse functions off.");
 	printf("\n");
 	printf("\n [/]: (left/right bracket) Increase/Decrease mouse selection area.");
 	printf("\n      The current selection area is");

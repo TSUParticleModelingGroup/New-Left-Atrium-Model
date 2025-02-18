@@ -52,26 +52,29 @@ bool PauseIs;
 int PulsePointNode;
 
 // Nodes that orient the simulation. 
-// If UpNode is up and FrontNode is in the front you should be in the standard view.
+// If the node's center of mass is at <0,0,0> and the UpNode is up and FrontNode is in the front looking at you, you should be in the standard view.
 int UpNode;
 int FrontNode;
 
+// This are the switches that tell what action you are performing to the LA.
 bool AblateModeIs;
 bool EctopicBeatModeIs;
 bool EctopicEventModeIs;
-bool AdjustMuscleModeIs;
+bool AdjustMuscleAreaModeIs;
+bool AdjustMuscleLineModeIs;
 bool FindNodeModeIs;
 bool MouseFunctionModeIs;
 int ViewFlag; // 0 orthoganal, 1 fulstum
 
-float HitMultiplier;
-int ScrollSpeedToggle;
-float ScrollSpeed;
+float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
+int ScrollSpeedToggle; // Sets slow or fast scroll speed.
+float ScrollSpeed; // How fast your scroll moves.
 
-int NodesMusclesFileOrPreviousRunsFile;
-char NodesMusclesFileName[256];
-char PreviousRunFileName[256];
-char ViewName[256] = "no view set";
+int NodesMusclesFileOrPreviousRunsFile; // Switch to tell if you are biulding the LA from nodes and muscles file or reading an old run.
+char NodesMusclesFileName[256]; // Holds name of nodes and muscle file created on blender.
+char PreviousRunFileName[256]; // Holds name of previous run file.
+
+char ViewName[256] = "no view set"; // Diplays what view you are in.
 float LineWidth;
 int DrawNodesFlag;
 float NodeRadiusAdjustment;
@@ -107,7 +110,7 @@ float BaseMuscleContractionStrength;
 float BaseAbsoluteRefractoryPeriodFraction;
 float AbsoluteRefractoryPeriodFractionSTD;
 
-float DragMultiplier;
+float Drag;
 
 float4 ReadyColor;
 float4 ContractingColor;
@@ -206,8 +209,7 @@ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, 
 __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float);
 __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, bool);
 __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
-__global__ void recenter(nodeAtributesStructure *, int, float4, float4);
-
+__global__ void recenter(nodeAtributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
@@ -220,14 +222,15 @@ void linkNodesToMuscles();
 double croppedRandomNumber(double, double, double);
 void setRemainingNodeAndMuscleAttributes();
 void getNodesandMusclesFromPreviuosRun();
-void checkMuscle(int);
-
-// Functions in the hardCodedNodeAndMuscleAtributes.h file.
+void setRemainingParameters();
 void hardCodedAblations();
 void hardCodedPeriodicEctopicEvents();
-void setIndividualMuscleAttributes();
+void hardCodedIndividualMuscleAttributes();
+void checkMuscle(int);
  
-// Functions in the DrawAndTerminalFunctions.h file.
+// Functions in the viewDrawAndTerminalFunctions.h file.
+float4 findCenterOfMass();
+void centerObject();
 void rotateXAxis(float);
 void rotateYAxis(float);
 void rotateZAxis(float);
@@ -247,7 +250,8 @@ void fulstrumView();
 void mouseFunctionsOff();
 void mouseAblateMode();
 void mouseEctopicBeatMode();
-void mouseAdjustMusclesMode();
+void mouseAdjustMusclesAreaMode();
+void mouseAdjustMusclesLineMode();
 void mouseIdentifyNodeMode();
 int setMouseMuscleAttributes();
 void setMouseMuscleRefractoryPeriod();
@@ -265,6 +269,4 @@ void helpMenu();
 void KeyPressed(unsigned char, int, int);
 void mousePassiveMotionCallback(int, int);
 void mymouse(int, int, int, int);
-float4 findCenterOfMass();
-void centerObject();
 

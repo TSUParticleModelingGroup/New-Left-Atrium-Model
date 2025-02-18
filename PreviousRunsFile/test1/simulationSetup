@@ -29,10 +29,8 @@ InputFileName = IdealLeftAtrium2.3K
 Place the name of the previous run file you would like to run here.
 The three run files below are just examples for demonstration purposes.
 When you have your own run file place the name after the equals sign. 
-PVFlutterDemo
-MicroReentryDemo
-RoofFlutterDemo
-PreviousRunFileName = PVFlutterDemo
+test1
+PreviousRunFileName = test1
 
 Note: you will only read from a (nodes and muscle file) or from a (previuos run file) not both.
 
@@ -75,10 +73,8 @@ MassOfLeftAtrium = 25.0;
 This should be the radius of the Left atriam. ??? The atriam holds around 23640 cubic millimeters of blood which gives a radius of 17.8 millimeters. (float) 
 RadiusOfLeftAtrium = 17.8;
 
-We set the drag using the viscusity of a sphere moving through blood. It let the AL move around a little more than disired so this
-value is multiplied by the drag so the user can adjust there simulation as desired. The initial drag calculation just gets you in
-the ballpark.
-DragMultiplier = 100.0;
+To remove energy biuldup in the system add drag. This helps keep the system from quivering and wandering around. 
+Drag = 1.0;
 
 If you want to turn off muscle contractions and just watch the electrical process you do that be setting this flag to 0.
 1 (true) turns the muscle contraction on.
