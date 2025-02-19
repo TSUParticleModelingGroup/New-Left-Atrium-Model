@@ -1,5 +1,6 @@
 /*
  This file contains all the CUDA and CUDA related function. 
+ 
  They are listed below in the order they appear.
  
  __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);

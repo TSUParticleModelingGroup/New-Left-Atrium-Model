@@ -1,13 +1,13 @@
 /*
  This file contains all the callBack functions and function that it calls to do its work.
+ In isense this file contains all the ways a user can interact (Mouse and Ternimal) with 
+ a running simulation.
  
  The functions in this file are listed below and in this order.
  
  void Display(void);
  void idle();
  void reshape(int, int);
- void orthoganialView();
- void fulstrumView();
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
@@ -26,47 +26,38 @@
  void movieOff();
  void screenShot();
  void saveSettings();
- void helpMenu();
  void KeyPressed(unsigned char, int, int);
  void mousePassiveMotionCallback(int, int);
  void mymouse(int, int, int, int);
 */
 
+/*
+ OpenGL callback when the window is created or reshaped.
+*/
 void Display(void)
 {
 	drawPicture();
 }
 
+/*
+ OpenGL callback when the window is doing nothing else.
+*/
 void idle()
 {
 	nBody(Dt);
 }
 
+/*
+ OpenGL callback when the window is reshaped.
+*/
 void reshape(int w, int h)
 {
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-void orthoganialView()
-{
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-RadiusOfLeftAtrium, RadiusOfLeftAtrium, -RadiusOfLeftAtrium, RadiusOfLeftAtrium, Near, Far);
-	glMatrixMode(GL_MODELVIEW);
-	ViewFlag = 0;
-	drawPicture();
-}
-
-void fulstrumView()
-{
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
-	glMatrixMode(GL_MODELVIEW);
-	ViewFlag = 1;
-	drawPicture();
-}
-
+/*
+ Turns off all the user interactions.
+*/
 void mouseFunctionsOff()
 {
 	PauseIs = true;
@@ -82,6 +73,9 @@ void mouseFunctionsOff()
 	drawPicture();
 }
 
+/*
+ Puts the user in ablate mode.
+*/
 void mouseAblateMode()
 {
 	PauseIs = true;
@@ -98,6 +92,9 @@ void mouseAblateMode()
 	drawPicture();
 }
 
+/*
+ Puts the user in extopic beat mode.
+*/
 void mouseEctopicBeatMode()
 {
 	PauseIs = true;
@@ -118,6 +115,9 @@ void mouseEctopicBeatMode()
 	printf("\n");
 }
 
+/*
+ Puts the user in extopic event mode.
+*/
 void mouseEctopicEventMode()
 {
 	PauseIs = true;
@@ -134,6 +134,9 @@ void mouseEctopicEventMode()
 	terminalPrint();
 }
 
+/*
+ Puts the user in area muscle adjustment mode.
+*/
 void mouseAdjustMusclesAreaMode()
 {
 	PauseIs = true;
@@ -156,6 +159,9 @@ void mouseAdjustMusclesAreaMode()
 	}
 }
 
+/*
+ Puts the user in line muscle adjustment mode.
+*/
 void mouseAdjustMusclesLineMode()
 {
 	PauseIs = true;
@@ -178,6 +184,9 @@ void mouseAdjustMusclesLineMode()
 	}
 }
 
+/*
+ Puts the user in identify node mode.
+*/
 void mouseIdentifyNodeMode()
 {
 	PauseIs = true;
@@ -194,6 +203,10 @@ void mouseIdentifyNodeMode()
 	terminalPrint();
 }
 
+/*
+ Calls the functions that get user inputs for how to change selected muscles' refractory periods 
+ and conduction velocities.
+*/
 int setMouseMuscleAttributes()
 {
 	setMouseMuscleRefractoryPeriod();
@@ -201,6 +214,10 @@ int setMouseMuscleAttributes()
 	return(1);
 }
 
+/*
+ This function asks the user to type in the terminal screen the value to be multipled by the
+ selected muscles' refractory period.
+*/
 void setMouseMuscleRefractoryPeriod()
 {
 	system("clear");
@@ -221,6 +238,10 @@ void setMouseMuscleRefractoryPeriod()
 	}
 }
 
+/*
+ This function asks the user to type in the terminal screen the value to be multipled by the
+ selected muscles' conduction velocity.
+*/
 void setMouseMuscleConductionVelocity()
 {
 	system("clear");
@@ -241,6 +262,9 @@ void setMouseMuscleConductionVelocity()
 	}
 }
 
+/*
+ This function sets a node (nodeId) up to be an ectopic beat node.
+*/
 void setEctopicBeat(int nodeId)
 {
 	Node[nodeId].isBeatNode = true;
@@ -262,6 +286,9 @@ void setEctopicBeat(int nodeId)
 	terminalPrint();
 }
 
+/*
+ This function is used to clear the print buffer.
+*/
 void clearStdin()
 {
     int c;
@@ -271,6 +298,9 @@ void clearStdin()
     }
 }
 
+/*
+ This function gets the ectopic beat period from the user.
+*/
 void getEctopicBeatPeriod(int nodeId)
 {
 	float period;
@@ -296,6 +326,12 @@ void getEctopicBeatPeriod(int nodeId)
 	clearStdin();
 }
 
+/*
+ This function gets the ectopic beat offset from the user. This is the amount of time the
+ user wants to pause before turning on the ectopic beat. This allows the user to time the 
+ ectopic beats relative to the current time. So the user can set beats to trigger at diffent 
+ times.
+*/
 void getEctopicBeatOffset(int nodeId)
 {
 	system("clear");
@@ -322,7 +358,9 @@ void getEctopicBeatOffset(int nodeId)
 }
 
 /*
-	Returns a timestamp in M-D-Y-H.M.S format.
+ This function returns a timestamp in M-D-Y-H.M.S format.
+ This is use so each file that is created has a unuque name. 
+ Note: You cannot create more than one file in a second or you will over write the previous file.
 */
 string getTimeStamp()
 {
@@ -350,6 +388,9 @@ string getTimeStamp()
 	return timeStamp;
 }
 
+/*
+ This function turns the movie capture on.
+*/
 void movieOn()
 {
 	string ts = getTimeStamp();
@@ -371,6 +412,9 @@ void movieOn()
 	MovieIsOn = true;
 }
 
+/*
+ This function turns the movie capture off.
+*/
 void movieOff()
 {
 	if(MovieIsOn == true) 
@@ -381,6 +425,9 @@ void movieOff()
 	MovieIsOn = false;
 }
 
+/*
+ This function takes a screen shot of the simulation.
+*/
 void screenShot()
 {	
 	bool pauseFlagIs;
@@ -431,6 +478,13 @@ void screenShot()
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
+/*
+ This function saves all the node and muscle values set in the run to a file. This file then be used at a
+ latter date to start a run with exact settings used at the time of capture.
+ So if the user has spent a great deal of time setting up a scenario they can be saved and used again latter.
+ We use it to create senarios that have arythmias preprogramed into them and have members from a class we are
+ presenting to come up and see if they can use the ablate tool to elemenate the arythmia.
+*/
 void saveSettings()
 {
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
@@ -511,54 +565,10 @@ void saveSettings()
 	chdir("../");
 }
 
-void helpMenu()
-{
-	system("clear");
-	//Pause = 1;
-	printf("\n The simulation is paused.");
-	printf("\n");
-	printf("\n h: Help");
-	printf("\n q: Quit");
-	printf("\n r: Run/Pause (Toggle)");
-	printf("\n g: View front half only/View full image (Toggle)");
-	printf("\n n: Nodes off/half/full (Toggle)");
-	printf("\n v: Orthogonal/Frustum projection (Toggle)");
-	printf("\n");
-	printf("\n m: Movie on/Movie off (Toggle)");
-	printf("\n S: Screenshot");
-	printf("\n");
-	printf("\n Views: 7 8 9 | LL  SUP RL" );
-	printf("\n Views: 4 5 6 | PA  INF Ref" );
-	printf("\n Views: 1 2 3 | LOA AP  ROA" );
-	printf("\n");
-	printf("\n c: Recenter image");
-	printf("\n w: Counterclockwise rotation x-axis");
-	printf("\n s: Clockwise rotation x-axis");
-	printf("\n d: Counterclockwise rotation y-axis");
-	printf("\n a: Clockwise rotation y-axis");
-	printf("\n z: Counterclockwise rotation z-axis");
-	printf("\n Z: Clockwise rotation z-axis");
-	printf("\n e: Zoom in");
-	printf("\n E: Zoom out");
-	printf("\n");
-	printf("\n [ or ]: Increases/Decrease the selection area of the mouse");
-	printf("\n shift 0: Turns off all mouse action.");
-	printf("\n shift 1: Turns on ablating. Left mouse ablate node. Right mouse undo ablation.");
-	printf("\n shift 2: Turns on ectopic beat. Left mouse set node as an ectopic beat location.");
-	printf("\n Note this action will prompt you to enter the");
-	printf("\n beat period and time offset in the terminal.");
-	printf("\n shift 3: Turns on one ectopic trigger.");
-	printf("\n Left mouse will trigger that node to start a single pulse at that location.");
-	printf("\n shift 4: Turns on muscle adjustments. Left mouse set node muscles adjustments.");
-	printf("\n Note this action will prompt you to entire the ");
-	printf("\n contraction, recharge, and action potential adjustment multiplier in the terminal.");
-	printf("\n shift 5: Turns on find node. Left mouse displays the Id of the node in the terminal.");
-	printf("\n");
-	printf("\n k: Save your current muscle attributes (note: previous run files are ignored by git)");
-	printf("\n ?: Find the up and front node at current view.");
-	printf("\n");
-}
-
+/*
+ This function directs the action that needs to be taken if a user hit a key on the key board.
+ The terminal screen lists out all the keys and what they will do.
+*/
 void KeyPressed(unsigned char key, int x, int y)
 {
 	float dAngle = 0.01;
@@ -974,21 +984,22 @@ void KeyPressed(unsigned char key, int x, int y)
 	copyNodesMusclesToGPU();
 }
 
+/*
+ This function is called when the mouse moves without any button pressed.
+ x and y are the current mouse coordinates.
+ x come in as (0, XWindowSize) and y comes in as (0, YWindowSize). 
+ We translates them to MouseX (-1, 1) and MouseY (-1, 1) to corospond to the openGL window size.
+ We then use MouseX and MouseY to determine where the mouse is in the simulation.
+*/
 void mousePassiveMotionCallback(int x, int y) 
 {
-	// This function is called when the mouse moves without any button pressed
-	// x and y are the current mouse coordinates
-	// Use these coordinates as needed
-	
-	// x and y come in as 0 to XWindowSize and 0 to YWindowSize. This traveslates them to -1 to 1 and -1 to 1.
-
 	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
 	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
-	//drawPicture();
-
-	//printf("\n MouseX = %f\n", MouseX);
 }
 
+/*
+ This function does an action based on the mode the viewer is in and which mouse button the user pressed.
+*/
 void mymouse(int button, int state, int x, int y)
 {	
 	float d, dx, dy, dz;

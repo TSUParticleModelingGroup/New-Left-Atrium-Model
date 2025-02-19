@@ -1,7 +1,10 @@
+// To compile the simulation type the line below in the terminal.
+// This is also done for you in the compile linux script.
 // nvcc SVT.cu -o svt -lglut -lm -lGLU -lGL
 
 /*
  This file contains all the the main controller functions that setup the simulation, then run and manage the simulation.
+ 
  The functions are listed below in the order they appear.
  
  void nBody(float);

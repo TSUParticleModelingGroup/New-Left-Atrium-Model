@@ -1,8 +1,14 @@
 /*
- This file contains all the draw and draw related function and the function that does the terminal print. 
- In short the is file holds the functions that display to the user.
+ This file contains:
+ 1: All the functions that determene how orient and view the simulation.
+ 2: all the functions that draw the actual simulation. 
+ 3: The functions that print to the linux terminal all the setting of the simulation.
+ In short this file holds the functions that present information to the user.
+ 
  The functions are listed below in the order they appear.
  
+ void orthoganialView();
+ void fulstrumView();
  float4 findCenterOfMass();
  void centerObject();
  void rotateXAxis(float);
@@ -14,8 +20,42 @@
  void setView(int);
  void drawPicture();
  void terminalPrint();
+ void helpMenu();
 */
 
+/*
+ This function sets your view to orthoganal. In orthoganal view all object are kept in line in the z direction.
+ This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
+*/
+void orthoganialView()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-RadiusOfLeftAtrium, RadiusOfLeftAtrium, -RadiusOfLeftAtrium, RadiusOfLeftAtrium, Near, Far);
+	glMatrixMode(GL_MODELVIEW);
+	ViewFlag = 0;
+	drawPicture();
+}
+
+/*
+ This function sets your view to fulstrum.This is the view the your eyes actually see. Where train tracks pull in 
+ towards each other as they move off in the distance. It is how we see but can cause problems when using the mouse
+ which lives in 2D to locate an object that lives in 3D.
+*/
+void fulstrumView()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
+	glMatrixMode(GL_MODELVIEW);
+	ViewFlag = 1;
+	drawPicture();
+}
+
+/*
+ This function finds the center of mass of the LA. It may seem like this function does not belong with
+ the display functions but it is used to center th LA in the view.
+*/
 float4 findCenterOfMass()
 {
 	float4 centerOfMass;
@@ -31,7 +71,7 @@ float4 findCenterOfMass()
 		 centerOfMass.z += Node[i].position.z*Node[i].mass;
 		 centerOfMass.w += Node[i].mass;
 	}
-	if(centerOfMass.w < 0.00001)
+	if(centerOfMass.w < 0.00001) // .w hold the mass.
 	{
 		printf("\n Mass is too small\n");
 		printf("\nw Good Bye\n");
@@ -46,6 +86,11 @@ float4 findCenterOfMass()
 	return(centerOfMass);
 }
 
+/*
+ This function centers the LA and resets the center of view to (0, 0, 0).
+ It is called periodically in a running simulation to center the LA, because the LA is not simitrical
+ and will wander off over time. It is also use center the LA before all the views are set.
+*/
 void centerObject()
 {
 	float4 centerOfMass = findCenterOfMass();
@@ -55,15 +100,18 @@ void centerObject()
 		Node[i].position.y -= centerOfMass.y;
 		Node[i].position.z -= centerOfMass.z;
 		
-		Node[i].velocity.x = 0.0;
-		Node[i].velocity.y = 0.0;
-		Node[i].velocity.z = 0.0;
+		//Node[i].velocity.x = 0.0;
+		//Node[i].velocity.y = 0.0;
+		//Node[i].velocity.z = 0.0;
 	}
 	CenterOfSimulation.x = 0.0;
 	CenterOfSimulation.y = 0.0;
 	CenterOfSimulation.z = 0.0;
 }
 
+/*
+ This function rotates view around the x-axis.
+*/
 void rotateXAxis(float angle)
 {
 	float temp;
@@ -76,6 +124,9 @@ void rotateXAxis(float angle)
 	AngleOfSimulation.x += angle;
 }
 
+/*
+ This function rotates view around the y-axis.
+*/
 void rotateYAxis(float angle)
 {
 	float temp;
@@ -88,6 +139,9 @@ void rotateYAxis(float angle)
 	AngleOfSimulation.y += angle;
 }
 
+/*
+ This function rotates view around the z-axis.
+*/
 void rotateZAxis(float angle)
 {
 	float temp;
@@ -100,13 +154,13 @@ void rotateZAxis(float angle)
 	AngleOfSimulation.z += angle;
 }
 
+/*
+ This function puts the viewer in the reference view. The reference view is looking straight at the four
+ pulminary viens with a vien in each of the four quadrants of the x-y plane as semetric as you can make 
+ it with the mitral valve down. We base all the other views off of this view.
+*/
 void ReferenceView()
-{
-	// We set the reference view looking straight at the four
-	// pulminary viens with a vien in each of the four quadrants 
-	// of the x-y plane as semetric as you can make it with the 
-	// valve down.
-	
+{	
 	float angle, temp;
 	
 	centerObject();
@@ -144,12 +198,16 @@ void ReferenceView()
 	AngleOfSimulation.y += angle;
 }
 
+/*
+ This function puts the LA in the PA view.
+ The heart does not set in the chest at a straight on angle. Hense we need to adjust our 
+ reference view to what is actually seen in a back view looking through the chest.
+*/
 void PAView()
 {  
-	// The heart does not set in the chest at a straight on angle.
-	// Hense we need to adjust our view to what they use in the EP lab.
-	// We first set the AP view because it is the closest to ours.
 	float angle;
+	
+	ReferenceView();
 	
 	angle = PI/6.0; // Rotate 30 degrees counterclockwise on the y-axis 
 	rotateYAxis(angle);
@@ -158,9 +216,12 @@ void PAView()
 	rotateZAxis(angle);
 }
 
+/*
+ This function puts the LA in the AP view.
+ To get the AP view we just rotate the PA view 180 degrees on the y-axis
+*/
 void APView()
 { 
-	// To get the AP view we just rotate the PA view 180 degrees on the y-axis
 	float angle;
 	
 	PAView();
@@ -168,14 +229,14 @@ void APView()
 	rotateYAxis(angle);
 }
 
+/*
+ This function sets all the views based off of the reference view and the AP view.
+*/
 void setView(int view)
 {
-	// Putting object into reference view because everything is based off of this.
-	ReferenceView();
-	
 	if(view == 6)
 	{
-		// It is already in reference view from the function call above.
+		ReferenceView();
 		strcpy(ViewName, "Ref");
 	}
 	if(view == 4)
@@ -230,6 +291,9 @@ void setView(int view)
 	}
 }
 
+/*
+ This function draws the LA to the screen. It also save movie frames if a movie is being recorded.
+*/
 void drawPicture()
 {
 	//int nodeNumber;
@@ -248,13 +312,14 @@ void drawPicture()
 	glPopMatrix();
 	
 	// Drawing center node
-	
-	glColor3d(1.0,1.0,1.0);
-	glPushMatrix();
-	glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
-	glutSolidSphere(0.02*RadiusOfLeftAtrium,20,20);
-	glPopMatrix();
-	
+	if(0) // 0 turns it off, 1 turns it on.
+	{
+		glColor3d(1.0,1.0,1.0);
+		glPushMatrix();
+		glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
+		glutSolidSphere(0.02*RadiusOfLeftAtrium,20,20);
+		glPopMatrix();
+	}
 
 	// Drawing other nodes
 	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)
@@ -349,6 +414,7 @@ void drawPicture()
 		}	
 	}
 	
+	// Puts a ball at the location of the mouse if a mouse function is on.
 	if(MouseFunctionModeIs == true)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
@@ -368,6 +434,7 @@ void drawPicture()
 
 	glutSwapBuffers();
 	
+	// Saves the picture if a movie is being recorded.
 	if(MovieIsOn == true)
 	{
 		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
@@ -375,6 +442,9 @@ void drawPicture()
 	}
 }
 
+/*
+ This function prints all the run information to the terminal screen.
+*/
 void terminalPrint()
 {
 	system("clear");
@@ -539,6 +609,58 @@ void terminalPrint()
 	printf("\033[0;33m");
 	printf("\n ********************************************************************");
 	printf("\033[0m");
+	printf("\n");
+}
+
+/*
+ This function prints the help menu to the terminal screen.
+*/
+void helpMenu()
+{
+	system("clear");
+	//Pause = 1;
+	printf("\n The simulation is paused.");
+	printf("\n");
+	printf("\n h: Help");
+	printf("\n q: Quit");
+	printf("\n r: Run/Pause (Toggle)");
+	printf("\n g: View front half only/View full image (Toggle)");
+	printf("\n n: Nodes off/half/full (Toggle)");
+	printf("\n v: Orthogonal/Frustum projection (Toggle)");
+	printf("\n");
+	printf("\n m: Movie on/Movie off (Toggle)");
+	printf("\n S: Screenshot");
+	printf("\n");
+	printf("\n Views: 7 8 9 | LL  SUP RL" );
+	printf("\n Views: 4 5 6 | PA  INF Ref" );
+	printf("\n Views: 1 2 3 | LOA AP  ROA" );
+	printf("\n");
+	printf("\n c: Recenter image");
+	printf("\n w: Counterclockwise rotation x-axis");
+	printf("\n s: Clockwise rotation x-axis");
+	printf("\n d: Counterclockwise rotation y-axis");
+	printf("\n a: Clockwise rotation y-axis");
+	printf("\n z: Counterclockwise rotation z-axis");
+	printf("\n Z: Clockwise rotation z-axis");
+	printf("\n e: Zoom in");
+	printf("\n E: Zoom out");
+	printf("\n");
+	printf("\n [ or ]: Increases/Decrease the selection area of the mouse");
+	printf("\n shift 0: Turns off all mouse action.");
+	printf("\n shift 1: Turns on ablating. Left mouse ablate node. Right mouse undo ablation.");
+	printf("\n shift 2: Turns on ectopic beat. Left mouse set node as an ectopic beat location.");
+	printf("\n Note this action will prompt you to enter the");
+	printf("\n beat period and time offset in the terminal.");
+	printf("\n shift 3: Turns on one ectopic trigger.");
+	printf("\n Left mouse will trigger that node to start a single pulse at that location.");
+	printf("\n shift 4: Turns on muscle adjustments. Left mouse set node muscles adjustments.");
+	printf("\n Note this action will prompt you to entire the ");
+	printf("\n contraction, recharge, and action potential adjustment multiplier in the terminal.");
+	printf("\n shift 5: Turns on find node. Left mouse displays the Id of the node in the terminal.");
+	printf("\n");
+	printf("\n k: Save your current muscle attributes.");
+	printf("\n    (note: previous run files are ignored by git. They must be uploaded manually)");
+	printf("\n ?: Find the up and front node at current view.");
 	printf("\n");
 }
 

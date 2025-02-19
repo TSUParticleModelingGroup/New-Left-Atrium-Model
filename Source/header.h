@@ -1,3 +1,8 @@
+/*
+ This file contains all include files, the #defines, structures and globals used in the simulation.
+ All the functions are prototyped in this file as well.
+*/
+
 // External include files
 #include <iostream>
 #include <fstream>
@@ -32,7 +37,55 @@ using namespace std;
 // This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
+// Structures
+// Everything a node holds. We have 1 on the CPU and 1 on the GPU
+struct nodeAtributesStructure
+{
+	float4 position;
+	float4 velocity;
+	float4 force;
+	float mass;
+	float area;
+	bool isBeatNode;
+	float beatPeriod;
+	float beatTimer;
+	bool isFiring;
+	bool isAblated;
+	bool drawNodeIs;
+	float4 color;
+	int muscle[MUSCLES_PER_NODE];
+};
+
+// Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
+struct muscleAtributesStructure
+{
+	int nodeA;
+	int nodeB;    
+	int apNode;
+	bool isOn;
+	bool isDisabled;
+	float timer;
+	float mass;
+	float naturalLength;
+	float relaxedStrength;
+	float compresionStopFraction;
+	float conductionVelocity;
+	float conductionDuration;
+	float refractoryPeriod;
+	float absoluteRefractoryPeriodFraction;
+	float contractionStrength;
+	float4 color;
+};
+
 // Globals Start ******************************************
+
+// This will hold all the nodes.
+nodeAtributesStructure *Node;
+nodeAtributesStructure *NodeGPU;
+
+// This will hold all the muscles.
+muscleAtributesStructure *Muscle;
+muscleAtributesStructure *MuscleGPU;
 
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.
@@ -164,51 +217,6 @@ double UpZ;
 // How many nodes and muscle the simulation contains.
 int NumberOfNodes;
 int NumberOfMuscles;
-
-// Everything a node holds. We have 1 on the CPU and 1 on the GPU
-struct nodeAtributesStructure
-{
-	float4 position;
-	float4 velocity;
-	float4 force;
-	float mass;
-	float area;
-	bool isBeatNode;
-	float beatPeriod;
-	float beatTimer;
-	bool isFiring;
-	bool isAblated;
-	bool drawNodeIs;
-	float4 color;
-	int muscle[MUSCLES_PER_NODE];
-};
-
-nodeAtributesStructure *Node;
-nodeAtributesStructure *NodeGPU;
-
-// Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
-struct muscleAtributesStructure
-{
-	int nodeA;
-	int nodeB;    
-	int apNode;
-	bool isOn;
-	bool isDisabled;
-	float timer;
-	float mass;
-	float naturalLength;
-	float relaxedStrength;
-	float compresionStopFraction;
-	float conductionVelocity;
-	float conductionDuration;
-	float refractoryPeriod;
-	float absoluteRefractoryPeriodFraction;
-	float contractionStrength;
-	float4 color;
-};
-
-muscleAtributesStructure *Muscle;
-muscleAtributesStructure *MuscleGPU;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.
@@ -243,6 +251,8 @@ void hardCodedIndividualMuscleAttributes();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
+void orthoganialView();
+void fulstrumView();
 float4 findCenterOfMass();
 void centerObject();
 void rotateXAxis(float);
@@ -254,13 +264,12 @@ void APView();
 void setView(int);
 void drawPicture();
 void terminalPrint();
+void helpMenu();
 
 // Functions in the callBackFunctions.h file.
 void Display(void);
 void idle();
 void reshape(int, int);
-void orthoganialView();
-void fulstrumView();
 void mouseFunctionsOff();
 void mouseAblateMode();
 void mouseEctopicBeatMode();
@@ -279,7 +288,6 @@ void movieOn();
 void movieOff();
 void screenShot();
 void saveSettings();
-void helpMenu();
 void KeyPressed(unsigned char, int, int);
 void mousePassiveMotionCallback(int, int);
 void mymouse(int, int, int, int);
