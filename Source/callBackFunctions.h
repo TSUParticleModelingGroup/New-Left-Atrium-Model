@@ -1,7 +1,7 @@
 /*
  This file contains all the callBack functions and function that it calls to do its work.
  
- The functions in this file are listed below and it is order.
+ The functions in this file are listed below and in this order.
  
  void Display(void);
  void idle();
@@ -39,7 +39,7 @@ void Display(void)
 
 void idle()
 {
-	n_body(Dt);
+	nBody(Dt);
 }
 
 void reshape(int w, int h)

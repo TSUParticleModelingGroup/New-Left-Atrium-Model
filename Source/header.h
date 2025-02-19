@@ -1,3 +1,4 @@
+// External include files
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -27,26 +28,19 @@ using namespace std;
 // Math defines.
 #define PI 3.141592654
 
-// Structure defines.
+// Structure defines. 
+// This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
 // Globals Start ******************************************
 
-// For videos and screenshots
-FILE* MovieFile;
-int* Buffer;
-bool MovieIsOn;
+// For videos and screenshots variables
+FILE* MovieFile; // File that holds all the movie frames.
+int* Buffer; // Buffer where you create each frame for a movie or the one frame for a screen shot.
 
 // To setup your CUDA device
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
-
-// For Timing
-float Dt;
-float PrintRate;
-int DrawRate;
-int RecenterRate;
-bool PauseIs;
 
 // This is the node that the beat iminates from.
 int PulsePointNode;
@@ -56,7 +50,8 @@ int PulsePointNode;
 int UpNode;
 int FrontNode;
 
-// This are the switches that tell what action you are performing to the LA.
+// This are the switches that tell what action you are performing in the simulation.
+bool PauseIs;
 bool AblateModeIs;
 bool EctopicBeatModeIs;
 bool EctopicEventModeIs;
@@ -64,67 +59,134 @@ bool AdjustMuscleAreaModeIs;
 bool AdjustMuscleLineModeIs;
 bool FindNodeModeIs;
 bool MouseFunctionModeIs;
+bool MovieIsOn;
 int ViewFlag; // 0 orthoganal, 1 fulstum
 
-float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
-int ScrollSpeedToggle; // Sets slow or fast scroll speed.
-float ScrollSpeed; // How fast your scroll moves.
-
-int NodesMusclesFileOrPreviousRunsFile; // Switch to tell if you are biulding the LA from nodes and muscles file or reading an old run.
-char NodesMusclesFileName[256]; // Holds name of nodes and muscle file created on blender.
-char PreviousRunFileName[256]; // Holds name of previous run file.
-
-char ViewName[256] = "no view set"; // Diplays what view you are in.
-float LineWidth;
+// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  
 int DrawNodesFlag;
-float NodeRadiusAdjustment;
+
+// Tells the program to draw the front hal of the simulation or the full simulation.
+// We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
+// or looking through a hold to the back of the simulation. By turning the back off it allows you to
+// orreint yourself.
 int DrawFrontHalfFlag;
 
-float Viscosity;
+// Holds the name of view you are in for diplaying in the terminal print.
+char ViewName[256] = "no view set"; 
+
+// These two variable get user input to adjust muscle refractory periods and conduction velosities when you are
+// in AdjustMuscleAreaMode or AdjustMuscleLineMode modes. Once they are read in they are multiplied by the muscles 
+// refractory period and conduction velocity respcectivly.  
+float RefractoryPeriodAdjustmentMultiplier;
+float MuscleConductionVelocityAdjustmentMultiplier;
+
+// These are all the globals that are read in from the simulationSetup file and are explained in detail there.
+// simulationSetup globals start ************************************************
+int NodesMusclesFileOrPreviousRunsFile;
+char NodesMusclesFileName[256];
+char PreviousRunFileName[256];
+float LineWidth;
+float NodeRadiusAdjustment;
 float MyocyteForcePerMass;
 float MyocyteForcePerMassMultiplier;
 float MyocyteForcePerMassSTD;
 float DiastolicPressureLA;
 float SystolicPressureLA;
 float PressureMultiplier;
-
-float BeatPeriod;
-
 float MassOfLeftAtrium;
 float RadiusOfLeftAtrium;
-
-int NumberOfNodes;
-int NumberOfMuscles;
-
+float Drag;
 bool ContractionIsOn;
 float MuscleRelaxedStrengthFraction;
 float MuscleCompresionStopFraction;
 float MuscleCompresionStopFractionSTD;
 float BaseMuscleRefractoryPeriod;
 float MuscleRefractoryPeriodSTD;
-float RefractoryPeriodAdjustmentMultiplier;
-float BaseMuscleConductionVelocity;
-float MuscleConductionVelocitySTD;
-float MuscleConductionVelocityAdjustmentMultiplier;
-float BaseMuscleContractionStrength;
 float BaseAbsoluteRefractoryPeriodFraction;
 float AbsoluteRefractoryPeriodFractionSTD;
-
-float Drag;
-
+float BaseMuscleConductionVelocity;
+float MuscleConductionVelocitySTD;
+float BeatPeriod;
+float PrintRate;
+int DrawRate;
+float Dt;
 float4 ReadyColor;
 float4 ContractingColor;
 float4 RestingColor;
 float4 RelativeColor;
 float4 DeadColor;
+float4 BackGround;
+// simulationSetup globals end ************************************************
 
-float BackGroundRed;
-float BackGroundGreen;
-float BackGroundBlue;
+// This is the base muscle strength that every muscle's start up strength is based on.
+// You might think this should be read in from the simulationSetup file. The reason it is 
+// not is because we do not know a muscles mass yet. Once we have the mass of a muscle,
+// which we the calculated in 2: of the setRemainingNodeAndMuscleAttributes() function, we
+// multiply it by the MyocyteForcePerMassMultiplier to get its base strength.
+float BaseMuscleContractionStrength;
 
+// Variable that hold mouse locations to be translated into positions in the simulation.
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
+float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
+int ScrollSpeedToggle; // Sets slow or fast scroll speed.
+float ScrollSpeed; // How fast your scroll moves.
 
+// Times to keep track on what to do in the nBody() function and you progresses through the simulation.
+// Some of the variable that acompany this variable are read in from the simulationSetup file.
+// The timers tell what the time is from the last action and the rates tell how often to perform the action.
+float PrintTimer;
+int DrawTimer; 
+int RecenterCount;
+int RecenterRate;
+double RunTime;
+
+// These keep track where the view is as you zoom in and out and rotate.
+float4 CenterOfSimulation;
+float4 AngleOfSimulation;
+
+// Window globals
+static int Window;
+int XWindowSize;
+int YWindowSize; 
+double Near; // Front and back of clip planes
+double Far;
+double EyeX; // Where your eye is
+double EyeY;
+double EyeZ;
+double CenterX; // Where you are looking
+double CenterY;
+double CenterZ;
+double UpX; // What up means to the viewer
+double UpY;
+double UpZ;
+
+// How many nodes and muscle the simulation contains.
+int NumberOfNodes;
+int NumberOfMuscles;
+
+// Everything a node holds. We have 1 on the CPU and 1 on the GPU
+struct nodeAtributesStructure
+{
+	float4 position;
+	float4 velocity;
+	float4 force;
+	float mass;
+	float area;
+	bool isBeatNode;
+	float beatPeriod;
+	float beatTimer;
+	bool isFiring;
+	bool isAblated;
+	bool drawNodeIs;
+	float4 color;
+	int muscle[MUSCLES_PER_NODE];
+};
+
+nodeAtributesStructure *Node;
+nodeAtributesStructure *NodeGPU;
+
+// Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
 struct muscleAtributesStructure
 {
 	int nodeA;
@@ -147,58 +209,10 @@ struct muscleAtributesStructure
 
 muscleAtributesStructure *Muscle;
 muscleAtributesStructure *MuscleGPU;
-
-struct nodeAtributesStructure
-{
-	float4 position;
-	float4 velocity;
-	float4 force;
-	float mass;
-	float area;
-	bool isBeatNode;
-	float beatPeriod;
-	float beatTimer;
-	bool isFiring;
-	bool isAblated;
-	bool drawNodeIs;
-	float4 color;
-	int muscle[MUSCLES_PER_NODE];
-};
-
-nodeAtributesStructure *Node;
-nodeAtributesStructure *NodeGPU;
-
-// This will hold the center of mass on the GPU so the center of mass can be adjusted on the GPU. 
-// This will keep us from having to copy the nodes down and up to do this on the CPU.
-//float4 *CenterOfMassGPU;
-
-float PrintTimer;
-int DrawTimer; 
-int RecenterCount;
-double RunTime;
-float4 CenterOfSimulation;
-float4 AngleOfSimulation;
-
-// Window globals
-static int Window;
-//GLFWwindow *Window;
-int XWindowSize;
-int YWindowSize; 
-double Near;
-double Far;
-double EyeX;
-double EyeY;
-double EyeZ;
-double CenterX;
-double CenterY;
-double CenterZ;
-double UpX;
-double UpY;
-double UpZ;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.
-void n_body(float);
+void nBody(float);
 void allocateMemory();
 void readSimulationParameters();
 void setup();

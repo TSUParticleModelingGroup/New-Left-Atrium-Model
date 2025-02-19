@@ -238,7 +238,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 }
 
 /*
- This CUDA function first moves the nodes then checks to see if the node is a beat node, if it is it updates its time 
+ This CUDA function first moves the nodes then checks to see if the node is a beat node, if it is, it updates its time 
  and if its time is past the beat period it sends out a signal then zeros out its timer to start a new period.
  
  We also add some drag to the system to remove energy biuldup.
@@ -298,8 +298,8 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 
 /*
  This function triggers the next node when its signal reaches the end of the muscle.
- Then it colors the muscle depending on where the muscle is inits cycle.
- It a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
+ Then it colors the muscle depending on where the muscle is in its cycle.
+ If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmition direction set to undetermined by setting apNode to -1.
 */
 __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
@@ -386,12 +386,10 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 
 /*
  Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wonder because the model and
- the forces are not completely simetric. This function just moves it back to the center.
+ the forces are not completely simetric. This function just moves it back to the center of the simulation.
  We are doing this on one block so we do not have to jump out to sync the blocks then move the nodes to the center.
- Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the seto function in
- the SVT.cu file
- This scheme is working fine but I believe we could do this more eficently and also have it bring in the view you are in
- to improve the stablity of the user's view.
+ Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaInvironment() 
+ function in the SVT.cu file.
 */
 __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
 {
@@ -421,7 +419,6 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 			myPart[id].x += node[nodeId].position.x*node[nodeId].mass;
 			myPart[id].y += node[nodeId].position.y*node[nodeId].mass;
 			myPart[id].z += node[nodeId].position.z*node[nodeId].mass;
-			//myPart[id].w += node[nodeId].mass;
 		}
 	}
 	__syncthreads();
@@ -438,7 +435,6 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 			myPart[id].x += myPart[id + n].x;
 			myPart[id].y += myPart[id + n].y;
 			myPart[id].z += myPart[id + n].z;
-			//myPart[id].w += myPart[id + n].w;
 		}
 		__syncthreads();
 	}
@@ -447,9 +443,6 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 	// Dividing by the total mass will now give us the center of mass of all the nodes.
 	if(id == 0)
 	{
-		//myPart[0].x /= myPart[0].w;
-		//myPart[0].y /= myPart[0].w;
-		//myPart[0].z /= myPart[0].w;
 		myPart[0].x /= massOfLA;
 		myPart[0].y /= massOfLA;
 		myPart[0].z /= massOfLA;

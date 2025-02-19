@@ -4,7 +4,7 @@
  This file contains all the the main controller functions that setup the simulation, then run and manage the simulation.
  The functions are listed below in the order they appear.
  
- void n_body(float);
+ void nBody(float);
  void setupCudaInvironment();
  void readSimulationParameters();
  void setup();
@@ -18,7 +18,23 @@
 #include "./viewDrawAndTerminalFunctions.h"
 #include "./cudaFunctions.h"
 
-void n_body(float dt)
+/*
+ This function is called by the openGL idle function. Hense this function is call every time openGL is not doing anything else,
+ which is most of the time.
+ This function orchstracts the simulation by;
+ 1: Calling the getForces function which gets all the forces except the drag force on all nodes.
+ 2: Calling the upDateNodes function which moves the nodes based off of the forces from the getForces function.
+    It uses the leap-frog formulas to integrate the nodes forward in time. It also sees if a node is a beat node  
+    and if it needs to send out a segnal.
+ 3: Calling the updateMuscles function to adjust where they are in their cycle and react acordingly.
+ 4: Sees if it is time to recenter the simulation.
+ 5: Sees if simulation needs to be redrawn to the screen.
+ 6: Sees if the terminal screen needs to be updated.
+ 
+ Note: If Pause is on it skips all this and if Contraction is not on it skips all of its moving calculations
+ and only performs calculations that deal with electrical conduction and muscle timing. 
+*/
+void nBody(float dt)
 {	
 	if(PauseIs == false)
 	{	
@@ -69,8 +85,15 @@ void n_body(float dt)
 	}
 }
 
+/*
+ Setting up the CUDA invironment. We have three:
+ 1: Node based
+ 2: Muscle based
+ 3: Just one block used for recentering the simulation.
+*/
 void setupCudaInvironment()
 {
+	// 1:
 	BlockNodes.x = BLOCKNODES;
 	BlockNodes.y = 1;
 	BlockNodes.z = 1;
@@ -79,6 +102,7 @@ void setupCudaInvironment()
 	GridNodes.y = 1;
 	GridNodes.z = 1;
 	
+	// 2:
 	BlockMuscles.x = BLOCKMUSCLES;
 	BlockMuscles.y = 1;
 	BlockMuscles.z = 1;
@@ -87,6 +111,7 @@ void setupCudaInvironment()
 	GridMuscles.y = 1;
 	GridMuscles.z = 1;
 	
+	// 3:
 	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
 	{
         	printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
@@ -97,6 +122,9 @@ void setupCudaInvironment()
         }
 }
 
+/*
+ This function reads in all the user defined parameters in the simulationSetup file.
+*/
 void readSimulationParameters()
 {
 	ifstream data;
@@ -236,13 +264,13 @@ void readSimulationParameters()
 		data >> DeadColor.z;
 		
 		getline(data,name,'=');
-		data >> BackGroundRed;
+		data >> BackGround.x;
 		
 		getline(data,name,'=');
-		data >> BackGroundGreen;
+		data >> BackGround.y;
 		
 		getline(data,name,'=');
-		data >> BackGroundBlue;
+		data >> BackGround.z;
 	}
 	else
 	{
@@ -254,14 +282,20 @@ void readSimulationParameters()
 	printf("\n Simulation Parameters have been read in.");
 }
 
+/*
+ This function calls all the functions that are used to setup the nodes muscles and initial prameters 
+ of the simulation.
+*/
 void setup()
 {	
 	// Seading the random number generater.
 	time_t t;
 	srand((unsigned) time(&t));
 	
+	// Getting user inputs.
 	readSimulationParameters();
 	
+	// Getting nodes and muscle from blender gererated files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
 		setNodesFromBlenderFile();
@@ -288,10 +322,13 @@ void setup()
 		exit(0);
 	}
 	
+	// Setting parameters that are not initially read from the node and muscle or previous run file.
 	setRemainingParameters();
 	
+	// Setting up the CUDA parallel structure to be used.
 	setupCudaInvironment();
 	
+	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
 	copyNodesMusclesToGPU();
         
 	printf("\n");
@@ -305,6 +342,9 @@ void setup()
 	terminalPrint();
 }
 
+/*
+ In main we mostly just setup the openGL invironment and kickoff the glutMainLoop function.
+*/
 int main(int argc, char** argv)
 {
 	setup();
@@ -344,7 +384,7 @@ int main(int argc, char** argv)
 	glLoadIdentity();
 	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
 	glMatrixMode(GL_MODELVIEW);
-	glClearColor(BackGroundRed, BackGroundGreen, BackGroundBlue, 0.0);
+	glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
 	
 	//GLfloat light_position[] = {EyeX, EyeY, EyeZ, 0.0};
 	GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
