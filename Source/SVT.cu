@@ -8,7 +8,7 @@
  The functions are listed below in the order they appear.
  
  void nBody(float);
- void setupCudaInvironment();
+ void setupCudaInvironment(); Environment(not invironment, will need to fix throughout- Kyla)
  void readSimulationParameters();
  void setup();
  int main(int, char**);
@@ -22,14 +22,14 @@
 #include "./cudaFunctions.h"
 
 /*
- This function is called by the openGL idle function. Hense this function is call every time openGL is not doing anything else,
+ This function is called by the openGL idle function. Hence this function is called every time openGL is not doing anything else,
  which is most of the time.
- This function orchstracts the simulation by;
+ This function orchestrates the simulation by;
  1: Calling the getForces function which gets all the forces except the drag force on all nodes.
  2: Calling the upDateNodes function which moves the nodes based off of the forces from the getForces function.
     It uses the leap-frog formulas to integrate the nodes forward in time. It also sees if a node is a beat node  
-    and if it needs to send out a segnal.
- 3: Calling the updateMuscles function to adjust where they are in their cycle and react acordingly.
+    and if it needs to send out a signal.
+ 3: Calling the updateMuscles function to adjust where they are in their cycle and react accordingly.
  4: Sees if it is time to recenter the simulation.
  5: Sees if simulation needs to be redrawn to the screen.
  6: Sees if the terminal screen needs to be updated.
@@ -43,6 +43,7 @@ void nBody(float dt)
 	{	
 		if(ContractionIsOn == true)
 		{
+			//Compresion should be Compression-Kyla
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompresionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
@@ -89,10 +90,10 @@ void nBody(float dt)
 }
 
 /*
- Setting up the CUDA invironment. We have three:
+ Setting up the CUDA environment. We have three:
  1: Node based
  2: Muscle based
- 3: Just one block used for recentering the simulation.
+ 3: Just one block used for re-centering the simulation.
 */
 void setupCudaInvironment()
 {
@@ -286,19 +287,19 @@ void readSimulationParameters()
 }
 
 /*
- This function calls all the functions that are used to setup the nodes muscles and initial prameters 
+ This function calls all the functions that are used to setup the nodes muscles and initial parameters 
  of the simulation.
 */
 void setup()
 {	
-	// Seading the random number generater.
+	// Seeding the random number generator.
 	time_t t;
 	srand((unsigned) time(&t));
 	
 	// Getting user inputs.
 	readSimulationParameters();
 	
-	// Getting nodes and muscle from blender gererated files or a previous run file.
+	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
 		setNodesFromBlenderFile();
@@ -316,7 +317,7 @@ void setup()
 	}
 	else if(NodesMusclesFileOrPreviousRunsFile == 1)
 	{
-		getNodesandMusclesFromPreviuosRun();
+		getNodesandMusclesFromPreviuosRun(); //Previous not Previuos
 	}
 	else
 	{
@@ -346,7 +347,7 @@ void setup()
 }
 
 /*
- In main we mostly just setup the openGL invironment and kickoff the glutMainLoop function.
+ In main we mostly just setup the openGL environment and kickoff the glutMainLoop function.
 */
 int main(int argc, char** argv)
 {
