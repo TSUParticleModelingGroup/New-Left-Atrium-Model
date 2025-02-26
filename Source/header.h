@@ -26,7 +26,7 @@ using namespace std;
 #define BLOCKMUSCLES 256
 #define BLOCKCENTEROFMASS 512
 
-// defines for terminal print
+// Defines for terminal print
 #define BOLD_ON  "\e[1m"
 #define BOLD_OFF   "\e[m"
 
@@ -39,7 +39,7 @@ using namespace std;
 
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
-struct nodeAtributesStructure
+struct nodeAtributesStructure //attributes is spelled wrong,change throughout- kyla
 {
 	float4 position;
 	float4 velocity;
@@ -57,7 +57,7 @@ struct nodeAtributesStructure
 };
 
 // Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
-struct muscleAtributesStructure
+struct muscleAtributesStructure //attributes is spelled wrong-kyla
 {
 	int nodeA;
 	int nodeB;    
@@ -68,7 +68,7 @@ struct muscleAtributesStructure
 	float mass;
 	float naturalLength;
 	float relaxedStrength;
-	float compresionStopFraction;
+	float compresionStopFraction; //compression is spelt wrong-kyla
 	float conductionVelocity;
 	float conductionDuration;
 	float refractoryPeriod;
@@ -95,7 +95,7 @@ int* Buffer; // Buffer where you create each frame for a movie or the one frame 
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
 
-// This is the node that the beat iminates from.
+// This is the node that the beat initiates from.
 int PulsePointNode;
 
 // Nodes that orient the simulation. 
@@ -103,7 +103,7 @@ int PulsePointNode;
 int UpNode;
 int FrontNode;
 
-// This are the switches that tell what action you are performing in the simulation.
+// These are the switches that tell what action you are performing in the simulation.
 bool PauseIs;
 bool AblateModeIs;
 bool EctopicBeatModeIs;
@@ -113,23 +113,23 @@ bool AdjustMuscleLineModeIs;
 bool FindNodeModeIs;
 bool MouseFunctionModeIs;
 bool MovieIsOn;
-int ViewFlag; // 0 orthoganal, 1 fulstum
+int ViewFlag; // 0 orthogonal, 1 fulcrum (did you mean fulcrum-kyla?)
 
 // This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  
 int DrawNodesFlag;
 
-// Tells the program to draw the front hal of the simulation or the full simulation.
+// Tells the program to draw the front half of the simulation or the full simulation.
 // We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
-// or looking through a hold to the back of the simulation. By turning the back off it allows you to
-// orreint yourself.
+// or looking through a hole to the back of the simulation. By turning the back off it allows you to
+// orient yourself.
 int DrawFrontHalfFlag;
 
-// Holds the name of view you are in for diplaying in the terminal print.
+// Holds the name of view you are in for displaying in the terminal print.
 char ViewName[256] = "no view set"; 
 
-// These two variable get user input to adjust muscle refractory periods and conduction velosities when you are
-// in AdjustMuscleAreaMode or AdjustMuscleLineMode modes. Once they are read in they are multiplied by the muscles 
-// refractory period and conduction velocity respcectivly.  
+// These two variable get user input to adjust muscle refractory periods and conduction velocities when you are
+// in AdjustMuscleAreaMode or AdjustMuscleLineMode modes. Once they are read in, they are multiplied by the muscles 
+// refractory period and conduction velocity respectively.  
 float RefractoryPeriodAdjustmentMultiplier;
 float MuscleConductionVelocityAdjustmentMultiplier;
 
@@ -178,15 +178,15 @@ float4 BackGround;
 // multiply it by the MyocyteForcePerMassMultiplier to get its base strength.
 float BaseMuscleContractionStrength;
 
-// Variable that hold mouse locations to be translated into positions in the simulation.
+// Variable that holds mouse locations to be translated into positions in the simulation.
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
 float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
 int ScrollSpeedToggle; // Sets slow or fast scroll speed.
 float ScrollSpeed; // How fast your scroll moves.
 
-// Times to keep track on what to do in the nBody() function and you progresses through the simulation.
-// Some of the variable that acompany this variable are read in from the simulationSetup file.
+// Times to keep track of what to do in the nBody() function and your progress through the simulation.
+// Some of the variables that accompany this variable are read in from the simulationSetup file.
 // The timers tell what the time is from the last action and the rates tell how often to perform the action.
 float PrintTimer;
 int DrawTimer; 
@@ -194,7 +194,7 @@ int RecenterCount;
 int RecenterRate;
 double RunTime;
 
-// These keep track where the view is as you zoom in and out and rotate.
+// These keep track of where the view is as you zoom in and out and rotate.
 float4 CenterOfSimulation;
 float4 AngleOfSimulation;
 
