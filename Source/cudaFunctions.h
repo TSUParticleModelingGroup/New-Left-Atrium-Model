@@ -3,7 +3,7 @@
  
  They are listed below in the order they appear.
  
- __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
+ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *); (Attributes is spelled incorrectly-kyla)
  __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float)
  __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
  __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
@@ -49,7 +49,7 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
  to the muscles connected to the nodes, but one is a central outward pushing force that represents 
  the pressure from the blood in the LA. 
  
- The only other force of a node is its drag force. This is a velocity-based force and is calculated 
+ The only other force on a node is its drag force. This is a velocity-based force and is calculated 
  in the updateNodes function. 
  
  The function's parallel structure is node-based (GridNodes, BlockNodes).
@@ -57,46 +57,46 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
  below in the function.
  
  1. Central push back force:
- 	If you are using a lines or circle nodes and muscles file pressure does not make much sense but
- 	this force is still usefull. In a lines simulation it helps straighten the line out after a beat.
+ 	If you are using a line or circle nodes and muscles file pressure does not make much sense but
+ 	this force is still useful. In a lines simulation it helps straighten the line out after a beat.
  	In a circle simulation it helps return the nodes out to a circle after a beat.
- 	For the 3-D shell simulations we use force = presure*area. The area of a node is calculated in the 
+ 	For the 3-D shell simulations we use force = pressure*area. The area of a node is calculated in the 
  	setMuscleAttributesAndNodeMasses() function. The pressure is is a linear function that starts from
  	DiastolicPressureLA when the node is a full radiusOfLeftAtrium and increases to SystolicPressureLA
- 	when a node is at its contracted length of muscleCompresionStopFraction*radiusOfLeftAtrium. We also use 
- 	a multilier so the user can adjust this force to fit their needs.
+ 	when a node is at its contracted length of muscleCompressionStopFraction*radiusOfLeftAtrium. We also use 
+ 	a multiplier so the user can adjust this force to fit their needs.
  
- This next set of functions gets the forces on a node caused by a muscles at all times not just when it
+ This next set of functions gets the forces on a node caused by a muscles at all times, not just when it
  is under contraction. It pulls back when a muscle is stretched past its natural length, pushes back when a 
  muscle is compressed past it maximal compression length, and helps restore a muscle to its natural length 
  when it is between these two values.
  
  2. Muscle is too short force: 
- 	If a muscle starts to becomes shorter than compresionStopFraction*naturalLength it will start to push
+ 	If a muscle starts to become shorter than compressionStopFraction*naturalLength it will start to push
  	back. To keep this from being an abrupt change we transition into it. This transition starts at 10% of 
- 	the amount a muscle can contract with equals [0.1*(1 - compresionStopFraction)*naturalLength].
- 	Note: We used the amount a muscle can contract not the compresionStopFraction because using the 
- 	compresionStopFraction might make a case where the transition zone reaches past the natural length in
+ 	the amount a muscle can contract with equals [0.1*(1 - compressionStopFraction)*naturalLength].
+ 	Note: We used the amount a muscle can contract not the compressionStopFraction because using the 
+ 	compressionStopFraction might make a case where the transition zone reaches past the natural length in
  	the subsequent force functions.
  	
  	This starts at the relaxed strength. The relaxed force is always on to help return a muscle to its natural 
  	length, as stated above. It cancels out the contraction strength by the time it hits the contraction stop length. 
 	If d which equals the actual muscle length at this moment in time, gets shorter than the contraction stop length 
-	the push back force just keeps increasing. This is acomplished in the linear function below 2..
+	the push back force just keeps increasing. This is accomplished in the linear function below 2..
  	
  3. Restoration force	
- 	In this region the muscle is neather to short or too long. In this region we add a small push back force to help
- 	the muscle return to its natural length. This is a constant forced force with strength equal to the relaxedStrength 
+ 	In this region the muscle is neither too short or too long. In this region we add a small push back force to help
+ 	the muscle return to its natural length. This is a constant force force with strength equal to the relaxedStrength 
  	which is a fraction of the contractionStrength. This function and the pressure restore the AL to it relaxed shape.
  	
- 4. Aproaching natural length transition force
- 	As the muscle aproaches its natural length we linearly transition it into having a force of zero when it reaches 
+ 4. Approaching natural length transition force
+ 	As the muscle approaches its natural length we linearly transition it into having a force of zero when it reaches 
  	its natural length.
 
  5. Muscle too long force
 	If for some reason a muscle is stretched past its natural length this function will linearly pull it back to its 
 	natural length. It should be a good bit stronger than the relaxedStrength. We are not putting in a distance where 
-	the muscle actually brakes. If it gets stretched that far we have bigger problems we need to address. 
+	the muscle actually breaks. If it gets stretched that far we have bigger problems we need to address. 
 	We transition into this taking it from zero to the contractionStrength in one transitionLength. Past one transitionLength 
 	it will just keep increasing. We use contractionStrength and transitionLength here because they are already scaled 
 	to work on this muscle.
@@ -104,9 +104,9 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
  6. sine squared contraction force
  	This contraction force transitions from zero to full strength as time goes from zero to half the refractory period. 
  	Then goes from full strength to zero as time progresses on to the full refractory period. Here we use a sine squared 
- 	function to acheive this because it smoothly transition in and out of the contraction.
+ 	function to achieve this because it smoothly transition in and out of the contraction.
  	
- 7. The user can completly turn the contraction function if they only want to watch the electrical activity across the LA 
+ 7. The user can completely turn off the contraction function if they only want to watch the electrical activity across the LA 
     by setting the contractionType to zero in the simulationSetUp file.
  
 */
@@ -188,8 +188,8 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				}
 				
 				// The following (2-5) force functions are always on
-				// even if the muscle is disable. This just keeps the muscle 
-				// at it natural length.
+				// even if the muscle is disabled. This just keeps the muscle 
+				// at its natural length.
 				if(d < (contractedLength + transitionLength))
 				{
 					// 2: Muscle is getting too short force
@@ -207,7 +207,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				}
 				else if(d < naturalLength)
 				{
-					// 4: Aproaching natural length transition force
+					// 4: Approaching natural length transition force
 					m = relaxedStrength/transitionLength;
 					force = m*(d - naturalLength);
 				}
@@ -242,7 +242,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
  This CUDA function first moves the nodes then checks to see if the node is a beat node, if it is, it updates its time 
  and if its time is past the beat period it sends out a signal then zeros out its timer to start a new period.
  
- We also add some drag to the system to remove energy biuldup.
+ We also add some drag to the system to remove energy buildup.
 */
 __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float drag, float dt, double time, bool ContractionIsOn)
 {
@@ -301,7 +301,7 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
  This function triggers the next node when its signal reaches the end of the muscle.
  Then it colors the muscle depending on where the muscle is in its cycle.
  If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
- and its transmition direction set to undetermined by setting apNode to -1.
+ and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? )
 */
 __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
 {
@@ -313,7 +313,7 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 		if(muscle[i].isOn == true && muscle[i].isDisabled == false)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
-			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not rest here
+			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not reset here (should it be reset rather than rest? -kyla )
 			// and this would make this call happen every time step past conductionDuration until it was reset.
 			if((muscle[i].conductionDuration - dt < muscle[i].timer) && (muscle[i].timer < muscle[i].conductionDuration + dt))
 			{
@@ -386,10 +386,10 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
 }
 
 /*
- Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wonder because the model and
- the forces are not completely simetric. This function just moves it back to the center of the simulation.
+ Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wander because the model and
+ the forces are not completely symmetric. This function just moves it back to the center of the simulation.
  We are doing this on one block so we do not have to jump out to sync the blocks then move the nodes to the center.
- Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaInvironment() 
+ Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaInvironment() (environment-kyla)
  function in the SVT.cu file.
 */
 __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
@@ -409,7 +409,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 	// Finding the number of strides needed to go through all of the nodes using only one block.
 	int stop = (numberOfNodes - 1)/blockDim.x + 1;
 	
-	// Suming all of the node masses*distance and total node masses into the single block we are using.
+	// Summing all of the node masses*distance and total node masses into the single block we are using.
 	for(int i = 0; i < stop; i++)
 	{
 		nodeId = threadIdx.x + i*blockDim.x;
@@ -424,7 +424,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 	}
 	__syncthreads();
 	
-	// Doing the final reduction on the value we have acumulated on the block. 
+	// Doing the final reduction on the value we have accumulated on the block. 
 	// This will all be stored in node zero when this while loop is done.
 	// Note: This section of code only works if block size is a power of 2.
 	n = blockDim.x;
@@ -464,7 +464,7 @@ __global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float 
 }
 
 /*
- Checks to see if an error occured in a CUDA call and returns the file name and line number where the error occured.
+ Checks to see if an error occurred in a CUDA call and returns the file name and line number where the error occurred.
 */
 void cudaErrorCheck(const char *file, int line)
 {
