@@ -1,6 +1,6 @@
 /*
- This file contains all the callBack functions and function that it calls to do its work.
- In isense this file contains all the ways a user can interact (Mouse and Ternimal) with 
+ This file contains all the callBack functions and functions that it calls to do its work.
+ This file contains all the ways a user can interact (Mouse and Terminal) with 
  a running simulation.
  
  The functions in this file are listed below and in this order.
@@ -93,7 +93,7 @@ void mouseAblateMode()
 }
 
 /*
- Puts the user in extopic beat mode.
+ Puts the user in ectopic beat mode.
 */
 void mouseEctopicBeatMode()
 {
@@ -106,7 +106,7 @@ void mouseEctopicBeatMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView();
 	terminalPrint();
 	drawPicture();
 	system("clear");
@@ -116,7 +116,7 @@ void mouseEctopicBeatMode()
 }
 
 /*
- Puts the user in extopic event mode.
+ Puts the user in ectopic event mode.
 */
 void mouseEctopicEventMode()
 {
@@ -129,7 +129,7 @@ void mouseEctopicEventMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView();
 	drawPicture();
 	terminalPrint();
 }
@@ -148,7 +148,7 @@ void mouseAdjustMusclesAreaMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView();
 	drawPicture();
 	
 	int returnCode = setMouseMuscleAttributes();
@@ -173,7 +173,7 @@ void mouseAdjustMusclesLineMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView();
 	drawPicture();
 	
 	int returnCode = setMouseMuscleAttributes();
@@ -198,14 +198,14 @@ void mouseIdentifyNodeMode()
 	FindNodeModeIs = true;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView();
 	drawPicture();
 	terminalPrint();
 }
 
 /*
- Calls the functions that get user inputs for how to change selected muscles' refractory periods 
- and conduction velocities.
+	Calls the functions that get user inputs for modifying the refractory periods 
+	and conduction velocities of the selected muscles
 */
 int setMouseMuscleAttributes()
 {
@@ -215,7 +215,7 @@ int setMouseMuscleAttributes()
 }
 
 /*
- This function asks the user to type in the terminal screen the value to be multipled by the
+ This function asks the user to type in the terminal screen the value to be multiplied by the
  selected muscles' refractory period.
 */
 void setMouseMuscleRefractoryPeriod()
@@ -239,7 +239,7 @@ void setMouseMuscleRefractoryPeriod()
 }
 
 /*
- This function asks the user to type in the terminal screen the value to be multipled by the
+ This function asks the user to type in the terminal screen the value to be multiplied by the
  selected muscles' conduction velocity.
 */
 void setMouseMuscleConductionVelocity()
@@ -247,7 +247,7 @@ void setMouseMuscleConductionVelocity()
 	system("clear");
 	MuscleConductionVelocityAdjustmentMultiplier = -1.0;
 	
-	printf("\n\n Enter conduction velocity multipier.");
+	printf("\n\n Enter conduction velocity multiplier.");
 	printf("\n A number between 0 and 1 will slow it down.");
 	printf("\n A number bigger than 1 will speed it up.");
 	printf("\n\n Conduction velocity multiplier = ");
@@ -256,14 +256,14 @@ void setMouseMuscleConductionVelocity()
 	if(MuscleConductionVelocityAdjustmentMultiplier <= 0)
 	{
 		system("clear");
-		printf("\n You cannot adjust the the conduction velocity by a nonpositive number.");
+		printf("\n You cannot adjust the the conduction velocity by a non-positive number.");
 		printf("\n Retry\n");
 		setMouseMuscleConductionVelocity();
 	}
 }
 
 /*
- This function sets a node (nodeId) up to be an ectopic beat node.
+ This function sets up a node (nodeId) to be an ectopic beat node.
 */
 void setEctopicBeat(int nodeId)
 {
@@ -329,7 +329,7 @@ void getEctopicBeatPeriod(int nodeId)
 /*
  This function gets the ectopic beat offset from the user. This is the amount of time the
  user wants to pause before turning on the ectopic beat. This allows the user to time the 
- ectopic beats relative to the current time. So the user can set beats to trigger at diffent 
+ ectopic beats relative to the current time. So the user can set beats to trigger at different 
  times.
 */
 void getEctopicBeatOffset(int nodeId)
@@ -359,7 +359,7 @@ void getEctopicBeatOffset(int nodeId)
 
 /*
  This function returns a timestamp in M-D-Y-H.M.S format.
- This is use so each file that is created has a unuque name. 
+ This is use so each file that is created has a unique name. 
  Note: You cannot create more than one file in a second or you will over write the previous file.
 */
 string getTimeStamp()
@@ -479,11 +479,11 @@ void screenShot()
 }
 
 /*
- This function saves all the node and muscle values set in the run to a file. This file then be used at a
- latter date to start a run with exact settings used at the time of capture.
- So if the user has spent a great deal of time setting up a scenario they can be saved and used again latter.
- We use it to create senarios that have arythmias preprogramed into them and have members from a class we are
- presenting to come up and see if they can use the ablate tool to elemenate the arythmia.
+ This function saves all the node and muscle values set in the run to a file. This file can then be used at a
+ later date to start a run with the exact settings used at the time of capture.
+ So if the user has spent a great deal of time setting up a scenario, they can save the scenario and use it again later.
+ We use it to create scenarios that have arrhythmias preprogrammed into them and have members from a class we are
+ presenting to come up and see if they can use the ablation tool to eliminate the arythmia.
 */
 void saveSettings()
 {
@@ -566,7 +566,7 @@ void saveSettings()
 }
 
 /*
- This function directs the action that needs to be taken if a user hit a key on the key board.
+ This function directs the action that needs to be taken if a user hits a key on the key board.
  The terminal screen lists out all the keys and what they will do.
 */
 void KeyPressed(unsigned char key, int x, int y)
