@@ -315,7 +315,7 @@ void getEctopicBeatPeriod(int nodeId)
 	{
 		system("clear");
 		printf("\n You entered %f.", Node[nodeId].beatPeriod);
-		printf("\n You cannot have a beat period that is a nonpositive number.");
+		printf("\n You cannot have a beat period that is a non-positive number.");
 		printf("\n Retry\n");
 		getEctopicBeatPeriod(nodeId);
 	}
