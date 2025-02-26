@@ -1,6 +1,6 @@
 /*
  This file contains all the functions that read in the nodes and muscles, links them together, 
- sets up the node and muscle atributes, and asigns them there values in our units. 
+ sets up the node and muscle attributes, and assigns them their values in our units. 
  Additionally it sets any remaining run parameters to get started in the setRemainingParameters() 
  function.
  
@@ -12,7 +12,7 @@
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void setRemainingNodeAndMuscleAttributes();
- void getNodesandMusclesFromPreviuosRun();
+ void getNodesandMusclesFromPreviuosRun(); 				(Previous not Previuos-Kyla )
  void setRemainingParameters();
  void hardCodedAblations();
  void hardCodedPeriodicEctopicEvents();
@@ -26,7 +26,7 @@
  2. Finds the number of nodes, the pulse node, the up and front nodes.
  3. Allocates memory to hold the nodes on the CPU and the GPU
  4. Sets all the nodes to their default or start values.
- 5. Reads and asigns the node positions from the node file.
+ 5. Reads and assigns the node positions from the node file.
 */
 void setNodesFromBlenderFile()
 {	
@@ -61,7 +61,7 @@ void setNodesFromBlenderFile()
 	printf("\n FrontNode = %d", FrontNode);
 	
 	// Allocating memory for the CPU and GPU nodes. 
-	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
+	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure)); //should be attributes not atributes,will need to fix below-Kyla
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
@@ -86,9 +86,9 @@ void setNodesFromBlenderFile()
 		Node[i].mass = 0.0;
 		Node[i].area = 0.0;
 		
-		Node[i].isBeatNode = false; // Setting all nodes to start out as not be a beat node.
-		Node[i].beatPeriod = -1.0; // Setting bogus number so it will throw a flag later if something happens latter on.
-		Node[i].beatTimer = -1.0; // Setting bogus number so it will throw a flag later if something happens latter on.
+		Node[i].isBeatNode = false; // Setting all nodes to start out as not being a beat node.
+		Node[i].beatPeriod = -1.0; // Setting bogus number so it will throw a flag later if something happens later on.
+		Node[i].beatTimer = -1.0; // Setting bogus number so it will throw a flag later if something happens later on.
 		Node[i].isFiring = false; // Setting the node fire button to false so it will not fire as soon as it is turned on.
 		Node[i].isAblated = false; // Setting all nodes to not ablated.
 		Node[i].drawNodeIs = false; // This flag will allow you to draw certain nodes even when the draw nodes flag is set to off. Set it to off to start with.
@@ -124,25 +124,25 @@ void setNodesFromBlenderFile()
 	printf("\n Blender generated nodes have been created.");
 }
 
-/* This functions checks to see if two nodes are too close relative to all the other nodes 
+/* This function checks to see if two nodes are too close relative to all the other nodes 
    in the simulations. 
-   1: This for loop finds all the nearest nieghbor distances. Then it takes the average of this value. 
+   1: This for loop finds all the nearest neighbor distances and then it calculates the average of this value. 
       This get a sense of how close nodes are in general. If you have more nodes they are going to be 
-      closer together, this number just gets you a scale to compair to.
+      closer together, this number just gets you a scale to compare to.
    2: This for loop checks to see if two nodes are closer than an cutoffDivider times smaller than the 
-      average minimal distance. If it is, the nodes are printed out with thier seperation and a flag is set.
-      Adjust the cutoffDivider for tighter and looser tollerances.
-   3: If the flag was set the simulation is terminated so the user can correct the node file that contains the faulty nodes.
+      average minimal distance. If it is, the nodes are printed out with their separation and a flag is set.
+      Adjust the cutoffDivider for tighter and looser tolerances.
+   3: If the flag is set, the simulation is terminated so the user can correct the node file that contains the faulty nodes.
 */
 void checkNodes()
 {
 	float dx, dy, dz, d;
-	float averageMinSeperation, minSeperation;
+	float averageMinSeperation, minSeperation; //seperation is spelt wrong, should be separation-Kyla 
 	int flag;
 	float cutoffDivider = 100.0;
 	float cutoff;
 	
-	// 1: Finding average nearest nieghbor distance.
+	// 1: Finding average nearest neighbor distance.
 	averageMinSeperation = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -190,8 +190,8 @@ void checkNodes()
 	// 3: Terminating the simulation if nodes were flagged.
 	if(flag == 1)
 	{
-		printf("\n The average nearest seperation for all the nodes is %f.", averageMinSeperation);
-		printf("\n The cutoff seperation was %f.\n\n", averageMinSeperation/10.0);
+		printf("\n The average nearest separation for all the nodes is %f.", averageMinSeperation);
+		printf("\n The cutoff separation was %f.\n\n", averageMinSeperation/10.0);
 		exit(0);
 	}
 	printf("\n Nodes have been checked for minimal separation.");
@@ -316,7 +316,7 @@ void linkNodesToMuscles()
 
 /*
  This function: 
- 1: Uses the Box-Muller meathod to create a standard normal random number from two uniform random numbers.
+ 1: Uses the Box-Muller method to create a standard normal random number from two uniform random numbers.
  2: Sets the standard deviation to what was input.
  3: Checks to see if the random number is between the desired numbers. If not throw it away and choose again.
 */
@@ -346,22 +346,22 @@ double croppedRandomNumber(double stddev, double left, double right)
 }
 
 /*
- In this function we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
+ In this function, we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
  the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
- 1: First we finding the length of each individual muscle and sum this up to find the total length of all muscles that represent
+ 1: First,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 2: This allows us to find the fration of a single muscle's length compaired to the total muscle lengths. We can now multiply this 
-    fraction by the mass of the left atrium to get the mass on an indivdual muscle. 
- 3: Now we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+ 2: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+    fraction by the mass of the left atrium to get the mass on an individual muscle. 
+ 3: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses like we used the ratio of muscle length like we did in 2 to 
     find the area of each node.
- 4: Here we set the final muscle atributes using the scaling read in from the simulationSetup file. The scaling is use so the user
-    can adjust the standard muscle atributes to preform as desired in their simulation. We also add some small random fluctuations
-    to these values so the simulation can have some stocastic behavior. If you do not want any stocastic behavior simply set the 
+ 4: Here we set the final muscle attributes using the scaling read in from the simulationSetup file. The scaling is used so the user
+    can adjust the standard muscle attributes to perform as desired in their simulation. We also add some small random fluctuations
+    to these values so the simulation can have some stochastic behavior. If you do not want any stochastic behavior simply set the 
     standard deviation for each muscle attribute to zero in the simulationsetup file.
     
- Note: Muscle do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
- generate the node masses and area. We carry the muscle masses forward in the even that we need to generate a muscle ratio in 
+ Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
+ generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
  future update to the program.
     
 */
@@ -442,7 +442,7 @@ void setRemainingNodeAndMuscleAttributes()
 }
 
 /*
- This function load all the node and muscle attributes from a previuos run file that was saved.
+ This function loads all the node and muscle attributes from a previous run file that was saved.
 */
 void getNodesandMusclesFromPreviuosRun()
 {
@@ -543,16 +543,16 @@ void setRemainingParameters()
 }
 
 /*
- If you know that you want to ablated a set of nodes before the simulation
+ If you know that you want to ablate a set of nodes before the simulation
  starts you can do it here, or just wait and do it in the running simulation.
  Do not ablate the PulsePointNode node unless you want to have a simulation 
- that just sets there.
+ that just sits there.
  
- An example is give and comented out below to work from.
+ An example is given and commented out below to work from.
 */
 void hardCodedAblations()
 {	
-	// To ablate a slected node set your index and uncomment this line.
+	// To ablate a selected node set your index and uncomment this line.
 	
 	/*
 	int index = ???;
@@ -568,8 +568,8 @@ void hardCodedAblations()
 	if(index == PulsePointNode) 
 	{
 		printf("\n\n You have ablated the pulse point node in the hardCodedAblations() function.");
-		printf("\n If this is what you wanted to do fine.");
-		printf("\n If not change your sellection in the code hardCodedAblations() function.");
+		printf("\n If this is what you wanted to do, it's fine.");
+		printf("\n If not, change your selection in the code hardCodedAblations() function.");
 		printf("\n");
 	}
 	*/
@@ -581,7 +581,7 @@ void hardCodedAblations()
  Do not set the the PulsePointNode node because it has alread been set in the 
  setNodesFromBlenderFile() function
  
- An example is give and comented out below to work from.
+ An example is given and commented out below to work from.
 */
 void hardCodedPeriodicEctopicEvents()
 {	
@@ -604,7 +604,7 @@ void hardCodedPeriodicEctopicEvents()
  If you know that you want to set a muscle's atributes before the simulation
  starts you can do it here, or just wait and do it in the running simulation.
  
- An example is give and comented out below to work from.
+ An example is given and commented out below to work from.
 */
 void hardCodedIndividualMuscleAttributes()
 {
@@ -622,15 +622,15 @@ void hardCodedIndividualMuscleAttributes()
  1: Checks to see if the electrical signal goes through the muscle faster than the refractory period.
     If it does not a muscle could fire itself and the signal would just bounce back and forth in the muscle.
     If this is true we just kill the muscle and move on.
- 2: If a muscles relaxed strength is greater than it contraction strength something must have gotten entered
-    wrong in the setup file. Here we kill the muscle and move on but we might should kill the simulation.
+ 2: If a muscle's relaxed strength is greater than it contraction strength something must have gotten entered
+    wrong in the setup file. Here we kill the muscle and move on but we might need to kill the simulation.
  3: If the muscle can contract past half its natural length or cannot contract down to its natural length
     something is wrong in the setup simulation file. Here we kill the muscle and move on.
  4: If the muscle should be greater than half the refractory period and less than the refractory period. 
     If not something is wrong. Here we kill the muscle and move on.
  5: If the muscle's contration strength is negative something is wrong. Here we kill the muscle and move on.
     
- We left each if statement as a stand alone unit incase the user wants to perform a different act in a selected
+ We left each if statement as a stand alone unit in case the user wants to perform a different act in a selected
  if statement. We could have set a flag and just killed the the muscle after all checks, but this gives move
  flexability for future directions. 
 */
