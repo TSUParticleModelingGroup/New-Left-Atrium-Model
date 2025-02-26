@@ -1,14 +1,14 @@
 /*
  This file contains:
- 1: All the functions that determene how orient and view the simulation.
+ 1: All the functions that determine how to orient and view the simulation.
  2: all the functions that draw the actual simulation. 
  3: The functions that print to the linux terminal all the setting of the simulation.
  In short this file holds the functions that present information to the user.
  
  The functions are listed below in the order they appear.
  
- void orthoganialView();
- void fulstrumView();
+ void orthoganialView(); (orthogonal is spelled wrong-kyla )
+ void fulstrumView(); (is it fulcrum? -kyla,will need to be changed throughout  )
  float4 findCenterOfMass();
  void centerObject();
  void rotateXAxis(float);
@@ -24,7 +24,7 @@
 */
 
 /*
- This function sets your view to orthoganal. In orthoganal view all object are kept in line in the z direction.
+ This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.
  This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
 */
 void orthoganialView()
@@ -71,7 +71,7 @@ float4 findCenterOfMass()
 		 centerOfMass.z += Node[i].position.z*Node[i].mass;
 		 centerOfMass.w += Node[i].mass;
 	}
-	if(centerOfMass.w < 0.00001) // .w hold the mass.
+	if(centerOfMass.w < 0.00001) // .w holds the mass.
 	{
 		printf("\n Mass is too small\n");
 		printf("\nw Good Bye\n");
@@ -88,7 +88,7 @@ float4 findCenterOfMass()
 
 /*
  This function centers the LA and resets the center of view to (0, 0, 0).
- It is called periodically in a running simulation to center the LA, because the LA is not simitrical
+ It is called periodically in a running simulation to center the LA, because the LA is not symmetrical 
  and will wander off over time. It is also use center the LA before all the views are set.
 */
 void centerObject()
@@ -110,7 +110,7 @@ void centerObject()
 }
 
 /*
- This function rotates view around the x-axis.
+ This function rotates the view around the x-axis.
 */
 void rotateXAxis(float angle)
 {
@@ -125,7 +125,7 @@ void rotateXAxis(float angle)
 }
 
 /*
- This function rotates view around the y-axis.
+ This function rotates the view around the y-axis.
 */
 void rotateYAxis(float angle)
 {
@@ -140,7 +140,7 @@ void rotateYAxis(float angle)
 }
 
 /*
- This function rotates view around the z-axis.
+ This function rotates the view around the z-axis.
 */
 void rotateZAxis(float angle)
 {
@@ -156,7 +156,7 @@ void rotateZAxis(float angle)
 
 /*
  This function puts the viewer in the reference view. The reference view is looking straight at the four
- pulminary viens with a vien in each of the four quadrants of the x-y plane as semetric as you can make 
+ pulmonary veins with a vein in each of the four quadrants of the x-y plane as symmetric as you can make 
  it with the mitral valve down. We base all the other views off of this view.
 */
 void ReferenceView()
@@ -200,7 +200,7 @@ void ReferenceView()
 
 /*
  This function puts the LA in the PA view.
- The heart does not set in the chest at a straight on angle. Hense we need to adjust our 
+ The heart does not set in the chest at a straight on angle. Hence we need to adjust our 
  reference view to what is actually seen in a back view looking through the chest.
 */
 void PAView()
@@ -292,7 +292,7 @@ void setView(int view)
 }
 
 /*
- This function draws the LA to the screen. It also save movie frames if a movie is being recorded.
+ This function draws the LA to the screen. It also saves movie frames if a movie is being recorded.
 */
 void drawPicture()
 {
@@ -558,7 +558,7 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n @: Ectoic Beat ----------------- ");
+	printf("\n @: Ectopic Beat ----------------- ");
 	if (EctopicBeatModeIs == true) 
 	{
 		printf("\033[0;36m");
