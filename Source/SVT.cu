@@ -37,9 +37,11 @@
  Note: If Pause is on it skips all this and if Contraction is not on it skips all of its moving calculations
  and only performs calculations that deal with electrical conduction and muscle timing. 
 */
+
+//If(sim.isPaused) //if(!sim.isPaused) if(sim.isPaused == false) 
 void nBody(float dt)
 {	
-	if(IsPaused == false) //
+	if(!IsPaused) 
 	{	
 		if(ContractionIsOn)
 		{

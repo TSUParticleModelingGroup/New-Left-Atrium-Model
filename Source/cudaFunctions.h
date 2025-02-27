@@ -341,7 +341,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 		
 			float refractoryPeriod = muscle[i].refractoryPeriod;
 			float absoluteRefractoryPeriod = refractoryPeriod*muscle[i].absoluteRefractoryPeriodFraction;
-			float relativeRefractoryPeriod = refractoryPeriod - absoluteRefractoryPeriod;
+			//float relativeRefractoryPeriod = refractoryPeriod - absoluteRefractoryPeriod;
 			
 			if(muscle[i].timer < 0.5*refractoryPeriod)
 			{

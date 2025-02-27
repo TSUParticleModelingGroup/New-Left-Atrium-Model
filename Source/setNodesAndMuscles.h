@@ -28,6 +28,7 @@
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
 */
+
 void setNodesFromBlenderFile()
 {	
 	FILE *inFile;
@@ -146,7 +147,7 @@ void checkNodes()
 	averageMinSeparation = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		minSeparation = 10000000.0; // Setting min as a huge value just to get it started.
+		minSeparation = FLOATMAX; // Setting min as a huge value just to get it started.
 		for(int j = 0; j < NumberOfNodes; j++)
 		{
 			if(i != j)

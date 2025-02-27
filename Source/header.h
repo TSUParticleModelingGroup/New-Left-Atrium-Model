@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 using namespace std;
 
@@ -25,6 +26,8 @@ using namespace std;
 #define BLOCKNODES 256
 #define BLOCKMUSCLES 256
 #define BLOCKCENTEROFMASS 512
+#define FLOATMAX 3.4028235e+38f
+#define INTMAX 2147483647
 
 // Defines for terminal print
 #define BOLD_ON  "\e[1m"
@@ -276,7 +279,7 @@ void mouseEctopicBeatMode();
 void mouseAdjustMusclesAreaMode();
 void mouseAdjustMusclesLineMode();
 void mouseIdentifyNodeMode();
-int setMouseMuscleAttributes();
+bool setMouseMuscleAttributes();
 void setMouseMuscleRefractoryPeriod();
 void setMouseMuscleConductionVelocity();
 void setEctopicBeat(int);

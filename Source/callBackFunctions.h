@@ -14,7 +14,7 @@
  void mouseAdjustMusclesAreaMode();
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
- int setMouseMuscleAttributes();
+ bool setMouseMuscleAttributes();
  void setMouseMuscleRefractoryPeriod();
  void setMouseMuscleConductionVelocity();
  void setEctopicBeat(int nodeId);
@@ -151,9 +151,9 @@ void mouseAdjustMusclesAreaMode()
 	//orthogonalView();
 	drawPicture();
 	
-	int returnCode = setMouseMuscleAttributes();
+	int returnFlag = setMouseMuscleAttributes();
 	
-	if(returnCode == 1)
+	if(returnFlag)
 	{
 		terminalPrint();
 	}
@@ -176,9 +176,9 @@ void mouseAdjustMusclesLineMode()
 	//orthogonalView();
 	drawPicture();
 	
-	int returnCode = setMouseMuscleAttributes();
+	bool returnFlag = setMouseMuscleAttributes();
 	
-	if(returnCode == 1)
+	if(returnFlag)
 	{
 		terminalPrint();
 	}
@@ -207,11 +207,11 @@ void mouseIdentifyNodeMode()
 	Calls the functions that get user inputs for modifying the refractory periods 
 	and conduction velocities of the selected muscles
 */
-int setMouseMuscleAttributes()
+bool setMouseMuscleAttributes()
 {
 	setMouseMuscleRefractoryPeriod();
 	setMouseMuscleConductionVelocity();
-	return(1);
+	return(true);
 }
 
 /*
@@ -440,7 +440,7 @@ void movieOff()
 */
 void screenShot()
 {	
-	bool pauseFlagIs;
+	bool savedPauseState;
 	FILE* ScreenShotFile;
 	int* buffer;
 
@@ -451,14 +451,14 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
 	
-	if(IsPaused == false) 
+	if(IsPaused == false) //if the simulation is running
 	{
-		IsPaused = true;
-		pauseFlagIs = false;
+		IsPaused = true; //pause the simulation
+		savedPauseState = false; //save the pause state
 	}
-	else
+	else //if the simulation is already paused
 	{
-		pauseFlagIs = true;
+		savedPauseState = true; //save the pause state
 	}
 	
 	for(int i =0; i < 1; i++)
@@ -483,8 +483,8 @@ void screenShot()
 	
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
 	//system("rm output1.mp4");
-	
-	IsPaused = pauseFlagIs;
+
+	IsPaused = savedPauseState; //restore the pause state before we took the screenshot
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
@@ -575,6 +575,7 @@ void saveSettings()
 	fwrite (buffer, 1, sizeOfFile, fileOut);
 	fclose(fileIn);
 	fclose(fileOut);
+	free(buffer);
 	
 	// Making a readMe file to put any infomation about why you are saving this run.
 	system("gedit readMe");

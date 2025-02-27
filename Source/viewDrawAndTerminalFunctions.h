@@ -314,7 +314,8 @@ void drawPicture()
 	glPopMatrix();
 	
 	// Drawing center node
-	if(0) // 0 turns it off, 1 turns it on.
+	//This draws a center node at the center of the simulation for debugging purposes
+	if(false) // false turns it off, true turns it on.
 	{
 		glColor3d(1.0,1.0,1.0);
 		glPushMatrix();
@@ -559,7 +560,7 @@ void terminalPrint()
 	}
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
-	printf("\n @: Ectopic Beat ----------------- ");
+	printf("\n @: Ectopic Beat ---------------- ");
 	if (EctopicBeatModeIs == true) 
 	{
 		printf("\033[0;36m");
