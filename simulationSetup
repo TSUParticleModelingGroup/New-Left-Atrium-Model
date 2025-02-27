@@ -75,13 +75,13 @@ Our units for pressure are grams/(Millimeters*(Millisecons^2)).
 Putting this into our units of grams, milliseconds, millimeters gives 0.01333224.
 So 1 millimeter of Mercury is 0.000133322387415 in our units of g/(mm*ms*ms)
 Here just enter the pressure in the left atrium in millimeters of Mercury and we will fix the 
-units in the code. ??? good values are diastolic 4.0 and systolic 12.0 from ???
+units in the code. Good starting values are diastolic 2.0 and systolic 12.0 [1].
 We have added a multiplier incase this pressure does not give enough push back
 in the simulation to have the LA regain its shape after contraction. This will be multiplied 
 by the pressures so the user can adjust the simulation as desired. 
 All three should be floates.
 
---DiastolicPressureLA = 4.0;
+--DiastolicPressureLA = 2.0;
 --SystolicPressureLA = 12.0;
 --PressureMultiplier = 10.0;
 
@@ -218,4 +218,7 @@ All three should be floats.
 --BackGroundRed = 0.0;
 --BackGroundGreen = 0.0;
 --BackGroundBlue = 0.0;
+
+References:
+1) https://www.msdmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
 
