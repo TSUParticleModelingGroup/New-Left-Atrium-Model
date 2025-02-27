@@ -39,7 +39,7 @@ using namespace std;
 
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
-struct nodeAtributesStructure //attributes is spelled wrong,change throughout- kyla
+struct nodeAttributesStructure //attributes is spelled wrong,change throughout- kyla
 {
 	float4 position;
 	float4 velocity;
@@ -57,7 +57,7 @@ struct nodeAtributesStructure //attributes is spelled wrong,change throughout- k
 };
 
 // Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
-struct muscleAtributesStructure //attributes is spelled wrong-kyla
+struct muscleAttributesStructure //attributes is spelled wrong-kyla
 {
 	int nodeA;
 	int nodeB;    
@@ -68,7 +68,7 @@ struct muscleAtributesStructure //attributes is spelled wrong-kyla
 	float mass;
 	float naturalLength;
 	float relaxedStrength;
-	float compresionStopFraction; //compression is spelt wrong-kyla
+	float compressionStopFraction; //compression is spelt wrong-kyla
 	float conductionVelocity;
 	float conductionDuration;
 	float refractoryPeriod;
@@ -80,12 +80,12 @@ struct muscleAtributesStructure //attributes is spelled wrong-kyla
 // Globals Start ******************************************
 
 // This will hold all the nodes.
-nodeAtributesStructure *Node;
-nodeAtributesStructure *NodeGPU;
+nodeAttributesStructure *Node;
+nodeAttributesStructure *NodeGPU;
 
 // This will hold all the muscles.
-muscleAtributesStructure *Muscle;
-muscleAtributesStructure *MuscleGPU;
+muscleAttributesStructure *Muscle;
+muscleAttributesStructure *MuscleGPU;
 
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.
@@ -104,7 +104,7 @@ int UpNode;
 int FrontNode;
 
 // These are the switches that tell what action you are performing in the simulation.
-bool PauseIs;
+bool IsPaused;
 bool AblateModeIs;
 bool EctopicBeatModeIs;
 bool EctopicEventModeIs;
@@ -151,8 +151,8 @@ float RadiusOfLeftAtrium;
 float Drag;
 bool ContractionIsOn;
 float MuscleRelaxedStrengthFraction;
-float MuscleCompresionStopFraction;
-float MuscleCompresionStopFractionSTD;
+float MuscleCompressionStopFraction;
+float MuscleCompressionStopFractionSTD;
 float BaseMuscleRefractoryPeriod;
 float MuscleRefractoryPeriodSTD;
 float BaseAbsoluteRefractoryPeriodFraction;
@@ -227,11 +227,11 @@ void setup();
 int main(int, char**);
 
 // Functions in the CUDAFunctions.h file.
-__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *);
-__global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float);
-__global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, bool);
-__global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
-__global__ void recenter(nodeAtributesStructure *, int, float, float4);
+__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
+__global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float);
+__global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, double, bool);
+__global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
+__global__ void recenter(nodeAttributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
@@ -251,8 +251,8 @@ void hardCodedIndividualMuscleAttributes();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
-void orthoganialView();
-void fulstrumView();
+void orthogonalView();
+void frustumView();
 float4 findCenterOfMass();
 void centerObject();
 void rotateXAxis(float);
@@ -290,5 +290,5 @@ void screenShot();
 void saveSettings();
 void KeyPressed(unsigned char, int, int);
 void mousePassiveMotionCallback(int, int);
-void mymouse(int, int, int, int);
+void myMouse(int, int, int, int);
 

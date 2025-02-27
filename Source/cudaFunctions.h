@@ -3,11 +3,11 @@
  
  They are listed below in the order they appear.
  
- __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAtributesStructure *, nodeAtributesStructure *); (Attributes is spelled incorrectly-kyla)
- __global__ void getForces(muscleAtributesStructure *, nodeAtributesStructure *, float, int, float4, float, float, float, float)
- __global__ void updateNodes(nodeAtributesStructure *, int, int, muscleAtributesStructure *, float, float, double, int);
- __global__ void updateMuscles(muscleAtributesStructure *, nodeAtributesStructure *, int, int, float, float4, float4, float4, float4);
- __global__ void recenter(nodeAtributesStructure *, int, float, float4);
+ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *); (Attributes is spelled incorrectly-kyla)
+ __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float)
+ __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, double, int);
+ __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
+ __global__ void recenter(nodeAttributesStructure *, int, float, float4);
  void errorCheck(const char *);
  void cudaErrorCheck(const char *, int);
  void copyNodesMusclesToGPU();
@@ -26,7 +26,7 @@
  	b. Sets the muscle to on.
  	c. Sets the muscle's timer to 0.0.
 */
-__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, nodeAtributesStructure *node)
+__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, nodeAttributesStructure *node)
 {
 	int muscleNumber;
 	
@@ -110,7 +110,7 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
     by setting the contractionType to zero in the simulationSetUp file.
  
 */
-__global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructure *node, float dt, int numberOfNodes, float4 centerOfSimulation, float muscleCompresionStopFraction, float radiusOfLeftAtrium, float diastolicPressureLA, float systolicPressureLA)
+__global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStructure *node, float dt, int numberOfNodes, float4 centerOfSimulation, float muscleCompressionStopFraction, float radiusOfLeftAtrium, float diastolicPressureLA, float systolicPressureLA)
 {
 	float dx, dy, dz, d;
 	int muscleNumber;
@@ -122,7 +122,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 	float contractionStrength;
 	float relaxedStrength;
 	float naturalLength;
-	float compresionStopFraction;
+	float compressionStopFraction;
 	float contractedLength;
 	float transitionLength;
 	
@@ -142,7 +142,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 		d  = sqrt(dx*dx + dy*dy + dz*dz);
 		if(0.00001 < d) // To keep from getting numeric overflow just jump over this if d is too small.
 		{
-			float r2 = muscleCompresionStopFraction*radiusOfLeftAtrium;
+			float r2 = muscleCompressionStopFraction*radiusOfLeftAtrium;
 			m = (systolicPressureLA - diastolicPressureLA)/(r2 - radiusOfLeftAtrium);
 			float bp = m*d + diastolicPressureLA - m*radiusOfLeftAtrium;
 			force  = bp*node[i].area;
@@ -168,8 +168,8 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				relaxedStrength = muscle[muscleNumber].relaxedStrength;
 				
 				naturalLength = muscle[muscleNumber].naturalLength;
-				compresionStopFraction = muscle[muscleNumber].compresionStopFraction;
-				contractedLength = naturalLength*compresionStopFraction;
+				compressionStopFraction = muscle[muscleNumber].compressionStopFraction;
+				contractedLength = naturalLength*compressionStopFraction;
 				transitionLength = 0.1*(naturalLength - contractedLength);
 				
 				// Every muscle is connected to two nodes A and B. We know it is connected to the 
@@ -184,7 +184,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				d  = sqrt(dx*dx + dy*dy + dz*dz);
 				if(d < 0.0001) // Grabbing numeric overflow before it happens.
 				{
-					printf("\n TSU Error: In generalMuscleForces d is very small between opposingNodeNumbers %d and %d the seperation is %f. Take a look at this!\n", i, opposingNodeNumber, d);
+					printf("\n TSU Error: In generalMuscleForces d is very small between opposingNodeNumbers %d and %d the separation is %f. Take a look at this!\n", i, opposingNodeNumber, d);
 				}
 				
 				// The following (2-5) force functions are always on
@@ -223,7 +223,7 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
 				node[i].force.z  += force*dz/d;
 			
 				// Checking to see if the muscle is on and has not been disabled.
-				if(muscle[muscleNumber].isOn == true && muscle[muscleNumber].isDisabled == false)
+				if(muscle[muscleNumber].isOn && muscle[muscleNumber].isDisabled == false)
 				{	
 					// 6: sine squared contraction force
 				 	float temp = sin(timer*PI/(totalDuration));
@@ -244,13 +244,13 @@ __global__ void getForces(muscleAtributesStructure *muscle, nodeAtributesStructu
  
  We also add some drag to the system to remove energy buildup.
 */
-__global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAtributesStructure *muscle, float drag, float dt, double time, bool ContractionIsOn)
+__global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, float drag, float dt, double time, bool ContractionIsOn)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(i < numberOfNodes)
 	{
-		if(ContractionIsOn == true)
+		if(ContractionIsOn)
 		{	
 			// Moving the nodes forward in time with the leap-frog formulas. 
 			if(time == 0.0)
@@ -274,7 +274,7 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 		if(node[i].isAblated == false) // If node is not ablated do some work on it.
 		{
 		
-			if(node[i].isBeatNode == true)
+			if(node[i].isBeatNode)
 			{
 				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period set it to fire and reset it internal clock.
 				{	
@@ -288,7 +288,7 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
 			}
 			
 			// Turning on the muscle to any node that is ready to fire. Then setting fire to false so it will not fire again until it is ready.
-			if(node[i].isFiring == true)
+			if(node[i].isFiring)
 			{
 				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, muscle, node);
 				node[i].isFiring = false;
@@ -303,14 +303,14 @@ __global__ void updateNodes(nodeAtributesStructure *node, int numberOfNodes, int
  If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? )
 */
-__global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
+__global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	int nodeId;
 	
 	if(i < numberOfMuscles)
 	{
-		if(muscle[i].isOn == true && muscle[i].isDisabled == false)
+		if(muscle[i].isOn && muscle[i].isDisabled == false)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
 			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not reset here (should it be reset rather than rest? -kyla )
@@ -389,10 +389,10 @@ __global__ void updateMuscles(muscleAtributesStructure *muscle, nodeAtributesStr
  Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wander because the model and
  the forces are not completely symmetric. This function just moves it back to the center of the simulation.
  We are doing this on one block so we do not have to jump out to sync the blocks then move the nodes to the center.
- Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaInvironment() (environment-kyla)
+ Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaEnvironment() (environment-kyla) --fixed (Mason)
  function in the SVT.cu file.
 */
-__global__ void recenter(nodeAtributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
+__global__ void recenter(nodeAttributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
 {
 	int id, n, nodeId;
 	
@@ -483,9 +483,9 @@ void cudaErrorCheck(const char *file, int line)
 */
 void copyNodesMusclesToGPU()
 {
-	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyHostToDevice );
+	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice );
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
 	cudaErrorCheck(__FILE__, __LINE__);
 }
 
@@ -494,8 +494,8 @@ void copyNodesMusclesToGPU()
 */
 void copyNodesMusclesFromGPU()
 {
-	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyDeviceToHost);
+	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 }

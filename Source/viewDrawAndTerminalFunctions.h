@@ -7,8 +7,8 @@
  
  The functions are listed below in the order they appear.
  
- void orthoganialView(); (orthogonal is spelled wrong-kyla )
- void fulstrumView(); (is it fulcrum? -kyla,will need to be changed throughout  )
+ void orthogonalView(); (orthogonal is spelled wrong-kyla )
+ void frustumView(); (is it fulcrum? -kyla,will need to be changed throughout  ) -- its frustum -Mason (Fixed)
  float4 findCenterOfMass();
  void centerObject();
  void rotateXAxis(float);
@@ -27,7 +27,7 @@
  This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.
  This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
 */
-void orthoganialView()
+void orthogonalView()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -38,11 +38,11 @@ void orthoganialView()
 }
 
 /*
- This function sets your view to fulstrum.This is the view the your eyes actually see. Where train tracks pull in 
+ This function sets your view to frustum.This is the view the your eyes actually see. Where train tracks pull in 
  towards each other as they move off in the distance. It is how we see but can cause problems when using the mouse
  which lives in 2D to locate an object that lives in 3D.
 */
-void fulstrumView()
+void frustumView()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -303,9 +303,11 @@ void drawPicture()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
 	// Draw Nodes
-	// Pulse node
-	if(PauseIs == false) glColor3d(0.0,1.0,0.0);
+
+	// Drawing Pulse node
+	if(IsPaused == false) glColor3d(0.0,1.0,0.0);
 	else glColor3d(1.0,0.0,0.0);
+
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
 	glutSolidSphere(0.03*RadiusOfLeftAtrium,20,20);
@@ -471,8 +473,7 @@ void terminalPrint()
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
 		printf(" %f", RefractoryPeriodAdjustmentMultiplier);
-		printf("\033[0m");
-		printf("\033[0m");
+		printf("\033[0m"); //is there supposed to be 2 of these? - Mason
 		printf("\n Muscle electrical conduction speed multiplier =");
 		printf("\033[0;36m");
 		printf(" %f", MuscleConductionVelocityAdjustmentMultiplier);
@@ -488,7 +489,7 @@ void terminalPrint()
 	}
 	
 	printf("\033[0;33m");
-	printf("\n **************************** Terminal Comands ****************************");
+	printf("\n **************************** Terminal Commands ****************************");
 	printf("\033[0m");
 	printf("\n h: Help");
 	printf("\n c: Recenter View");
@@ -501,7 +502,7 @@ void terminalPrint()
 	
 	printf("\n Toggles");
 	printf("\n r: Run/Pause            - ");
-	if (PauseIs == false) 
+	if (IsPaused == false) 
 	{
 		printf("\033[0;32m");
 		printf(BOLD_ON "Simulation Running" BOLD_OFF);
@@ -516,7 +517,7 @@ void terminalPrint()
 	printf("\n n: Nodes Off/Half/Full  - ");
 	if (DrawNodesFlag == 0) printf(BOLD_ON "Off" BOLD_OFF); else if (DrawNodesFlag == 1) printf(BOLD_ON "Half" BOLD_OFF); else printf(BOLD_ON "Full" BOLD_OFF);
 	printf("\n v: Orthogonal/Frustum   - ");
-	if (ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustrum" BOLD_OFF);
+	if (ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustum" BOLD_OFF);
 	printf("\n m: Video On/Off         - ");
 	if (MovieIsOn == false) 
 	{

@@ -28,7 +28,7 @@
  void saveSettings();
  void KeyPressed(unsigned char, int, int);
  void mousePassiveMotionCallback(int, int);
- void mymouse(int, int, int, int);
+ void myMouse(int, int, int, int);
 */
 
 /*
@@ -60,7 +60,7 @@ void reshape(int w, int h)
 */
 void mouseFunctionsOff()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
@@ -78,7 +78,7 @@ void mouseFunctionsOff()
 */
 void mouseAblateMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = true;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
@@ -87,7 +87,7 @@ void mouseAblateMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthoganialView();
+	//orthogonalView(); //changed orthoganicalView to orthogonalView -Mason
 	terminalPrint();
 	drawPicture();
 }
@@ -97,7 +97,7 @@ void mouseAblateMode()
 */
 void mouseEctopicBeatMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = true;
 	EctopicEventModeIs = false;
@@ -120,7 +120,7 @@ void mouseEctopicBeatMode()
 */
 void mouseEctopicEventMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = true;
@@ -139,7 +139,7 @@ void mouseEctopicEventMode()
 */
 void mouseAdjustMusclesAreaMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
@@ -164,7 +164,7 @@ void mouseAdjustMusclesAreaMode()
 */
 void mouseAdjustMusclesLineMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
@@ -189,7 +189,7 @@ void mouseAdjustMusclesLineMode()
 */
 void mouseIdentifyNodeMode()
 {
-	PauseIs = true;
+	IsPaused = true;
 	AblateModeIs = false;
 	EctopicBeatModeIs = false;
 	EctopicEventModeIs = false;
@@ -245,7 +245,7 @@ void setMouseMuscleRefractoryPeriod()
 void setMouseMuscleConductionVelocity()
 {
 	system("clear");
-	MuscleConductionVelocityAdjustmentMultiplier = -1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = -1.0; //init'd make sure the user enters a valid number
 	
 	printf("\n\n Enter conduction velocity multiplier.");
 	printf("\n A number between 0 and 1 will slow it down.");
@@ -311,6 +311,7 @@ void getEctopicBeatPeriod(int nodeId)
 	
 	printf("\n\n Ectopic period = ");
 	scanf("%f", &period);
+
 	if(period <= 0)
 	{
 		system("clear");
@@ -342,8 +343,10 @@ void getEctopicBeatOffset(int nodeId)
 	printf("\n A positive number will delay the ectopic beat by that amount.");
 	printf("\n\n Ectopic time delay = ");
 	fflush(stdin);
+
 	float timeDelay;
 	scanf("%f", &timeDelay);
+
 	if(timeDelay < 0)
 	{
 		system("clear");
@@ -370,7 +373,9 @@ string getTimeStamp()
 	struct tm * now = localtime( & t );
 	int month = now->tm_mon + 1, day = now->tm_mday, year = now->tm_year, 
 				curTimeHour = now->tm_hour, curTimeMin = now->tm_min, curTimeSec = now->tm_sec;
+
 	stringstream smonth, sday, syear, stimeHour, stimeMin, stimeSec;
+
 	smonth << month;
 	sday << day;
 	syear << (year + 1900); // The computer starts counting from the year 1900, so 1900 is year 0. So we fix that.
@@ -379,12 +384,17 @@ string getTimeStamp()
 	stimeSec << curTimeSec;
 	string timeStamp;
 
-	if (curTimeMin <= 9)	
+	if (curTimeMin <= 9)
+	{
 		timeStamp = smonth.str() + "-" + sday.str() + "-" + syear.str() + '_' + stimeHour.str() + ".0" + stimeMin.str() + 
 					"." + stimeSec.str();
-	else			
+	}
+	else
+	{		
 		timeStamp = smonth.str() + "-" + sday.str() + '-' + syear.str() + "_" + stimeHour.str() + "." + stimeMin.str() +
 					"." + stimeSec.str();
+	}
+
 	return timeStamp;
 }
 
@@ -417,7 +427,7 @@ void movieOn()
 */
 void movieOff()
 {
-	if(MovieIsOn == true) 
+	if(MovieIsOn) 
 	{
 		pclose(MovieFile);
 	}
@@ -441,9 +451,9 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
 	
-	if(PauseIs == false) 
+	if(IsPaused == false) 
 	{
-		PauseIs = true;
+		IsPaused = true;
 		pauseFlagIs = false;
 	}
 	else
@@ -474,7 +484,7 @@ void screenShot()
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
 	//system("rm output1.mp4");
 	
-	PauseIs = pauseFlagIs;
+	IsPaused = pauseFlagIs;
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
@@ -487,9 +497,9 @@ void screenShot()
 */
 void saveSettings()
 {
-	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure), cudaMemcpyDeviceToHost);
+	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	chdir("./PreviousRunsFile");
@@ -499,16 +509,21 @@ void saveSettings()
 	struct tm * now = localtime( & t );
 	int month = now->tm_mon + 1, day = now->tm_mday, curTimeHour = now->tm_hour, curTimeMin = now->tm_min, curTimeSec = now->tm_sec;
 	stringstream smonth, sday, stimeHour, stimeMin, stimeSec;
+
 	smonth << month;
 	sday << day;
 	stimeHour << curTimeHour;
 	stimeMin << curTimeMin;
 	stimeSec << curTimeSec;
 	string monthday;
+
 	if(curTimeMin <= 9)
+	{
 		if(curTimeSec <= 9) monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":0" + stimeMin.str() + ":0" + stimeSec.str();
 		else monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":0" + stimeMin.str() + ":" + stimeSec.str();
+	}
 	else monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":" + stimeMin.str() + ":" + stimeSec.str();
+
 	string timeStamp = "Run:" + monthday;
 	const char *diretoryName = timeStamp.c_str();
 	
@@ -533,8 +548,8 @@ void saveSettings()
   	fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
   	int linksPerNode = MUSCLES_PER_NODE;
   	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
-  	fwrite(Node, sizeof(nodeAtributesStructure), NumberOfNodes, settingFile);
-  	fwrite(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, settingFile);
+  	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
+  	fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
 	fclose(settingFile);
 	
 	//Copying the simulationSetup file into this directory so you will know how it was initally setup.
@@ -542,12 +557,15 @@ void saveSettings()
 	FILE *fileOut;
 	long sizeOfFile;
   	char *buffer;
+
 	fileIn = fopen("../../simulationSetup", "rb");
+
 	if(fileIn == NULL)
 	{
 		printf("\n\n The simulationSetup file does not exist\n\n");
 		exit(0);
 	}
+
 	fseek (fileIn , 0 , SEEK_END);
   	sizeOfFile = ftell(fileIn);
   	rewind (fileIn);
@@ -584,6 +602,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	lookVector.y = CenterY - EyeY;
 	lookVector.z = CenterZ - EyeZ;
 	d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
+	
 	if(d < 0.00001)
 	{
 		printf("\n lookVector is too small\n");
@@ -611,8 +630,8 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'r')  // Run toggle
 	{
-		if(PauseIs == false) PauseIs = true;
-		else PauseIs = false;
+		if(IsPaused == false) IsPaused = true;
+		else IsPaused = false;
 		terminalPrint();
 	}
 	
@@ -636,7 +655,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	if(key == 'B')  // Raising the beat period
 	{
 		Node[PulsePointNode].beatPeriod += 10;
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
 		cudaErrorCheck(__FILE__, __LINE__);
 		terminalPrint();
 	}
@@ -647,7 +666,7 @@ void KeyPressed(unsigned char key, int x, int y)
 		{
 			Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
 		}
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
 		cudaErrorCheck(__FILE__, __LINE__);
 		terminalPrint();
 	}
@@ -657,12 +676,12 @@ void KeyPressed(unsigned char key, int x, int y)
 		if(ViewFlag == 0) 
 		{
 			ViewFlag = 1;
-			fulstrumView();
+			frustumView();
 		}
 		else 
 		{
 			ViewFlag = 0;
-			orthoganialView();
+			orthogonalView();
 		}
 		drawPicture();
 		terminalPrint();
@@ -1000,7 +1019,7 @@ void mousePassiveMotionCallback(int x, int y)
 /*
  This function does an action based on the mode the viewer is in and which mouse button the user pressed.
 */
-void mymouse(int button, int state, int x, int y)
+void myMouse(int button, int state, int x, int y)
 {	
 	float d, dx, dy, dz;
 	float hit;
@@ -1117,7 +1136,7 @@ void mymouse(int button, int state, int x, int y)
 						
 						if(EctopicBeatModeIs == true)
 						{
-							PauseIs = true;
+							IsPaused = true;
 							printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
@@ -1158,12 +1177,12 @@ void mymouse(int button, int state, int x, int y)
 						
 						if(EctopicEventModeIs == true)
 						{
-							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyDeviceToHost);
+							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 							cudaErrorCheck(__FILE__, __LINE__);
 							
 							Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
 							
-							cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAtributesStructure), cudaMemcpyHostToDevice );
+							cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
 							cudaErrorCheck(__FILE__, __LINE__);
 						}
 						

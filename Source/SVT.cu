@@ -8,7 +8,7 @@
  The functions are listed below in the order they appear.
  
  void nBody(float);
- void setupCudaInvironment(); Environment(not invironment, will need to fix throughout- Kyla)
+ void setupCudaEnvironment(); Environment(not invironment, will need to fix throughout- Kyla)
  void readSimulationParameters();
  void setup();
  int main(int, char**);
@@ -39,12 +39,12 @@
 */
 void nBody(float dt)
 {	
-	if(PauseIs == false)
+	if(IsPaused == false) //
 	{	
-		if(ContractionIsOn == true)
+		if(ContractionIsOn)
 		{
-			//Compresion should be Compression-Kyla
-			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompresionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
+			//Compression should be Compression-Kyla
+			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
@@ -55,7 +55,7 @@ void nBody(float dt)
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		
-		if(ContractionIsOn == true)
+		if(ContractionIsOn)
 		{
 			RecenterCount++;
 			if(RecenterCount == RecenterRate) 
@@ -95,7 +95,7 @@ void nBody(float dt)
  2: Muscle based
  3: Just one block used for re-centering the simulation.
 */
-void setupCudaInvironment()
+void setupCudaEnvironment()
 {
 	// 1:
 	BlockNodes.x = BLOCKNODES;
@@ -187,10 +187,10 @@ void readSimulationParameters()
 		data >> MuscleRelaxedStrengthFraction;
 		
 		getline(data,name,'=');
-		data >> MuscleCompresionStopFraction;
+		data >> MuscleCompressionStopFraction;
 		
 		getline(data,name,'=');
-		data >> MuscleCompresionStopFractionSTD;
+		data >> MuscleCompressionStopFractionSTD;
 		
 		getline(data,name,'=');
 		data >> BaseMuscleRefractoryPeriod;
@@ -317,7 +317,7 @@ void setup()
 	}
 	else if(NodesMusclesFileOrPreviousRunsFile == 1)
 	{
-		getNodesandMusclesFromPreviuosRun(); //Previous not Previuos
+		getNodesandMusclesFromPreviousRun(); //Previous not Previuos
 	}
 	else
 	{
@@ -330,7 +330,7 @@ void setup()
 	setRemainingParameters();
 	
 	// Setting up the CUDA parallel structure to be used.
-	setupCudaInvironment();
+	setupCudaEnvironment();
 	
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
 	copyNodesMusclesToGPU();
@@ -417,7 +417,7 @@ int main(int argc, char** argv)
     	glutPassiveMotionFunc(mousePassiveMotionCallback);
 	glutDisplayFunc(Display);
 	glutReshapeFunc(reshape);
-	glutMouseFunc(mymouse);
+	glutMouseFunc(myMouse);
 	glutKeyboardFunc(KeyPressed);
 	glutIdleFunc(idle);
 	glutSetCursor(GLUT_CURSOR_DESTROY);

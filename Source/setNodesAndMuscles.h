@@ -12,7 +12,7 @@
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void setRemainingNodeAndMuscleAttributes();
- void getNodesandMusclesFromPreviuosRun(); 				(Previous not Previuos-Kyla )
+ void getNodesandMusclesFromPreviousRun(); 				(Previous not Previuos-Kyla )
  void setRemainingParameters();
  void hardCodedAblations();
  void hardCodedPeriodicEctopicEvents();
@@ -61,8 +61,8 @@ void setNodesFromBlenderFile()
 	printf("\n FrontNode = %d", FrontNode);
 	
 	// Allocating memory for the CPU and GPU nodes. 
-	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure)); //should be attributes not atributes,will need to fix below-Kyla
-	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
+	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure)); //should be attributes not atributes,will need to fix below-Kyla
+	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	// Setting all nodes to zero or their default settings; 
@@ -137,16 +137,16 @@ void setNodesFromBlenderFile()
 void checkNodes()
 {
 	float dx, dy, dz, d;
-	float averageMinSeperation, minSeperation; //seperation is spelt wrong, should be separation-Kyla 
-	int flag;
+	float averageMinSeparation, minSeparation; //seperation is spelt wrong, should be separation-Kyla --Fixed(Mason)
+	bool flag;
 	float cutoffDivider = 100.0;
 	float cutoff;
 	
 	// 1: Finding average nearest neighbor distance.
-	averageMinSeperation = 0;
+	averageMinSeparation = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		minSeperation = 10000000.0; // Setting min as a huge value just to get it started.
+		minSeparation = 10000000.0; // Setting min as a huge value just to get it started.
 		for(int j = 0; j < NumberOfNodes; j++)
 		{
 			if(i != j)
@@ -155,19 +155,19 @@ void checkNodes()
 				dy = Node[i].position.y - Node[j].position.y;
 				dz = Node[i].position.z - Node[j].position.z;
 				d = sqrt(dx*dx + dy*dy + dz*dz);
-				if(d < minSeperation) 
+				if(d < minSeparation) 
 				{
-					minSeperation = d;
+					minSeparation = d;
 				}
 			}
 		}
-		averageMinSeperation += minSeperation;
+		averageMinSeparation += minSeparation;
 	}
-	averageMinSeperation = averageMinSeperation/NumberOfNodes;
+	averageMinSeparation = averageMinSeparation/NumberOfNodes;
 	
 	// 2: Checking to see if nodes are too close together.
-	cutoff = averageMinSeperation/cutoffDivider;
-	flag =0;
+	cutoff = averageMinSeparation/cutoffDivider;
+	flag = false;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		for(int j = 0; j < NumberOfNodes; j++)
@@ -181,17 +181,17 @@ void checkNodes()
 				if(d < cutoff)
 				{
 					printf("\n Nodes %d and %d are too close. Their separation is %f", i, j, d);
-					flag = 1;
+					flag = true;
 				}
 			}
 		}
 	}
 	
 	// 3: Terminating the simulation if nodes were flagged.
-	if(flag == 1)
+	if(flag == true)
 	{
-		printf("\n The average nearest separation for all the nodes is %f.", averageMinSeperation);
-		printf("\n The cutoff separation was %f.\n\n", averageMinSeperation/10.0);
+		printf("\n The average nearest separation for all the nodes is %f.", averageMinSeparation);
+		printf("\n The cutoff separation was %f.\n\n", averageMinSeparation/10.0);
 		exit(0);
 	}
 	printf("\n Nodes have been checked for minimal separation.");
@@ -230,8 +230,8 @@ void setMusclesFromBlenderFile()
 	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
 	
 	// Allocating memory for the CPU and GPU muscles. 
-	Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
+	Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 
 	// Setting all muscles to their default settings; 
@@ -246,7 +246,7 @@ void setMusclesFromBlenderFile()
 		Muscle[i].mass = -1.0;
 		Muscle[i].naturalLength = -1.0;
 		Muscle[i].relaxedStrength = -1.0;
-		Muscle[i].compresionStopFraction = -1.0;
+		Muscle[i].compressionStopFraction = -1.0; //misspell compresion should be compression- Mason
 		Muscle[i].conductionVelocity = -1.0;
 		Muscle[i].conductionDuration = -1.0;
 		Muscle[i].refractoryPeriod = -1.0;
@@ -274,7 +274,7 @@ void setMusclesFromBlenderFile()
 		}
 		if(NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
 		{
-			printf("\n You are trying to conect to a node that is out of bounds.\n");
+			printf("\n You are trying to connect to a node that is out of bounds.\n");
 			exit(0);
 		}
 		Muscle[id].nodeA = idNode1;
@@ -432,10 +432,10 @@ void setRemainingNodeAndMuscleAttributes()
 		
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
-		stddev = MuscleCompresionStopFractionSTD;
-		left = -MuscleCompresionStopFractionSTD;
-		right = MuscleCompresionStopFractionSTD;
-		Muscle[i].compresionStopFraction = MuscleCompresionStopFraction + croppedRandomNumber(stddev, left, right);
+		stddev = MuscleCompressionStopFractionSTD;
+		left = -MuscleCompressionStopFractionSTD;
+		right = MuscleCompressionStopFractionSTD;
+		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
 	printf("\n All node and muscle attributes have been set.");
@@ -444,7 +444,7 @@ void setRemainingNodeAndMuscleAttributes()
 /*
  This function loads all the node and muscle attributes from a previous run file that was saved.
 */
-void getNodesandMusclesFromPreviuosRun()
+void getNodesandMusclesFromPreviousRun()
 {
 	FILE *inFile;
 	char fileName[256];
@@ -477,16 +477,16 @@ void getNodesandMusclesFromPreviuosRun()
 		exit(0);
 	}
 	
-	Node = (nodeAtributesStructure*)malloc(NumberOfNodes*sizeof(nodeAtributesStructure));
-	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAtributesStructure));
+	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
+	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
-	Muscle = (muscleAtributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAtributesStructure));
-	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAtributesStructure));
+	Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
-	fread(Node, sizeof(nodeAtributesStructure), NumberOfNodes, inFile);
-  	fread(Muscle, sizeof(muscleAtributesStructure), NumberOfMuscles, inFile);
+	fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
+  	fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
 	fclose(inFile);
 	
 	printf("\n Nodes and Muscles have been read in from %s.", fileName);	
@@ -498,7 +498,7 @@ void getNodesandMusclesFromPreviuosRun()
 */
 void setRemainingParameters()
 {
-	// Adjusting blood presure from millimeters of Mercury to our units.
+	// Adjusting blood pressure from millimeters of Mercury to our units. //presure -> pressure -Mason
 	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
 	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
 	
@@ -515,7 +515,7 @@ void setRemainingParameters()
 
 	DrawTimer = 0; 
 	RunTime = 0.0;
-	PauseIs = true;
+	IsPaused = true;
 	
 	DrawNodesFlag = 0;
 	DrawFrontHalfFlag = 0;
@@ -578,7 +578,7 @@ void hardCodedAblations()
 /*
  If you know that you want to set a node to be a pulse node before the simulation
  starts you can do it here, or just wait and do it in the running simulation.
- Do not set the the PulsePointNode node because it has alread been set in the 
+ Do not set the the PulsePointNode node because it has already been set in the 
  setNodesFromBlenderFile() function
  
  An example is given and commented out below to work from.
@@ -601,7 +601,7 @@ void hardCodedPeriodicEctopicEvents()
 }
 
 /*
- If you know that you want to set a muscle's atributes before the simulation
+ If you know that you want to set a muscle's attributes before the simulation
  starts you can do it here, or just wait and do it in the running simulation.
  
  An example is given and commented out below to work from.
@@ -628,11 +628,11 @@ void hardCodedIndividualMuscleAttributes()
     something is wrong in the setup simulation file. Here we kill the muscle and move on.
  4: If the muscle should be greater than half the refractory period and less than the refractory period. 
     If not something is wrong. Here we kill the muscle and move on.
- 5: If the muscle's contration strength is negative something is wrong. Here we kill the muscle and move on.
+ 5: If the muscle's contraction strength is negative something is wrong. Here we kill the muscle and move on.
     
  We left each if statement as a stand alone unit in case the user wants to perform a different act in a selected
  if statement. We could have set a flag and just killed the the muscle after all checks, but this gives move
- flexability for future directions. 
+ flexibility for future directions. 
 */
 void checkMuscle(int muscleId)
 {
@@ -650,7 +650,7 @@ void checkMuscle(int muscleId)
 	// 2:							
 	if(Muscle[muscleId].contractionStrength < Muscle[muscleId].relaxedStrength)
 	{
-	 	printf("\n\n The relaxed repultion strenrth of muscle %d is greater than its contraction strength. Rethink your parameters.", muscleId);
+	 	printf("\n\n The relaxed repulsion strength of muscle %d is greater than its contraction strength. Rethink your parameters.", muscleId);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
 	 	Muscle[muscleId].isDisabled = true;
 	 	Muscle[muscleId].color.x = DeadColor.x;
@@ -659,9 +659,9 @@ void checkMuscle(int muscleId)
 		Muscle[muscleId].color.w = 1.0;
 	} 
 	// 3:
-	if(Muscle[muscleId].compresionStopFraction < 0.5 || 1.0 < Muscle[muscleId].compresionStopFraction)
+	if(Muscle[muscleId].compressionStopFraction < 0.5 || 1.0 < Muscle[muscleId].compressionStopFraction)
 	{
-		printf("\n\n The compression Stop Fraction for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compresionStopFraction);
+		printf("\n\n The compression Stop Fraction for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
 	 	Muscle[muscleId].isDisabled = true;
 	 	Muscle[muscleId].color.x = DeadColor.x;
@@ -672,7 +672,7 @@ void checkMuscle(int muscleId)
 	// 4:
 	if(Muscle[muscleId].absoluteRefractoryPeriodFraction < 0.5 || 1.0 < Muscle[muscleId].absoluteRefractoryPeriodFraction)
 	{
-		printf("\n\n The absolute refractory period for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compresionStopFraction);
+		printf("\n\n The absolute refractory period for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
 	 	Muscle[muscleId].isDisabled = true;
 	 	Muscle[muscleId].color.x = DeadColor.x;
@@ -683,7 +683,7 @@ void checkMuscle(int muscleId)
 	// 5:
 	if(Muscle[muscleId].contractionStrength < 0.0)
 	{
-		printf("\n\n The contraction strength for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compresionStopFraction);
+		printf("\n\n The contraction strength for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
 	 	Muscle[muscleId].isDisabled = true;
 	 	Muscle[muscleId].color.x = DeadColor.x;
