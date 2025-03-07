@@ -8,7 +8,7 @@
  The functions are listed below in the order they appear.
  
  void nBody(float);
- void setupCudaEnvironment(); Environment(not invironment, will need to fix throughout- Kyla)
+ void setupCudaEnvironment();
  void readSimulationParameters();
  void setup();
  int main(int, char**);
@@ -38,14 +38,12 @@
  and only performs calculations that deal with electrical conduction and muscle timing. 
 */
 
-//If(sim.isPaused) //if(!sim.isPaused) if(sim.isPaused == false) 
 void nBody(float dt)
 {	
 	if(!IsPaused) 
 	{	
 		if(ContractionIsOn)
 		{
-			//Compression should be Compression-Kyla
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();

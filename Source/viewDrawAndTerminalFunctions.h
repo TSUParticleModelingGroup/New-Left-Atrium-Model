@@ -7,8 +7,8 @@
  
  The functions are listed below in the order they appear.
  
- void orthogonalView(); (orthogonal is spelled wrong-kyla )
- void frustumView(); (is it fulcrum? -kyla,will need to be changed throughout  ) -- its frustum -Mason (Fixed)
+ void orthogonalView();
+ void frustumView();
  float4 findCenterOfMass();
  void centerObject();
  void rotateXAxis(float);
@@ -305,7 +305,7 @@ void drawPicture()
 	// Draw Nodes
 
 	// Drawing Pulse node
-	if(IsPaused == false) glColor3d(0.0,1.0,0.0);
+	if(!IsPaused) glColor3d(0.0,1.0,0.0);
 	else glColor3d(1.0,0.0,0.0);
 
 	glPushMatrix();
@@ -370,7 +370,7 @@ void drawPicture()
 				else
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-					if(Node[i].drawNodeIs == true)
+					if(Node[i].drawNodeIs)
 					{
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 					}
@@ -418,7 +418,7 @@ void drawPicture()
 	}
 	
 	// Puts a ball at the location of the mouse if a mouse function is on.
-	if(MouseFunctionModeIs == true)
+	if(MouseFunctionModeIs)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
@@ -438,7 +438,7 @@ void drawPicture()
 	glutSwapBuffers();
 	
 	// Saves the picture if a movie is being recorded.
-	if(MovieIsOn == true)
+	if(MovieIsOn)
 	{
 		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
@@ -469,12 +469,12 @@ void terminalPrint()
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	printf("\n");
 	
-	if(AdjustMuscleAreaModeIs == true || AdjustMuscleLineModeIs == true) 
+	if(AdjustMuscleAreaModeIs || AdjustMuscleLineModeIs) 
 	{
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
 		printf(" %f", RefractoryPeriodAdjustmentMultiplier);
-		printf("\033[0m"); //is there supposed to be 2 of these? - Mason
+		printf("\033[0m");
 		printf("\n Muscle electrical conduction speed multiplier =");
 		printf("\033[0;36m");
 		printf(" %f", MuscleConductionVelocityAdjustmentMultiplier);
@@ -483,7 +483,7 @@ void terminalPrint()
 	
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		if(Node[i].isBeatNode == true && i != PulsePointNode)
+		if(Node[i].isBeatNode && i != PulsePointNode)
 		{
 			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", i, Node[i].beatPeriod);
 		}
@@ -520,7 +520,7 @@ void terminalPrint()
 	printf("\n v: Orthogonal/Frustum   - ");
 	if (ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustum" BOLD_OFF);
 	printf("\n m: Video On/Off         - ");
-	if (MovieIsOn == false) 
+	if (!MovieIsOn) 
 	{
 		printf("\033[0;31m");
 		printf(BOLD_ON "Video Recording Off" BOLD_OFF); 
@@ -553,7 +553,7 @@ void terminalPrint()
 	printf("\n Set Mouse actions");
 	
 	printf("\n !: Ablate ---------------------- ");
-	if (AblateModeIs == true) 
+	if (AblateModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -561,7 +561,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n @: Ectopic Beat ---------------- ");
-	if (EctopicBeatModeIs == true) 
+	if (EctopicBeatModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -569,7 +569,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger ------------- ");
-	if (EctopicEventModeIs == true) 
+	if (EctopicEventModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -577,7 +577,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n $: Muscle Adjustment Area Mode - ");
-	if (AdjustMuscleAreaModeIs == true) 
+	if (AdjustMuscleAreaModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -585,7 +585,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n %%: Muscle Adjustment Line Mode - ");
-	if (AdjustMuscleLineModeIs == true) 
+	if (AdjustMuscleLineModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -593,7 +593,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n ^: Identify Node --------------- ");
-	if (FindNodeModeIs == true) 
+	if (FindNodeModeIs) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 

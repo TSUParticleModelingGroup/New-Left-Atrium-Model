@@ -87,7 +87,7 @@ void mouseAblateMode()
 	FindNodeModeIs = false;
 	MouseFunctionModeIs = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	//orthogonalView(); //changed orthoganicalView to orthogonalView -Mason
+	//orthogonalView();
 	terminalPrint();
 	drawPicture();
 }
@@ -269,7 +269,7 @@ void setEctopicBeat(int nodeId)
 {
 	Node[nodeId].isBeatNode = true;
 	
-	if(Node[nodeId].isAblated == false)
+	if(!Node[nodeId].isAblated)
 	{
 		Node[nodeId].drawNodeIs = true;
 		Node[nodeId].color.x = 1.0;
@@ -451,7 +451,7 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
 	
-	if(IsPaused == false) //if the simulation is running
+	if(!IsPaused) //if the simulation is running
 	{
 		IsPaused = true; //pause the simulation
 		savedPauseState = false; //save the pause state
@@ -690,7 +690,7 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'm')  // Movie on
 	{
-		if(MovieIsOn == false) 
+		if(!MovieIsOn) 
 		{
 			MovieIsOn = true;
 			movieOn();
@@ -1033,7 +1033,7 @@ void myMouse(int button, int state, int x, int y)
 		
 		if(button == GLUT_LEFT_BUTTON)
 		{	
-			if(AdjustMuscleLineModeIs == true)
+			if(AdjustMuscleLineModeIs)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1066,7 +1066,7 @@ void myMouse(int button, int state, int x, int y)
 				// connects these two nodes. If there is a connecting muscle, adjust it.
 				else
 				{
-					if(Node[nodeId1].isAblated == false)
+					if(!Node[nodeId1].isAblated)
 					{
 						Node[nodeId1].color.x = 1.0;
 						Node[nodeId1].color.y = 0.0;
@@ -1074,7 +1074,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId1].drawNodeIs = true;
 					}
 					
-					if(Node[nodeId2].isAblated == false)
+					if(!Node[nodeId2].isAblated)
 					{
 						Node[nodeId2].color.x = 1.0;
 						Node[nodeId2].color.y = 0.0;
@@ -1126,7 +1126,7 @@ void myMouse(int button, int state, int x, int y)
 					
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(AblateModeIs == true)
+						if(AblateModeIs)
 						{
 							Node[i].isAblated = true;
 							Node[i].drawNodeIs = true;
@@ -1135,14 +1135,14 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 1.0;
 						}
 						
-						if(EctopicBeatModeIs == true)
+						if(EctopicBeatModeIs)
 						{
 							IsPaused = true;
 							printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
-						if(AdjustMuscleAreaModeIs == true)
+						if(AdjustMuscleAreaModeIs)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1168,7 +1168,7 @@ void myMouse(int button, int state, int x, int y)
 							}
 							
 							Node[i].drawNodeIs = true;
-							if(Node[i].isAblated == false) // If it is not ablated color it.
+							if(!Node[i].isAblated) // If it is not ablated color it.
 							{
 								Node[i].color.x = 0.0;
 								Node[i].color.y = 0.0;
@@ -1176,7 +1176,7 @@ void myMouse(int button, int state, int x, int y)
 							}
 						}
 						
-						if(EctopicEventModeIs == true)
+						if(EctopicEventModeIs)
 						{
 							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 							cudaErrorCheck(__FILE__, __LINE__);
@@ -1187,7 +1187,7 @@ void myMouse(int button, int state, int x, int y)
 							cudaErrorCheck(__FILE__, __LINE__);
 						}
 						
-						if(FindNodeModeIs == true)
+						if(FindNodeModeIs)
 						{
 							Node[i].drawNodeIs = true;
 							Node[i].color.x = 1.0;
@@ -1201,7 +1201,7 @@ void myMouse(int button, int state, int x, int y)
 		}
 		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
 		{
-			if(AdjustMuscleLineModeIs == true)
+			if(AdjustMuscleLineModeIs)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1234,7 +1234,7 @@ void myMouse(int button, int state, int x, int y)
 				// connects these two nodes. If there is a connecting muscle, adjust it.
 				else
 				{
-					if(Node[nodeId1].isAblated == false)
+					if(!Node[nodeId1].isAblated)
 					{
 						Node[nodeId1].color.x = 0.0;
 						Node[nodeId1].color.y = 1.0;
@@ -1242,7 +1242,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId1].drawNodeIs = false;
 					}
 					
-					if(Node[nodeId2].isAblated == false)
+					if(!Node[nodeId2].isAblated)
 					{
 						Node[nodeId2].color.x = 0.0;
 						Node[nodeId2].color.y = 1.0;
@@ -1295,7 +1295,7 @@ void myMouse(int button, int state, int x, int y)
 					dz = MouseZ - Node[i].position.z;
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(AblateModeIs == true)
+						if(AblateModeIs)
 						{
 							Node[i].isAblated = false;
 							Node[i].drawNodeIs = false;
@@ -1304,7 +1304,7 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 0.0;
 						}
 						
-						if(AdjustMuscleAreaModeIs == true)
+						if(AdjustMuscleAreaModeIs)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1328,7 +1328,7 @@ void myMouse(int button, int state, int x, int y)
 							}
 							
 							Node[i].drawNodeIs = true;
-							if(Node[i].isAblated == false) // If it is not ablated color it.
+							if(!Node[i].isAblated) // If it is not ablated color it.
 							{
 								Node[i].color.x = 0.0;
 								Node[i].color.y = 1.0;

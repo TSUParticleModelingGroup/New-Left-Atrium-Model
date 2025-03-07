@@ -3,7 +3,7 @@
  
  They are listed below in the order they appear.
  
- __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *); (Attributes is spelled incorrectly-kyla)
+ __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
  __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float)
  __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, double, int);
  __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
@@ -35,7 +35,7 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
 		muscleNumber = node[nodeToTurnOn].muscle[j];
 		
 		// 1: Is this a legit muscle and is it ready to turn on.
-		if((muscleNumber != -1) && (muscle[muscleNumber].isOn == false))
+		if((muscleNumber != -1) && (!muscle[muscleNumber].isOn))
 		{
 			muscle[muscleNumber].apNode = nodeToTurnOn;  //a: This is the node where the AP wave will now start moving away from.
 			muscle[muscleNumber].isOn = true; //b: Set to on.
@@ -271,7 +271,7 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 			node[i].position.z += node[i].velocity.z*dt;
 		}
 		
-		if(node[i].isAblated == false) // If node is not ablated do some work on it.
+		if(!node[i].isAblated) // If node is not ablated do some work on it.
 		{
 		
 			if(node[i].isBeatNode)
@@ -301,7 +301,7 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
  This function triggers the next node when its signal reaches the end of the muscle.
  Then it colors the muscle depending on where the muscle is in its cycle.
  If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
- and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? )
+ and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? Second this -Mason)
 */
 __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
 {
@@ -310,10 +310,10 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 	
 	if(i < numberOfMuscles)
 	{
-		if(muscle[i].isOn && muscle[i].isDisabled == false)
+		if(muscle[i].isOn && !muscle[i].isDisabled)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
-			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not reset here (should it be reset rather than rest? -kyla )
+			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not reset here
 			// and this would make this call happen every time step past conductionDuration until it was reset.
 			if((muscle[i].conductionDuration - dt < muscle[i].timer) && (muscle[i].timer < muscle[i].conductionDuration + dt))
 			{
@@ -327,7 +327,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 					nodeId = muscle[i].nodeA;
 				}
 				
-				if(node[nodeId].isBeatNode == false)
+				if(!node[nodeId].isBeatNode)
 				{
 					node[nodeId].isFiring = true;
 				}
@@ -389,7 +389,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
  Moves the center of mass of the nodes to the center of the simulation. The nodes tend to wander because the model and
  the forces are not completely symmetric. This function just moves it back to the center of the simulation.
  We are doing this on one block so we do not have to jump out to sync the blocks then move the nodes to the center.
- Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaEnvironment() (environment-kyla) --fixed (Mason)
+ Note: The block size here needs to be a power of 2 for the reduction to work. We check for this in the setupCudaEnvironment()
  function in the SVT.cu file.
 */
 __global__ void recenter(nodeAttributesStructure *node, int numberOfNodes, float massOfLA, float4 centerOfSimulation)
