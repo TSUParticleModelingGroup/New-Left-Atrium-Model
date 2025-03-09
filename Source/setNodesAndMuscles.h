@@ -12,7 +12,7 @@
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void setRemainingNodeAndMuscleAttributes();
- void getNodesandMusclesFromPreviousRun(); 				(Previous not Previuos-Kyla )
+ void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
  void hardCodedAblations();
  void hardCodedPeriodicEctopicEvents();
@@ -28,6 +28,7 @@
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
 */
+
 void setNodesFromBlenderFile()
 {	
 	FILE *inFile;
@@ -61,7 +62,7 @@ void setNodesFromBlenderFile()
 	printf("\n FrontNode = %d", FrontNode);
 	
 	// Allocating memory for the CPU and GPU nodes. 
-	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure)); //should be attributes not atributes,will need to fix below-Kyla
+	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
@@ -137,7 +138,7 @@ void setNodesFromBlenderFile()
 void checkNodes()
 {
 	float dx, dy, dz, d;
-	float averageMinSeparation, minSeparation; //seperation is spelt wrong, should be separation-Kyla --Fixed(Mason)
+	float averageMinSeparation, minSeparation;
 	bool flag;
 	float cutoffDivider = 100.0;
 	float cutoff;
@@ -146,7 +147,7 @@ void checkNodes()
 	averageMinSeparation = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		minSeparation = 10000000.0; // Setting min as a huge value just to get it started.
+		minSeparation = FLOATMAX; // Setting min as a huge value just to get it started.
 		for(int j = 0; j < NumberOfNodes; j++)
 		{
 			if(i != j)
@@ -246,7 +247,7 @@ void setMusclesFromBlenderFile()
 		Muscle[i].mass = -1.0;
 		Muscle[i].naturalLength = -1.0;
 		Muscle[i].relaxedStrength = -1.0;
-		Muscle[i].compressionStopFraction = -1.0; //misspell compresion should be compression- Mason
+		Muscle[i].compressionStopFraction = -1.0;
 		Muscle[i].conductionVelocity = -1.0;
 		Muscle[i].conductionDuration = -1.0;
 		Muscle[i].refractoryPeriod = -1.0;
@@ -498,7 +499,7 @@ void getNodesandMusclesFromPreviousRun()
 */
 void setRemainingParameters()
 {
-	// Adjusting blood pressure from millimeters of Mercury to our units. //presure -> pressure -Mason
+	// Adjusting blood pressure from millimeters of Mercury to our units.
 	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
 	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
 	

@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 using namespace std;
 
@@ -25,6 +26,8 @@ using namespace std;
 #define BLOCKNODES 256
 #define BLOCKMUSCLES 256
 #define BLOCKCENTEROFMASS 512
+#define FLOATMAX 3.4028235e+38f
+#define INTMAX 2147483647
 
 // Defines for terminal print
 #define BOLD_ON  "\e[1m"
@@ -39,7 +42,7 @@ using namespace std;
 
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
-struct nodeAttributesStructure //attributes is spelled wrong,change throughout- kyla
+struct nodeAttributesStructure
 {
 	float4 position;
 	float4 velocity;
@@ -57,7 +60,7 @@ struct nodeAttributesStructure //attributes is spelled wrong,change throughout- 
 };
 
 // Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
-struct muscleAttributesStructure //attributes is spelled wrong-kyla
+struct muscleAttributesStructure
 {
 	int nodeA;
 	int nodeB;    
@@ -68,7 +71,7 @@ struct muscleAttributesStructure //attributes is spelled wrong-kyla
 	float mass;
 	float naturalLength;
 	float relaxedStrength;
-	float compressionStopFraction; //compression is spelt wrong-kyla
+	float compressionStopFraction;
 	float conductionVelocity;
 	float conductionDuration;
 	float refractoryPeriod;
@@ -113,7 +116,7 @@ bool AdjustMuscleLineModeIs;
 bool FindNodeModeIs;
 bool MouseFunctionModeIs;
 bool MovieIsOn;
-int ViewFlag; // 0 orthogonal, 1 fulcrum (did you mean fulcrum-kyla?)
+int ViewFlag; // 0 orthogonal, 1 fulcrum
 
 // This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  
 int DrawNodesFlag;
@@ -276,7 +279,7 @@ void mouseEctopicBeatMode();
 void mouseAdjustMusclesAreaMode();
 void mouseAdjustMusclesLineMode();
 void mouseIdentifyNodeMode();
-int setMouseMuscleAttributes();
+bool setMouseMuscleAttributes();
 void setMouseMuscleRefractoryPeriod();
 void setMouseMuscleConductionVelocity();
 void setEctopicBeat(int);
