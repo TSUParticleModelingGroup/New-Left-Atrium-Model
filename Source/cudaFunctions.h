@@ -223,7 +223,7 @@ __global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStruc
 				node[i].force.z  += force*dz/d;
 			
 				// Checking to see if the muscle is on and has not been disabled.
-				if(muscle[muscleNumber].isOn && muscle[muscleNumber].isDisabled == false)
+				if(muscle[muscleNumber].isOn && muscle[muscleNumber].isEnabled)
 				{	
 					// 6: sine squared contraction force
 				 	float temp = sin(timer*PI/(totalDuration));
@@ -310,7 +310,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 	
 	if(i < numberOfMuscles)
 	{
-		if(muscle[i].isOn && !muscle[i].isDisabled)
+		if(muscle[i].isOn && muscle[i].isEnabled)
 		{
 			// Turning on the next node when the conduction front reaches it. This is at a certain floating point time this is why we used the +-dt
 			// You can't just turn it on when the timer is greater than the conductionDuration because the timer is not reset here

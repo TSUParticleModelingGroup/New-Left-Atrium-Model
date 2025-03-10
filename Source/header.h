@@ -66,7 +66,7 @@ struct muscleAttributesStructure
 	int nodeB;    
 	int apNode;
 	bool isOn;
-	bool isDisabled;
+	bool isEnabled;
 	float timer;
 	float mass;
 	float naturalLength;

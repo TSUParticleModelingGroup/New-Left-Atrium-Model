@@ -242,7 +242,7 @@ void setMusclesFromBlenderFile()
 		Muscle[i].nodeB = -1;
 		Muscle[i].apNode = -1;
 		Muscle[i].isOn = false;
-		Muscle[i].isDisabled = false;
+		Muscle[i].isEnabled = true;
 		Muscle[i].timer = -1.0;
 		Muscle[i].mass = -1.0;
 		Muscle[i].naturalLength = -1.0;
@@ -642,7 +642,7 @@ void checkMuscle(int muscleId)
 	{
 	 	printf("\n\n Refractory period is shorter than the contraction duration in muscle number %d", muscleId);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
-	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
@@ -653,7 +653,7 @@ void checkMuscle(int muscleId)
 	{
 	 	printf("\n\n The relaxed repulsion strength of muscle %d is greater than its contraction strength. Rethink your parameters.", muscleId);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
-	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
@@ -664,7 +664,7 @@ void checkMuscle(int muscleId)
 	{
 		printf("\n\n The compression Stop Fraction for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
-	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
@@ -675,7 +675,7 @@ void checkMuscle(int muscleId)
 	{
 		printf("\n\n The absolute refractory period for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
-	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
@@ -686,7 +686,7 @@ void checkMuscle(int muscleId)
 	{
 		printf("\n\n The contraction strength for muscle %d is %f. Rethink your parameters.", muscleId, Muscle[muscleId].compressionStopFraction);
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
-	 	Muscle[muscleId].isDisabled = true;
+	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;

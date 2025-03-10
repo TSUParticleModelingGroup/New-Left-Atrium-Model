@@ -1280,7 +1280,7 @@ void myMouse(int button, int state, int x, int y)
 						Muscle[muscleId].color.z = 0.0;
 						Muscle[muscleId].color.w = 0.0;
 						// Turning the muscle back on if it was disabled.
-						Muscle[muscleId].isDisabled = false;
+						Muscle[muscleId].isEnabled = true;
 						
 						checkMuscle(muscleId);		
 					}
@@ -1320,7 +1320,7 @@ void myMouse(int button, int state, int x, int y)
 									Muscle[muscleId].color.w = 0.0;
 									
 									// Turning the muscle back on if it was disabled.
-									Muscle[muscleId].isDisabled = false;
+									Muscle[muscleId].isEnabled = true;
 									
 									// Checking to see if the muscle needs to be killed.
 									checkMuscle(muscleId);
