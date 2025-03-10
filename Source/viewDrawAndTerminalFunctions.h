@@ -325,13 +325,13 @@ void drawPicture()
 	}
 
 	// Drawing other nodes
-	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)
+	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
-		for(int i = 1; i < NumberOfNodes; i++)
+		for(int i = 1; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
-			if(DrawFrontHalfFlag == 1 || DrawNodesFlag == 1)
+			if(DrawFrontHalfFlag == 1 || DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
 			{
-				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
+				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //draw only the nodes in the front.
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
@@ -340,7 +340,7 @@ void drawPicture()
 					glPopMatrix();
 				}
 			}
-			else
+			else //draw all nodes
 			{
 				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 				glPushMatrix();
@@ -361,7 +361,7 @@ void drawPicture()
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 					{
 						glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-						if(Node[i].drawNodeIs == true)
+						if(Node[i].isDrawNode)
 						{
 							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 						}
@@ -370,7 +370,7 @@ void drawPicture()
 				else
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-					if(Node[i].drawNodeIs)
+					if(Node[i].isDrawNode)
 					{
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 					}

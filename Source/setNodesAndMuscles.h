@@ -92,7 +92,7 @@ void setNodesFromBlenderFile()
 		Node[i].beatTimer = -1.0; // Setting bogus number so it will throw a flag later if something happens later on.
 		Node[i].isFiring = false; // Setting the node fire button to false so it will not fire as soon as it is turned on.
 		Node[i].isAblated = false; // Setting all nodes to not ablated.
-		Node[i].drawNodeIs = false; // This flag will allow you to draw certain nodes even when the draw nodes flag is set to off. Set it to off to start with.
+		Node[i].isDrawNode = false; // This flag will allow you to draw certain nodes even when the draw nodes flag is set to off. Set it to off to start with.
 		
 		// Setting all node colors to not ablated (green)
 		Node[i].color.x = 0.0;
@@ -560,7 +560,7 @@ void hardCodedAblations()
 	if(0 < index && index < NumberOfNodes)
 	{
 		Node[index].isAblated = true;
-		Node[index].drawNodeIs = true;
+		Node[index].isDrawNode = true;
 		Node[index].color.x = 1.0;
 		Node[index].color.y = 1.0;
 		Node[index].color.z = 1.0;
@@ -593,7 +593,7 @@ void hardCodedPeriodicEctopicEvents()
 		Node[index].isBeatNode = true;
 		Node[index].beatPeriod = ???;
 		Node[index].beatTimer = ???;
-		Node[index].drawNodeIs = true;
+		Node[index].isDrawNode = true;
 		Node[index].color.x = 1.0;
 		Node[index].color.y = 0.0;
 		Node[index].color.z = 1.0;

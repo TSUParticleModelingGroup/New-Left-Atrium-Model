@@ -271,7 +271,7 @@ void setEctopicBeat(int nodeId)
 	
 	if(!Node[nodeId].isAblated)
 	{
-		Node[nodeId].drawNodeIs = true;
+		Node[nodeId].isDrawNode = true;
 		Node[nodeId].color.x = 1.0;
 		Node[nodeId].color.y = 1.0;
 		Node[nodeId].color.z = 0.0;
@@ -1071,7 +1071,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId1].color.x = 1.0;
 						Node[nodeId1].color.y = 0.0;
 						Node[nodeId1].color.z = 1.0;
-						Node[nodeId1].drawNodeIs = true;
+						Node[nodeId1].isDrawNode = true;
 					}
 					
 					if(!Node[nodeId2].isAblated)
@@ -1079,7 +1079,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId2].color.x = 1.0;
 						Node[nodeId2].color.y = 0.0;
 						Node[nodeId2].color.z = 1.0;
-						Node[nodeId2].drawNodeIs = true;
+						Node[nodeId2].isDrawNode = true;
 					}
 					
 					for(int i = 0; i < MUSCLES_PER_NODE; i++) // Spinnning through muscles on node 1.
@@ -1129,7 +1129,7 @@ void myMouse(int button, int state, int x, int y)
 						if(IsInAblateMode)
 						{
 							Node[i].isAblated = true;
-							Node[i].drawNodeIs = true;
+							Node[i].isDrawNode = true;
 							Node[i].color.x = 1.0;
 							Node[i].color.y = 1.0;
 							Node[i].color.z = 1.0;
@@ -1167,7 +1167,7 @@ void myMouse(int button, int state, int x, int y)
 								}
 							}
 							
-							Node[i].drawNodeIs = true;
+							Node[i].isDrawNode = true;
 							if(!Node[i].isAblated) // If it is not ablated color it.
 							{
 								Node[i].color.x = 0.0;
@@ -1189,7 +1189,7 @@ void myMouse(int button, int state, int x, int y)
 						
 						if(IsInFindNodeMode)
 						{
-							Node[i].drawNodeIs = true;
+							Node[i].isDrawNode = true;
 							Node[i].color.x = 1.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
@@ -1239,7 +1239,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId1].color.x = 0.0;
 						Node[nodeId1].color.y = 1.0;
 						Node[nodeId1].color.z = 0.0;
-						Node[nodeId1].drawNodeIs = false;
+						Node[nodeId1].isDrawNode = false;
 					}
 					
 					if(!Node[nodeId2].isAblated)
@@ -1247,7 +1247,7 @@ void myMouse(int button, int state, int x, int y)
 						Node[nodeId2].color.x = 0.0;
 						Node[nodeId2].color.y = 1.0;
 						Node[nodeId2].color.z = 0.0;
-						Node[nodeId2].drawNodeIs = false;
+						Node[nodeId2].isDrawNode = false;
 					}
 					
 					for(int i = 0; i < MUSCLES_PER_NODE; i++) // Spinnning through muscles on node 1.
@@ -1298,7 +1298,7 @@ void myMouse(int button, int state, int x, int y)
 						if(IsInAblateMode)
 						{
 							Node[i].isAblated = false;
-							Node[i].drawNodeIs = false;
+							Node[i].isDrawNode = false;
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 1.0;
 							Node[i].color.z = 0.0;
@@ -1327,7 +1327,7 @@ void myMouse(int button, int state, int x, int y)
 								}
 							}
 							
-							Node[i].drawNodeIs = true;
+							Node[i].isDrawNode = true;
 							if(!Node[i].isAblated) // If it is not ablated color it.
 							{
 								Node[i].color.x = 0.0;
