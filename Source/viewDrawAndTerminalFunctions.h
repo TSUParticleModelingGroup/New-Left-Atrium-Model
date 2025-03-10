@@ -418,7 +418,7 @@ void drawPicture()
 	}
 	
 	// Puts a ball at the location of the mouse if a mouse function is on.
-	if(MouseFunctionModeIs)
+	if(IsInMouseFunctionMode)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
@@ -469,7 +469,7 @@ void terminalPrint()
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	printf("\n");
 	
-	if(AdjustMuscleAreaModeIs || AdjustMuscleLineModeIs) 
+	if(IsInAdjustMuscleAreaMode || IsInAdjustMuscleLineMode) 
 	{
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
@@ -553,7 +553,7 @@ void terminalPrint()
 	printf("\n Set Mouse actions");
 	
 	printf("\n !: Ablate ---------------------- ");
-	if (AblateModeIs) 
+	if (IsInAblateMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -561,7 +561,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n @: Ectopic Beat ---------------- ");
-	if (EctopicBeatModeIs) 
+	if (IsInEctopicBeatMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -569,7 +569,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger ------------- ");
-	if (EctopicEventModeIs) 
+	if (IsInEctopicEventMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -577,7 +577,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n $: Muscle Adjustment Area Mode - ");
-	if (AdjustMuscleAreaModeIs) 
+	if (IsInAdjustMuscleAreaMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -585,7 +585,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n %%: Muscle Adjustment Line Mode - ");
-	if (AdjustMuscleLineModeIs) 
+	if (IsInAdjustMuscleLineMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -593,7 +593,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n ^: Identify Node --------------- ");
-	if (FindNodeModeIs) 
+	if (IsInFindNodeMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 

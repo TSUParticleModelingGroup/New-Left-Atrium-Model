@@ -108,13 +108,13 @@ int FrontNode;
 
 // These are the switches that tell what action you are performing in the simulation.
 bool IsPaused;
-bool AblateModeIs;
-bool EctopicBeatModeIs;
-bool EctopicEventModeIs;
-bool AdjustMuscleAreaModeIs;
-bool AdjustMuscleLineModeIs;
-bool FindNodeModeIs;
-bool MouseFunctionModeIs;
+bool IsInAblateMode;
+bool IsInEctopicBeatMode;
+bool IsInEctopicEventMode;
+bool IsInAdjustMuscleAreaMode;
+bool IsInAdjustMuscleLineMode;
+bool IsInFindNodeMode;
+bool IsInMouseFunctionMode;
 bool MovieIsOn;
 int ViewFlag; // 0 orthogonal, 1 fulcrum
 

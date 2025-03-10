@@ -522,13 +522,13 @@ void setRemainingParameters()
 	DrawFrontHalfFlag = 0;
 	
 	MovieIsOn = false;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	EctopicEventModeIs = false;
-	MouseFunctionModeIs = false;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInEctopicEventMode = false;
+	IsInMouseFunctionMode = false;
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;

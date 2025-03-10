@@ -61,13 +61,13 @@ void reshape(int w, int h)
 void mouseFunctionsOff()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = false;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = false;
 	terminalPrint();
 	glutSetCursor(GLUT_CURSOR_DESTROY);
 	drawPicture();
@@ -79,13 +79,13 @@ void mouseFunctionsOff()
 void mouseAblateMode()
 {
 	IsPaused = true;
-	AblateModeIs = true;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = true;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	terminalPrint();
@@ -98,13 +98,13 @@ void mouseAblateMode()
 void mouseEctopicBeatMode()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = true;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = true;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	terminalPrint();
@@ -121,13 +121,13 @@ void mouseEctopicBeatMode()
 void mouseEctopicEventMode()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = true;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = true;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -140,13 +140,13 @@ void mouseEctopicEventMode()
 void mouseAdjustMusclesAreaMode()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = true;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = true;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -165,13 +165,13 @@ void mouseAdjustMusclesAreaMode()
 void mouseAdjustMusclesLineMode()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = true;
-	FindNodeModeIs = false;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = true;
+	IsInFindNodeMode = false;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -190,13 +190,13 @@ void mouseAdjustMusclesLineMode()
 void mouseIdentifyNodeMode()
 {
 	IsPaused = true;
-	AblateModeIs = false;
-	EctopicBeatModeIs = false;
-	EctopicEventModeIs = false;
-	AdjustMuscleAreaModeIs = false;
-	AdjustMuscleLineModeIs = false;
-	FindNodeModeIs = true;
-	MouseFunctionModeIs = true;
+	IsInAblateMode = false;
+	IsInEctopicBeatMode = false;
+	IsInEctopicEventMode = false;
+	IsInAdjustMuscleAreaMode = false;
+	IsInAdjustMuscleLineMode = false;
+	IsInFindNodeMode = true;
+	IsInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -282,7 +282,7 @@ void setEctopicBeat(int nodeId)
 	getEctopicBeatOffset(nodeId);
 	
 	// We only let you set 1 ectopic beat at a time.
-	EctopicBeatModeIs = false;
+	IsInEctopicBeatMode = false;
 	terminalPrint();
 }
 
@@ -943,37 +943,37 @@ void KeyPressed(unsigned char key, int x, int y)
 	if(key == ')')  // All mouse functions are off (shift 0)
 	{
 		mouseFunctionsOff();
-		MouseFunctionModeIs = false;
+		IsInMouseFunctionMode = false;
 	}
 	if(key == '!')  // Ablate is on (shift 1)
 	{
 		mouseAblateMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	if(key == '@')  // Ectopic beat is on (shift 2)
 	{
 		mouseEctopicBeatMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	if(key == '#')  // You are in ectopic single trigger mode. (shift 3)
 	{
 		mouseEctopicEventMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	if(key == '$') // muscle adjustment is on (shift 4)
 	{
 		mouseAdjustMusclesAreaMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	if(key == '%') // muscle adjustment is on (shift 4)
 	{
 		mouseAdjustMusclesLineMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	if(key == '^')  // Find node is on (shift 5)
 	{
 		mouseIdentifyNodeMode();
-		MouseFunctionModeIs = true;
+		IsInMouseFunctionMode = true;
 	}
 	
 	if(key == ']')  
@@ -1033,7 +1033,7 @@ void myMouse(int button, int state, int x, int y)
 		
 		if(button == GLUT_LEFT_BUTTON)
 		{	
-			if(AdjustMuscleLineModeIs)
+			if(IsInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1126,7 +1126,7 @@ void myMouse(int button, int state, int x, int y)
 					
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(AblateModeIs)
+						if(IsInAblateMode)
 						{
 							Node[i].isAblated = true;
 							Node[i].drawNodeIs = true;
@@ -1135,14 +1135,14 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 1.0;
 						}
 						
-						if(EctopicBeatModeIs)
+						if(IsInEctopicBeatMode)
 						{
 							IsPaused = true;
 							printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
-						if(AdjustMuscleAreaModeIs)
+						if(IsInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1176,7 +1176,7 @@ void myMouse(int button, int state, int x, int y)
 							}
 						}
 						
-						if(EctopicEventModeIs)
+						if(IsInEctopicEventMode)
 						{
 							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 							cudaErrorCheck(__FILE__, __LINE__);
@@ -1187,7 +1187,7 @@ void myMouse(int button, int state, int x, int y)
 							cudaErrorCheck(__FILE__, __LINE__);
 						}
 						
-						if(FindNodeModeIs)
+						if(IsInFindNodeMode)
 						{
 							Node[i].drawNodeIs = true;
 							Node[i].color.x = 1.0;
@@ -1201,7 +1201,7 @@ void myMouse(int button, int state, int x, int y)
 		}
 		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
 		{
-			if(AdjustMuscleLineModeIs)
+			if(IsInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1295,7 +1295,7 @@ void myMouse(int button, int state, int x, int y)
 					dz = MouseZ - Node[i].position.z;
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(AblateModeIs)
+						if(IsInAblateMode)
 						{
 							Node[i].isAblated = false;
 							Node[i].drawNodeIs = false;
@@ -1304,7 +1304,7 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 0.0;
 						}
 						
-						if(AdjustMuscleAreaModeIs)
+						if(IsInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
