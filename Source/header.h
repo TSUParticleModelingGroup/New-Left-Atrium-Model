@@ -54,7 +54,7 @@ struct nodeAttributesStructure
 	float beatTimer;
 	bool isFiring;
 	bool isAblated;
-	bool drawNodeIs;
+	bool isDrawNode;
 	float4 color;
 	int muscle[MUSCLES_PER_NODE];
 };
@@ -66,7 +66,7 @@ struct muscleAttributesStructure
 	int nodeB;    
 	int apNode;
 	bool isOn;
-	bool isDisabled;
+	bool isEnabled;
 	float timer;
 	float mass;
 	float naturalLength;
@@ -108,17 +108,17 @@ int FrontNode;
 
 // These are the switches that tell what action you are performing in the simulation.
 bool IsPaused;
-bool AblateModeIs;
-bool EctopicBeatModeIs;
-bool EctopicEventModeIs;
-bool AdjustMuscleAreaModeIs;
-bool AdjustMuscleLineModeIs;
-bool FindNodeModeIs;
-bool MouseFunctionModeIs;
+bool IsInAblateMode;
+bool IsInEctopicBeatMode;
+bool IsInEctopicEventMode;
+bool IsInAdjustMuscleAreaMode;
+bool IsInAdjustMuscleLineMode;
+bool IsInFindNodeMode;
+bool IsInMouseFunctionMode;
 bool MovieIsOn;
 int ViewFlag; // 0 orthogonal, 1 fulcrum
 
-// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  
+// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
 int DrawNodesFlag;
 
 // Tells the program to draw the front half of the simulation or the full simulation.

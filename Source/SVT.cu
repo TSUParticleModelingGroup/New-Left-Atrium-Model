@@ -424,5 +424,12 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 	
 	glutMainLoop();
+
+	//free up memory
+	free(Node);
+    free(Muscle);
+    cudaFree(NodeGPU);
+    cudaFree(MuscleGPU);
+
 	return 0;
 }

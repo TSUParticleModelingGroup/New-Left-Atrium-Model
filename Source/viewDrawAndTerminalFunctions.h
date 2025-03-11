@@ -325,13 +325,13 @@ void drawPicture()
 	}
 
 	// Drawing other nodes
-	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)
+	if(DrawNodesFlag == 1 || DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
-		for(int i = 1; i < NumberOfNodes; i++)
+		for(int i = 1; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
-			if(DrawFrontHalfFlag == 1 || DrawNodesFlag == 1)
+			if(DrawFrontHalfFlag == 1 || DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
 			{
-				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
+				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //draw only the nodes in the front.
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
@@ -340,7 +340,7 @@ void drawPicture()
 					glPopMatrix();
 				}
 			}
-			else
+			else //draw all nodes
 			{
 				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 				glPushMatrix();
@@ -361,7 +361,7 @@ void drawPicture()
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 					{
 						glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-						if(Node[i].drawNodeIs == true)
+						if(Node[i].isDrawNode)
 						{
 							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 						}
@@ -370,7 +370,7 @@ void drawPicture()
 				else
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-					if(Node[i].drawNodeIs)
+					if(Node[i].isDrawNode)
 					{
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
 					}
@@ -418,7 +418,7 @@ void drawPicture()
 	}
 	
 	// Puts a ball at the location of the mouse if a mouse function is on.
-	if(MouseFunctionModeIs)
+	if(IsInMouseFunctionMode)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
@@ -469,7 +469,7 @@ void terminalPrint()
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	printf("\n");
 	
-	if(AdjustMuscleAreaModeIs || AdjustMuscleLineModeIs) 
+	if(IsInAdjustMuscleAreaMode || IsInAdjustMuscleLineMode) 
 	{
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
@@ -553,7 +553,7 @@ void terminalPrint()
 	printf("\n Set Mouse actions");
 	
 	printf("\n !: Ablate ---------------------- ");
-	if (AblateModeIs) 
+	if (IsInAblateMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -561,7 +561,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n @: Ectopic Beat ---------------- ");
-	if (EctopicBeatModeIs) 
+	if (IsInEctopicBeatMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -569,7 +569,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger ------------- ");
-	if (EctopicEventModeIs) 
+	if (IsInEctopicEventMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -577,7 +577,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n $: Muscle Adjustment Area Mode - ");
-	if (AdjustMuscleAreaModeIs) 
+	if (IsInAdjustMuscleAreaMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -585,7 +585,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n %%: Muscle Adjustment Line Mode - ");
-	if (AdjustMuscleLineModeIs) 
+	if (IsInAdjustMuscleLineMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -593,7 +593,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n ^: Identify Node --------------- ");
-	if (FindNodeModeIs) 
+	if (IsInFindNodeMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
