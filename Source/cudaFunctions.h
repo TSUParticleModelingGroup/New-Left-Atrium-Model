@@ -244,13 +244,13 @@ __global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStruc
  
  We also add some drag to the system to remove energy buildup.
 */
-__global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, float drag, float dt, float time, bool ContractionIsOn)
+__global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, float drag, float dt, float time, bool contractionIsOn)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(i < numberOfNodes)
 	{
-		if(ContractionIsOn)
+		if(contractionIsOn)
 		{	
 			// Moving the nodes forward in time with the leap-frog formulas. 
 			if(time == 0.0)

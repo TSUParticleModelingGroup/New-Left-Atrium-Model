@@ -83,17 +83,17 @@ struct muscleAttributesStructure
 // This structure will contain all the switches that control the actions in the code.
 struct simulationSwitchesStructure
 {
-	bool IsPaused;
-	bool IsInAblateMode;
-	bool IsInEctopicBeatMode;
-	bool IsInEctopicEventMode;
-	bool IsInAdjustMuscleAreaMode;
-	bool IsInAdjustMuscleLineMode;
-	bool IsInFindNodeMode;
-	bool IsInMouseFunctionMode;
-	bool MovieIsOn;
+	bool isPaused;
+	bool isInAblateMode;
+	bool isInEctopicBeatMode;
+	bool isInEctopicEventMode;
+	bool isInAdjustMuscleAreaMode;
+	bool isInAdjustMuscleLineMode;
+	bool isInFindNodeMode;
+	bool isInMouseFunctionMode;
+	bool isRecording;
 	// Turns the contractions on and off to speed up the simulation when only studying electrical activity.
-	bool ContractionIsOn; 
+	bool ContractionisOn; 
 	// 0 Orthogonal, 1 Frustum
 	int ViewFlag; 
 	// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
@@ -116,7 +116,7 @@ muscleAttributesStructure *Muscle;
 muscleAttributesStructure *MuscleGPU;
 
 // This will hold all the simulation switches.
-simulationSwitchesStructure Switches;
+simulationSwitchesStructure Simulation;
 
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.

@@ -33,7 +33,7 @@ void orthogonalView()
 	glLoadIdentity();
 	glOrtho(-RadiusOfLeftAtrium, RadiusOfLeftAtrium, -RadiusOfLeftAtrium, RadiusOfLeftAtrium, Near, Far);
 	glMatrixMode(GL_MODELVIEW);
-	Switches.ViewFlag = 0;
+	Simulation.ViewFlag = 0;
 	drawPicture();
 }
 
@@ -48,7 +48,7 @@ void frustumView()
 	glLoadIdentity();
 	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
 	glMatrixMode(GL_MODELVIEW);
-	Switches.ViewFlag = 1;
+	Simulation.ViewFlag = 1;
 	drawPicture();
 }
 
@@ -305,7 +305,7 @@ void drawPicture()
 	// Draw Nodes
 
 	// Drawing Pulse node
-	if(!Switches.IsPaused) glColor3d(0.0,1.0,0.0);
+	if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0);
 	else glColor3d(1.0,0.0,0.0);
 
 	glPushMatrix();
@@ -325,11 +325,11 @@ void drawPicture()
 	}
 
 	// Drawing other nodes
-	if(Switches.DrawNodesFlag == 1 || Switches.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
+	if(Simulation.DrawNodesFlag == 1 || Simulation.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
 		for(int i = 1; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
-			if(Switches.DrawFrontHalfFlag == 1 || Switches.DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
+			if(Simulation.DrawFrontHalfFlag == 1 || Simulation.DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
 			{
 				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //draw only the nodes in the front.
 				{
@@ -356,7 +356,7 @@ void drawPicture()
 		glBegin(GL_POINTS);
 		 	for(int i = 1; i < NumberOfNodes; i++)
 			{
-				if(Switches.DrawFrontHalfFlag == 1)
+				if(Simulation.DrawFrontHalfFlag == 1)
 				{
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 					{
@@ -394,7 +394,7 @@ void drawPicture()
 					k = Muscle[muscleNumber].nodeB;
 				}
 				
-				if(Switches.DrawFrontHalfFlag == 1)
+				if(Simulation.DrawFrontHalfFlag == 1)
 				{
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front.
 					{
@@ -418,7 +418,7 @@ void drawPicture()
 	}
 	
 	// Puts a ball at the location of the mouse if a mouse function is on.
-	if(Switches.IsInMouseFunctionMode)
+	if(Simulation.isInMouseFunctionMode)
 	{
 		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
@@ -438,7 +438,7 @@ void drawPicture()
 	glutSwapBuffers();
 	
 	// Saves the picture if a movie is being recorded.
-	if(Switches.MovieIsOn)
+	if(Simulation.isRecording)
 	{
 		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
@@ -469,7 +469,7 @@ void terminalPrint()
 	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
 	printf("\n");
 	
-	if(Switches.IsInAdjustMuscleAreaMode || Switches.IsInAdjustMuscleLineMode) 
+	if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
 	{
 		printf("\n Muscle refractory period multiplier =");
 		printf("\033[0;36m");
@@ -503,7 +503,7 @@ void terminalPrint()
 	
 	printf("\n Toggles");
 	printf("\n r: Run/Pause            - ");
-	if (Switches.IsPaused == false) 
+	if (Simulation.isPaused == false) 
 	{
 		printf("\033[0;32m");
 		printf(BOLD_ON "Simulation Running" BOLD_OFF);
@@ -515,7 +515,7 @@ void terminalPrint()
 	}
 	
 	printf("\n u: Contraction On/Off   - ");
-	if (Switches.ContractionIsOn == true) 
+	if (Simulation.ContractionisOn == true) 
 	{
 		printf("\033[0;32m");
 		printf(BOLD_ON "Muscle Contractions on" BOLD_OFF);
@@ -527,13 +527,13 @@ void terminalPrint()
 	}
 	
 	printf("\n g: Front/Full           - ");
-	if (Switches.DrawFrontHalfFlag == 0) printf(BOLD_ON "Full" BOLD_OFF); else printf(BOLD_ON "Front" BOLD_OFF);
+	if (Simulation.DrawFrontHalfFlag == 0) printf(BOLD_ON "Full" BOLD_OFF); else printf(BOLD_ON "Front" BOLD_OFF);
 	printf("\n n: Nodes Off/Half/Full  - ");
-	if (Switches.DrawNodesFlag == 0) printf(BOLD_ON "Off" BOLD_OFF); else if (Switches.DrawNodesFlag == 1) printf(BOLD_ON "Half" BOLD_OFF); else printf(BOLD_ON "Full" BOLD_OFF);
+	if (Simulation.DrawNodesFlag == 0) printf(BOLD_ON "Off" BOLD_OFF); else if (Simulation.DrawNodesFlag == 1) printf(BOLD_ON "Half" BOLD_OFF); else printf(BOLD_ON "Full" BOLD_OFF);
 	printf("\n v: Orthogonal/Frustum   - ");
-	if (Switches.ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustum" BOLD_OFF);
+	if (Simulation.ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustum" BOLD_OFF);
 	printf("\n m: Video On/Off         - ");
-	if (!Switches.MovieIsOn) 
+	if (!Simulation.isRecording) 
 	{
 		printf("\033[0;31m");
 		printf(BOLD_ON "Video Recording Off" BOLD_OFF); 
@@ -566,7 +566,7 @@ void terminalPrint()
 	printf("\n Set Mouse actions");
 	
 	printf("\n !: Ablate ---------------------- ");
-	if (Switches.IsInAblateMode) 
+	if (Simulation.isInAblateMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -574,7 +574,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n @: Ectopic Beat ---------------- ");
-	if (Switches.IsInEctopicBeatMode) 
+	if (Simulation.isInEctopicBeatMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -582,7 +582,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n #: Ectopic Trigger ------------- ");
-	if (Switches.IsInEctopicEventMode) 
+	if (Simulation.isInEctopicEventMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -590,7 +590,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n $: Muscle Adjustment Area Mode - ");
-	if (Switches.IsInAdjustMuscleAreaMode) 
+	if (Simulation.isInAdjustMuscleAreaMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -598,7 +598,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n %%: Muscle Adjustment Line Mode - ");
-	if (Switches.IsInAdjustMuscleLineMode) 
+	if (Simulation.isInAdjustMuscleLineMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 
@@ -606,7 +606,7 @@ void terminalPrint()
 	else printf(BOLD_ON "Off" BOLD_OFF);
 	
 	printf("\n ^: Identify Node --------------- ");
-	if (Switches.IsInFindNodeMode) 
+	if (Simulation.isInFindNodeMode) 
 	{
 		printf("\033[0;36m");
 		printf(BOLD_ON "On" BOLD_OFF); 

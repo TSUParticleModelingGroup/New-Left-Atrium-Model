@@ -60,14 +60,14 @@ void reshape(int w, int h)
 */
 void mouseFunctionsOff()
 {
-	//Switches.IsPaused = true;
-	Switches.IsInAblateMode = false;
-	Switches.IsInEctopicBeatMode = false;
-	Switches.IsInEctopicEventMode = false;
-	Switches.IsInAdjustMuscleAreaMode = false;
-	Switches.IsInAdjustMuscleLineMode = false;
-	Switches.IsInFindNodeMode = false;
-	Switches.IsInMouseFunctionMode = false;
+	//Simulation.isPaused = true;
+	Simulation.isInAblateMode = false;
+	Simulation.isInEctopicBeatMode = false;
+	Simulation.isInEctopicEventMode = false;
+	Simulation.isInAdjustMuscleAreaMode = false;
+	Simulation.isInAdjustMuscleLineMode = false;
+	Simulation.isInFindNodeMode = false;
+	Simulation.isInMouseFunctionMode = false;
 	terminalPrint();
 	glutSetCursor(GLUT_CURSOR_DESTROY);
 	drawPicture();
@@ -79,9 +79,9 @@ void mouseFunctionsOff()
 void mouseAblateMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInAblateMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInAblateMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	terminalPrint();
@@ -94,9 +94,9 @@ void mouseAblateMode()
 void mouseEctopicBeatMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInEctopicBeatMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInEctopicBeatMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	terminalPrint();
@@ -113,9 +113,9 @@ void mouseEctopicBeatMode()
 void mouseEctopicEventMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInEctopicEventMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInEctopicEventMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -128,9 +128,9 @@ void mouseEctopicEventMode()
 void mouseAdjustMusclesAreaMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInAdjustMuscleAreaMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInAdjustMuscleAreaMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -149,9 +149,9 @@ void mouseAdjustMusclesAreaMode()
 void mouseAdjustMusclesLineMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInAdjustMuscleLineMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInAdjustMuscleLineMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -170,9 +170,9 @@ void mouseAdjustMusclesLineMode()
 void mouseIdentifyNodeMode()
 {
 	mouseFunctionsOff();
-	Switches.IsPaused = true;
-	Switches.IsInFindNodeMode = true;
-	Switches.IsInMouseFunctionMode = true;
+	Simulation.isPaused = true;
+	Simulation.isInFindNodeMode = true;
+	Simulation.isInMouseFunctionMode = true;
 	glutSetCursor(GLUT_CURSOR_NONE);
 	//orthogonalView();
 	drawPicture();
@@ -258,7 +258,7 @@ void setEctopicBeat(int nodeId)
 	getEctopicBeatOffset(nodeId);
 	
 	// We only let you set 1 ectopic beat at a time.
-	Switches.IsInEctopicBeatMode = false;
+	Simulation.isInEctopicBeatMode = false;
 	terminalPrint();
 }
 
@@ -395,7 +395,7 @@ void movieOn()
 	MovieFile = popen(ccx, "w");
 	//Buffer = new int[XWindowSize*YWindowSize];
 	Buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
-	Switches.MovieIsOn = true;
+	Simulation.isRecording = true;
 }
 
 /*
@@ -403,12 +403,12 @@ void movieOn()
 */
 void movieOff()
 {
-	if(Switches.MovieIsOn) 
+	if(Simulation.isRecording) 
 	{
 		pclose(MovieFile);
 	}
 	free(Buffer);
-	Switches.MovieIsOn = false;
+	Simulation.isRecording = false;
 }
 
 /*
@@ -427,9 +427,9 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
 	
-	if(!Switches.IsPaused) //if the simulation is running
+	if(!Simulation.isPaused) //if the simulation is running
 	{
-		Switches.IsPaused = true; //pause the simulation
+		Simulation.isPaused = true; //pause the simulation
 		savedPauseState = false; //save the pause state
 	}
 	else //if the simulation is already paused
@@ -460,7 +460,7 @@ void screenShot()
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
 	//system("rm output1.mp4");
 
-	Switches.IsPaused = savedPauseState; //restore the pause state before we took the screenshot
+	Simulation.isPaused = savedPauseState; //restore the pause state before we took the screenshot
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
@@ -612,31 +612,31 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'r')  // Run toggle
 	{
-		if(Switches.IsPaused == false) Switches.IsPaused = true;
-		else Switches.IsPaused = false;
+		if(Simulation.isPaused == false) Simulation.isPaused = true;
+		else Simulation.isPaused = false;
 		terminalPrint();
 	}
 	
 	if(key == 'u')  // Contraction toggle
 	{
-		if(Switches.ContractionIsOn == false) Switches.ContractionIsOn = true;
-		else Switches.ContractionIsOn = false;
+		if(Simulation.ContractionisOn == false) Simulation.ContractionisOn = true;
+		else Simulation.ContractionisOn = false;
 		terminalPrint();
 	}
 	
 	if(key == 'n')  // Draw nodes toggle
 	{
-		if(Switches.DrawNodesFlag == 0) Switches.DrawNodesFlag = 1;
-		else if(Switches.DrawNodesFlag == 1) Switches.DrawNodesFlag = 2;
-		else Switches.DrawNodesFlag = 0;
+		if(Simulation.DrawNodesFlag == 0) Simulation.DrawNodesFlag = 1;
+		else if(Simulation.DrawNodesFlag == 1) Simulation.DrawNodesFlag = 2;
+		else Simulation.DrawNodesFlag = 0;
 		drawPicture();
 		terminalPrint();
 	}
 	
 	if(key == 'g')  // Draw full or front half toggle
 	{
-		if(Switches.DrawFrontHalfFlag == 0) Switches.DrawFrontHalfFlag = 1;
-		else Switches.DrawFrontHalfFlag = 0;
+		if(Simulation.DrawFrontHalfFlag == 0) Simulation.DrawFrontHalfFlag = 1;
+		else Simulation.DrawFrontHalfFlag = 0;
 		drawPicture();
 		terminalPrint();
 	}
@@ -662,14 +662,14 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'v') // Orthoganal/Fulstrium view
 	{
-		if(Switches.ViewFlag == 0) 
+		if(Simulation.ViewFlag == 0) 
 		{
-			Switches.ViewFlag = 1;
+			Simulation.ViewFlag = 1;
 			frustumView();
 		}
 		else 
 		{
-			Switches.ViewFlag = 0;
+			Simulation.ViewFlag = 0;
 			orthogonalView();
 		}
 		drawPicture();
@@ -678,14 +678,14 @@ void KeyPressed(unsigned char key, int x, int y)
 	
 	if(key == 'm')  // Movie on
 	{
-		if(!Switches.MovieIsOn) 
+		if(!Simulation.isRecording) 
 		{
-			Switches.MovieIsOn = true;
+			Simulation.isRecording = true;
 			movieOn();
 		}
 		else 
 		{
-			Switches.MovieIsOn = false;
+			Simulation.isRecording = false;
 			movieOff();
 		}
 		terminalPrint();
@@ -931,37 +931,37 @@ void KeyPressed(unsigned char key, int x, int y)
 	if(key == ')')  // All mouse functions are off (shift 0)
 	{
 		mouseFunctionsOff();
-		Switches.IsInMouseFunctionMode = false;
+		Simulation.isInMouseFunctionMode = false;
 	}
 	if(key == '!')  // Ablate is on (shift 1)
 	{
 		mouseAblateMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	if(key == '@')  // Ectopic beat is on (shift 2)
 	{
 		mouseEctopicBeatMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	if(key == '#')  // You are in ectopic single trigger mode. (shift 3)
 	{
 		mouseEctopicEventMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	if(key == '$') // muscle adjustment is on (shift 4)
 	{
 		mouseAdjustMusclesAreaMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	if(key == '%') // muscle adjustment is on (shift 4)
 	{
 		mouseAdjustMusclesLineMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	if(key == '^')  // Find node is on (shift 5)
 	{
 		mouseIdentifyNodeMode();
-		Switches.IsInMouseFunctionMode = true;
+		Simulation.isInMouseFunctionMode = true;
 	}
 	
 	if(key == ']')  
@@ -1021,7 +1021,7 @@ void myMouse(int button, int state, int x, int y)
 		
 		if(button == GLUT_LEFT_BUTTON)
 		{	
-			if(Switches.IsInAdjustMuscleLineMode)
+			if(Simulation.isInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1114,7 +1114,7 @@ void myMouse(int button, int state, int x, int y)
 					
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(Switches.IsInAblateMode)
+						if(Simulation.isInAblateMode)
 						{
 							Node[i].isAblated = true;
 							Node[i].isDrawNode = true;
@@ -1123,14 +1123,14 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 1.0;
 						}
 						
-						if(Switches.IsInEctopicBeatMode)
+						if(Simulation.isInEctopicBeatMode)
 						{
-							Switches.IsPaused = true;
+							Simulation.isPaused = true;
 							printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
-						if(Switches.IsInAdjustMuscleAreaMode)
+						if(Simulation.isInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1164,7 +1164,7 @@ void myMouse(int button, int state, int x, int y)
 							}
 						}
 						
-						if(Switches.IsInEctopicEventMode)
+						if(Simulation.isInEctopicEventMode)
 						{
 							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 							cudaErrorCheck(__FILE__, __LINE__);
@@ -1175,7 +1175,7 @@ void myMouse(int button, int state, int x, int y)
 							cudaErrorCheck(__FILE__, __LINE__);
 						}
 						
-						if(Switches.IsInFindNodeMode)
+						if(Simulation.isInFindNodeMode)
 						{
 							Node[i].isDrawNode = true;
 							Node[i].color.x = 1.0;
@@ -1189,7 +1189,7 @@ void myMouse(int button, int state, int x, int y)
 		}
 		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
 		{
-			if(Switches.IsInAdjustMuscleLineMode)
+			if(Simulation.isInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1283,7 +1283,7 @@ void myMouse(int button, int state, int x, int y)
 					dz = MouseZ - Node[i].position.z;
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(Switches.IsInAblateMode)
+						if(Simulation.isInAblateMode)
 						{
 							Node[i].isAblated = false;
 							Node[i].isDrawNode = false;
@@ -1292,7 +1292,7 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.z = 0.0;
 						}
 						
-						if(Switches.IsInAdjustMuscleAreaMode)
+						if(Simulation.isInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{

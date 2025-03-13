@@ -40,22 +40,22 @@
 
 void nBody(double dt)
 {	
-	if(!Switches.IsPaused) 
+	if(!Simulation.isPaused) 
 	{	
-		if(Switches.ContractionIsOn)
+		if(Simulation.ContractionisOn)
 		{
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Switches.ContractionIsOn);
+		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		
-		if(Switches.ContractionIsOn)
+		if(Simulation.ContractionisOn)
 		{
 			RecenterCount++;
 			if(RecenterCount == RecenterRate) 
@@ -190,7 +190,7 @@ void readSimulationParameters()
 		data >> Drag;
 		
 		getline(data,name,'=');
-		data >> Switches.ContractionIsOn;
+		data >> Simulation.ContractionisOn;
 		
 		getline(data,name,'=');
 		data >> MuscleRelaxedStrengthFraction;

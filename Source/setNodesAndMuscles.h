@@ -578,19 +578,19 @@ void setRemainingParameters()
 
 	DrawTimer = 0; 
 	RunTime = 0.0;
-	Switches.IsPaused = true;
+	Simulation.isPaused = true;
 	
-	Switches.DrawNodesFlag = 0;
-	Switches.DrawFrontHalfFlag = 0;
+	Simulation.DrawNodesFlag = 0;
+	Simulation.DrawFrontHalfFlag = 0;
 	
-	Switches.MovieIsOn = false;
-	Switches.IsInAblateMode = false;
-	Switches.IsInEctopicBeatMode = false;
-	Switches.IsInAdjustMuscleAreaMode = false;
-	Switches.IsInAdjustMuscleLineMode = false;
-	Switches.IsInFindNodeMode = false;
-	Switches.IsInEctopicEventMode = false;
-	Switches.IsInMouseFunctionMode = false;
+	Simulation.isRecording = false;
+	Simulation.isInAblateMode = false;
+	Simulation.isInEctopicBeatMode = false;
+	Simulation.isInAdjustMuscleAreaMode = false;
+	Simulation.isInAdjustMuscleLineMode = false;
+	Simulation.isInFindNodeMode = false;
+	Simulation.isInEctopicEventMode = false;
+	Simulation.isInMouseFunctionMode = false;
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;
@@ -602,7 +602,7 @@ void setRemainingParameters()
 	RecenterRate = 10;
 	setView(6);
 	
-	Switches.ViewFlag = 1;
+	Simulation.ViewFlag = 1;
 }
 
 /*
