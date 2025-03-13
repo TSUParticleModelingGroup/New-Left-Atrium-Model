@@ -5,7 +5,7 @@
  
  __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
  __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float)
- __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, double, int);
+ __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, float, int);
  __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
  __global__ void recenter(nodeAttributesStructure *, int, float, float4);
  void errorCheck(const char *);
@@ -244,7 +244,7 @@ __global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStruc
  
  We also add some drag to the system to remove energy buildup.
 */
-__global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, float drag, float dt, double time, bool ContractionIsOn)
+__global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, float drag, float dt, float time, bool ContractionIsOn)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	

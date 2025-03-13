@@ -116,6 +116,51 @@ void setNodesFromBlenderFile()
 		Node[id].position.z = z;
 	}
 	
+	
+	// Finding center on LA
+	float4 centerOfObject;
+	centerOfObject.x = 0.0;
+	centerOfObject.y = 0.0;
+	centerOfObject.z = 0.0;
+	centerOfObject.w = (double)NumberOfNodes;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		 centerOfObject.x += Node[i].position.x;
+		 centerOfObject.y += Node[i].position.y;
+		 centerOfObject.z += Node[i].position.z;
+	}
+	centerOfObject.x /= centerOfObject.w;
+	centerOfObject.y /= centerOfObject.w;
+	centerOfObject.z /= centerOfObject.w;
+	
+	// Centering the LA
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		 centerOfObject.x -= centerOfObject.x;
+		 centerOfObject.y -= centerOfObject.y;
+		 centerOfObject.z -= centerOfObject.z;
+	}
+	
+	// Finding the average radius of the blender LA.
+	double averageRadius = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
+	}
+	averageRadius /= (double)NumberOfNodes;
+	
+	// Calculating the radius of the LA from the volume read in from the simulation setup file. 
+	RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
+	
+	// Making the blender LA have an average radius the same as the radius calculated from the volume read in from the simulation setup file.
+	double temp = RadiusOfLeftAtrium/averageRadius;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{	
+		Node[i].position.x *= temp;
+		Node[i].position.y *= temp;
+		Node[i].position.z *= temp;
+	}
+	
 	// This is the pulse node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
@@ -349,17 +394,20 @@ double croppedRandomNumber(double stddev, double left, double right)
 /*
  In this function, we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
  the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
- 1: First,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ 1: First,we find the average radius of the left atrium from its volume.
+ 2: Then,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 2: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+ 3: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
     fraction by the mass of the left atrium to get the mass on an individual muscle. 
- 3: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+ 4: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses like we used the ratio of muscle length like we did in 2 to 
     find the area of each node.
- 4: Here we set the final muscle attributes using the scaling read in from the simulationSetup file. The scaling is used so the user
-    can adjust the standard muscle attributes to perform as desired in their simulation. We also add some small random fluctuations
-    to these values so the simulation can have some stochastic behavior. If you do not want any stochastic behavior simply set the 
-    standard deviation for each muscle attribute to zero in the simulationsetup file.
+ 5: Here we set the muscle contraction strength attributes. 
+    The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
+    In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
+    If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
+    The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
+    can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
     
  Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
@@ -371,6 +419,9 @@ void setRemainingNodeAndMuscleAttributes()
 	double stddev, left, right;
 	
 	// 1:
+	//RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
+	
+	// 2:
 	double dx, dy, dz, d;
 	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -383,15 +434,15 @@ void setRemainingNodeAndMuscleAttributes()
 		totalLengthOfAllMuscles += d;
 	}
 		
-	// 2:
+	// 3:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
-	// 3:
-	float surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
-	float ConnectedMuscleMass;
+	// 4:
+	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
+	double ConnectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		ConnectedMuscleMass = 0.0;
@@ -406,7 +457,12 @@ void setRemainingNodeAndMuscleAttributes()
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
-	// 4:
+	// 5:
+ 	double radius = MyocyteWidth/2.0;
+ 	double myocyteVolume = PI*radius*radius*MyocyteLength;
+ 	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
+ 	MyocyteForcePerMassFraction = MyocyteContractionForce/myocyteMass;
+
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
 		stddev = MuscleConductionVelocitySTD;
@@ -429,7 +485,7 @@ void setRemainingNodeAndMuscleAttributes()
 		stddev = MyocyteForcePerMassSTD;
 		left = -MyocyteForcePerMassSTD;
 		right = MyocyteForcePerMassSTD;
-		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMass + croppedRandomNumber(stddev, left, right))*Muscle[i].mass;
+		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMassFraction + croppedRandomNumber(stddev, left, right))*Muscle[i].mass;
 		
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
@@ -467,6 +523,8 @@ void getNodesandMusclesFromPreviousRun()
 	fread(&FrontNode, sizeof(int), 1, inFile);
 	fread(&NumberOfNodes, sizeof(int), 1, inFile);
 	fread(&NumberOfMuscles, sizeof(int), 1, inFile);
+	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
+	
 	int linksPerNode;
 	fread(&linksPerNode, sizeof(int), 1, inFile);
 	if(linksPerNode != MUSCLES_PER_NODE)
@@ -498,13 +556,17 @@ void getNodesandMusclesFromPreviousRun()
  It also sets or initializes the run parameters for this run.
 */
 void setRemainingParameters()
-{
-	// Adjusting blood pressure from millimeters of Mercury to our units.
-	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
-	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
-	
+{	
 	RefractoryPeriodAdjustmentMultiplier = 1.0;
 	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+	
+	// Adjusting blood pressure from millimeters of Mercury to our units.
+	// We simulate blood pressure as a central push-back force.
+	// 1 millimeter of mercury is 133.322387415 Pascals or kg/(meters*seconds*seconds).
+	// Converting this into our units of grams, milliseconds, and millimeters gives 0.000133322387415.
+	// Therefore, 1 millimeter of mercury is equivalent to 0.000133322387415 in our units of g/(mm*ms*ms).
+	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
+	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
 	
 	CenterOfSimulation.x = 0.0;
 	CenterOfSimulation.y = 0.0;
@@ -516,19 +578,19 @@ void setRemainingParameters()
 
 	DrawTimer = 0; 
 	RunTime = 0.0;
-	IsPaused = true;
+	Switches.IsPaused = true;
 	
-	DrawNodesFlag = 0;
-	DrawFrontHalfFlag = 0;
+	Switches.DrawNodesFlag = 0;
+	Switches.DrawFrontHalfFlag = 0;
 	
-	MovieIsOn = false;
-	IsInAblateMode = false;
-	IsInEctopicBeatMode = false;
-	IsInAdjustMuscleAreaMode = false;
-	IsInAdjustMuscleLineMode = false;
-	IsInFindNodeMode = false;
-	IsInEctopicEventMode = false;
-	IsInMouseFunctionMode = false;
+	Switches.MovieIsOn = false;
+	Switches.IsInAblateMode = false;
+	Switches.IsInEctopicBeatMode = false;
+	Switches.IsInAdjustMuscleAreaMode = false;
+	Switches.IsInAdjustMuscleLineMode = false;
+	Switches.IsInFindNodeMode = false;
+	Switches.IsInEctopicEventMode = false;
+	Switches.IsInMouseFunctionMode = false;
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;
@@ -540,7 +602,7 @@ void setRemainingParameters()
 	RecenterRate = 10;
 	setView(6);
 	
-	ViewFlag = 1;
+	Switches.ViewFlag = 1;
 }
 
 /*

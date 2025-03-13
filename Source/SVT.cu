@@ -7,7 +7,7 @@
  
  The functions are listed below in the order they appear.
  
- void nBody(float);
+ void nBody(double);
  void setupCudaEnvironment();
  void readSimulationParameters();
  void setup();
@@ -38,24 +38,24 @@
  and only performs calculations that deal with electrical conduction and muscle timing. 
 */
 
-void nBody(float dt)
+void nBody(double dt)
 {	
-	if(!IsPaused) 
+	if(!Switches.IsPaused) 
 	{	
-		if(ContractionIsOn)
+		if(Switches.ContractionIsOn)
 		{
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
 			cudaDeviceSynchronize();
 		}
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, ContractionIsOn);
+		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Switches.ContractionIsOn);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
 		cudaErrorCheck(__FILE__, __LINE__);
 		cudaDeviceSynchronize();
 		
-		if(ContractionIsOn)
+		if(Switches.ContractionIsOn)
 		{
 			RecenterCount++;
 			if(RecenterCount == RecenterRate) 
@@ -152,9 +152,18 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> NodeRadiusAdjustment;
+
+		getline(data,name,'=');
+		data >> MyocyteLength;
 		
 		getline(data,name,'=');
-		data >> MyocyteForcePerMass;
+		data >> MyocyteWidth;
+		
+		getline(data,name,'=');
+		data >> MyocyteContractionForce;
+		
+		getline(data,name,'=');
+		data >> MyocardialTissueDensity;
 		
 		getline(data,name,'=');
 		data >> MyocyteForcePerMassMultiplier;
@@ -175,13 +184,13 @@ void readSimulationParameters()
 		data >> MassOfLeftAtrium;
 		
 		getline(data,name,'=');
-		data >> RadiusOfLeftAtrium;
+		data >> VolumeOfLeftAtrium;
 		
 		getline(data,name,'=');
 		data >> Drag;
 		
 		getline(data,name,'=');
-		data >> ContractionIsOn;
+		data >> Switches.ContractionIsOn;
 		
 		getline(data,name,'=');
 		data >> MuscleRelaxedStrengthFraction;
@@ -427,9 +436,9 @@ int main(int argc, char** argv)
 
 	//free up memory
 	free(Node);
-    free(Muscle);
-    cudaFree(NodeGPU);
-    cudaFree(MuscleGPU);
+    	free(Muscle);
+    	cudaFree(NodeGPU);
+    	cudaFree(MuscleGPU);
 
 	return 0;
 }

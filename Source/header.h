@@ -80,6 +80,31 @@ struct muscleAttributesStructure
 	float4 color;
 };
 
+// This structure will contain all the switches that control the actions in the code.
+struct simulationSwitchesStructure
+{
+	bool IsPaused;
+	bool IsInAblateMode;
+	bool IsInEctopicBeatMode;
+	bool IsInEctopicEventMode;
+	bool IsInAdjustMuscleAreaMode;
+	bool IsInAdjustMuscleLineMode;
+	bool IsInFindNodeMode;
+	bool IsInMouseFunctionMode;
+	bool MovieIsOn;
+	// Turns the contractions on and off to speed up the simulation when only studying electrical activity.
+	bool ContractionIsOn; 
+	// 0 Orthogonal, 1 Frustum
+	int ViewFlag; 
+	// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
+	int DrawNodesFlag; 
+	// Tells the program to draw the front half of the simulation or the full simulation.
+	// We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
+	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
+	// orient yourself.
+	int DrawFrontHalfFlag;
+};
+
 // Globals Start ******************************************
 
 // This will hold all the nodes.
@@ -89,6 +114,9 @@ nodeAttributesStructure *NodeGPU;
 // This will hold all the muscles.
 muscleAttributesStructure *Muscle;
 muscleAttributesStructure *MuscleGPU;
+
+// This will hold all the simulation switches.
+simulationSwitchesStructure Switches;
 
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.
@@ -106,27 +134,6 @@ int PulsePointNode;
 int UpNode;
 int FrontNode;
 
-// These are the switches that tell what action you are performing in the simulation.
-bool IsPaused;
-bool IsInAblateMode;
-bool IsInEctopicBeatMode;
-bool IsInEctopicEventMode;
-bool IsInAdjustMuscleAreaMode;
-bool IsInAdjustMuscleLineMode;
-bool IsInFindNodeMode;
-bool IsInMouseFunctionMode;
-bool MovieIsOn;
-int ViewFlag; // 0 orthogonal, 1 fulcrum
-
-// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
-int DrawNodesFlag;
-
-// Tells the program to draw the front half of the simulation or the full simulation.
-// We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
-// or looking through a hole to the back of the simulation. By turning the back off it allows you to
-// orient yourself.
-int DrawFrontHalfFlag;
-
 // Holds the name of view you are in for displaying in the terminal print.
 char ViewName[256] = "no view set"; 
 
@@ -143,29 +150,32 @@ char NodesMusclesFileName[256];
 char PreviousRunFileName[256];
 float LineWidth;
 float NodeRadiusAdjustment;
-float MyocyteForcePerMass;
-float MyocyteForcePerMassMultiplier;
-float MyocyteForcePerMassSTD;
-float DiastolicPressureLA;
-float SystolicPressureLA;
-float PressureMultiplier;
-float MassOfLeftAtrium;
-float RadiusOfLeftAtrium;
-float Drag;
-bool ContractionIsOn;
-float MuscleRelaxedStrengthFraction;
-float MuscleCompressionStopFraction;
-float MuscleCompressionStopFractionSTD;
-float BaseMuscleRefractoryPeriod;
-float MuscleRefractoryPeriodSTD;
-float BaseAbsoluteRefractoryPeriodFraction;
-float AbsoluteRefractoryPeriodFractionSTD;
-float BaseMuscleConductionVelocity;
-float MuscleConductionVelocitySTD;
-float BeatPeriod;
-float PrintRate;
+double MyocyteLength; 
+double MyocyteWidth;
+double MyocyteContractionForce;
+double MyocardialTissueDensity;
+double MyocyteForcePerMassMultiplier;
+double MyocyteForcePerMassSTD;
+double DiastolicPressureLA;
+double SystolicPressureLA;
+double PressureMultiplier;
+double MassOfLeftAtrium;
+double VolumeOfLeftAtrium;
+double Drag;
+// bool ContractionIsOn; // This is read in from the setup file but is defined in the simulationSwitchesStructure.
+double MuscleRelaxedStrengthFraction;
+double MuscleCompressionStopFraction;
+double MuscleCompressionStopFractionSTD;
+double BaseMuscleRefractoryPeriod;
+double MuscleRefractoryPeriodSTD;
+double BaseAbsoluteRefractoryPeriodFraction;
+double AbsoluteRefractoryPeriodFractionSTD;
+double BaseMuscleConductionVelocity;
+double MuscleConductionVelocitySTD;
+double BeatPeriod;
+double PrintRate;
 int DrawRate;
-float Dt;
+double Dt;
 float4 ReadyColor;
 float4 ContractingColor;
 float4 RestingColor;
@@ -174,24 +184,25 @@ float4 DeadColor;
 float4 BackGround;
 // simulationSetup globals end ************************************************
 
-// This is the base muscle strength that every muscle's start up strength is based on.
-// You might think this should be read in from the simulationSetup file. The reason it is 
-// not is because we do not know a muscles mass yet. Once we have the mass of a muscle,
-// which we the calculated in 2: of the setRemainingNodeAndMuscleAttributes() function, we
-// multiply it by the MyocyteForcePerMassMultiplier to get its base strength.
-float BaseMuscleContractionStrength;
+// This will hold the radius of the left atrium which we will use to scale the size of everything in
+// the simulation.
+double RadiusOfLeftAtrium;
+
+// This will hold the force per mass fraction of a myocte which we will use to scale a a muscles strength
+// by its mass.
+double MyocyteForcePerMassFraction;
 
 // Variable that holds mouse locations to be translated into positions in the simulation.
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
 float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
 int ScrollSpeedToggle; // Sets slow or fast scroll speed.
-float ScrollSpeed; // How fast your scroll moves.
+double ScrollSpeed; // How fast your scroll moves.
 
 // Times to keep track of what to do in the nBody() function and your progress through the simulation.
 // Some of the variables that accompany this variable are read in from the simulationSetup file.
 // The timers tell what the time is from the last action and the rates tell how often to perform the action.
-float PrintTimer;
+double PrintTimer;
 int DrawTimer; 
 int RecenterCount;
 int RecenterRate;
@@ -223,7 +234,7 @@ int NumberOfMuscles;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.
-void nBody(float);
+void nBody(double);
 void allocateMemory();
 void readSimulationParameters();
 void setup();
@@ -232,7 +243,7 @@ int main(int, char**);
 // Functions in the CUDAFunctions.h file.
 __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
 __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float);
-__global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, double, bool);
+__global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, float, bool);
 __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
 __global__ void recenter(nodeAttributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
