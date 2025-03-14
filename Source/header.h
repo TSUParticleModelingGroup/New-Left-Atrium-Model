@@ -161,6 +161,7 @@ double SystolicPressureLA;
 double PressureMultiplier;
 double MassOfLeftAtrium;
 double VolumeOfLeftAtrium;
+bool KeepOriginalDimensions;
 double Drag;
 // bool ContractionIsOn; // This is read in from the setup file but is defined in the simulationSwitchesStructure.
 double MuscleRelaxedStrengthFraction;

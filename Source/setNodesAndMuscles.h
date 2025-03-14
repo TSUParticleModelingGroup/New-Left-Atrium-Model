@@ -149,16 +149,24 @@ void setNodesFromBlenderFile()
 	}
 	averageRadius /= (double)NumberOfNodes;
 	
-	// Calculating the radius of the LA from the volume read in from the simulation setup file. 
-	RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
-	
-	// Making the blender LA have an average radius the same as the radius calculated from the volume read in from the simulation setup file.
-	double temp = RadiusOfLeftAtrium/averageRadius;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{	
-		Node[i].position.x *= temp;
-		Node[i].position.y *= temp;
-		Node[i].position.z *= temp;
+	if(KeepOriginalDimensions == 1)
+	{
+		// Here, we do not adjust the nodes and set the average radius to the value calculated from the node file.
+		RadiusOfLeftAtrium = averageRadius;
+	}
+	else
+	{
+		// Calculating the radius of the LA from the volume read in from the simulation setup file. 
+		RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
+		
+		// Making the blender LA have an average radius the same as the radius calculated from the volume read in from the simulation setup file.
+		double temp = RadiusOfLeftAtrium/averageRadius;
+		for(int i = 0; i < NumberOfNodes; i++)
+		{	
+			Node[i].position.x *= temp;
+			Node[i].position.y *= temp;
+			Node[i].position.z *= temp;
+		}
 	}
 	
 	// This is the pulse node that generates the beat.
@@ -394,15 +402,14 @@ double croppedRandomNumber(double stddev, double left, double right)
 /*
  In this function, we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
  the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
- 1: First,we find the average radius of the left atrium from its volume.
- 2: Then,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ 1: Then,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 3: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+ 2: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
     fraction by the mass of the left atrium to get the mass on an individual muscle. 
- 4: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+ 3: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses like we used the ratio of muscle length like we did in 2 to 
     find the area of each node.
- 5: Here we set the muscle contraction strength attributes. 
+ 4: Here we set the muscle contraction strength attributes. 
     The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
     In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
     If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
@@ -419,9 +426,6 @@ void setRemainingNodeAndMuscleAttributes()
 	double stddev, left, right;
 	
 	// 1:
-	//RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
-	
-	// 2:
 	double dx, dy, dz, d;
 	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -434,13 +438,13 @@ void setRemainingNodeAndMuscleAttributes()
 		totalLengthOfAllMuscles += d;
 	}
 		
-	// 3:
+	// 2:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
-	// 4:
+	// 3:
 	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
 	double ConnectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -457,7 +461,7 @@ void setRemainingNodeAndMuscleAttributes()
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
-	// 5:
+	// 4:
  	double radius = MyocyteWidth/2.0;
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;

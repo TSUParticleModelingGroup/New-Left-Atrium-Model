@@ -187,6 +187,9 @@ void readSimulationParameters()
 		data >> VolumeOfLeftAtrium;
 		
 		getline(data,name,'=');
+		data >> KeepOriginalDimensions;
+		
+		getline(data,name,'=');
 		data >> Drag;
 		
 		getline(data,name,'=');

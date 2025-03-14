@@ -26,7 +26,7 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium2.3K
+--InputFileName = 3DIdealLAtrium13K
 
 Name of previous run files that were stored in GitHub.
 Test
@@ -86,11 +86,28 @@ It should be a float.
 --MassOfLeftAtrium = 25.0;
 
 The volume of the left atrium will be used to calculating the average radius of the left atrium.
-The average radius will be use to scale all length values.  
+The average radius will then be use to scale all length values. The nodes read in from the nodes file
+will be adjusted so that their average distance from the geometric center of the object will be this value.
+The value will also be used scale all visual the LA to the screen so it will file the screen. However 
+in some setuations the user will not want the nodes from the node file adjusted because they are the actuall
+demintions desired. In this case set the flag KeepOriginalDimentions to 1 and the average radius will be set 
+solley from the node positions read in from the nodes' file.  
 The left atrium holds around 23640 cubic millimeters of blood [7]. 
 It should be a float.
 
+The volume of the left atrium will be used to calculate the average radius of the left atrium.
+The average radius will then be used to scale all length values. The nodes read from the nodes file will 
+be adjusted so that their average distance from the geometric center of the object corresponds to this value.
+This value will also be used to scale the visual representation of the left atrium on the screen so that it 
+fills the screen. However, in some situations, the user may not want the nodes from the node file adjusted 
+because they represent the actual dimensions desired. In this case, set the flag KeepOriginalDimensions to 1, 
+and the average radius will be calculated solely from the node positions read from the nodes file. A value of 
+0 will scale the simulation to have a radius calculated from VolumeOfLeftAtrium. 
+The left atrium holds around 23,640 cubic millimeters of blood [7].
+The first value should be a float and the second value should be a 0 or a 1.
+
 --VolumeOfLeftAtrium = 23640.0;
+--KeepOriginalDimensions = 1;
 
 To remove energy buildup in the system, we add a drag coefficient that works opposite to velocity.
 This helps prevent the system from quivering and wandering around. A value around 1.0 works well.
