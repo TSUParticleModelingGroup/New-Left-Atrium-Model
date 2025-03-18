@@ -85,16 +85,6 @@ It should be a float.
  
 --MassOfLeftAtrium = 25.0;
 
-The volume of the left atrium will be used to calculating the average radius of the left atrium.
-The average radius will then be use to scale all length values. The nodes read in from the nodes file
-will be adjusted so that their average distance from the geometric center of the object will be this value.
-The value will also be used scale all visual the LA to the screen so it will file the screen. However 
-in some setuations the user will not want the nodes from the node file adjusted because they are the actuall
-demintions desired. In this case set the flag KeepOriginalDimentions to 1 and the average radius will be set 
-solley from the node positions read in from the nodes' file.  
-The left atrium holds around 23640 cubic millimeters of blood [7]. 
-It should be a float.
-
 The volume of the left atrium will be used to calculate the average radius of the left atrium.
 The average radius will then be used to scale all length values. The nodes read from the nodes file will 
 be adjusted so that their average distance from the geometric center of the object corresponds to this value.

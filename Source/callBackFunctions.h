@@ -473,14 +473,17 @@ void screenShot()
 */
 void saveSettings()
 {
+	// Copying the latest node and muscle information down from the GPU.
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 	
+	// Moving into the file that contains previuos run files.
 	chdir("./PreviousRunsFile");
 	   	
-	//Create output file name to store run settings in.
+	// Creating an output file name to store run settings infomation in. It is unique down to the second to keep the user from 
+	// overwriting files (You just cannot save more than one file a second).
 	time_t t = time(0); 
 	struct tm * now = localtime( & t );
 	int month = now->tm_mon + 1, day = now->tm_mday, curTimeHour = now->tm_hour, curTimeMin = now->tm_min, curTimeSec = now->tm_sec;
@@ -492,7 +495,9 @@ void saveSettings()
 	stimeMin << curTimeMin;
 	stimeSec << curTimeSec;
 	string monthday;
-
+	
+	// We are using <=9 below to keep the minutes and seconds in a two-digit format. 
+	// For example, 2 seconds would be displayed as 02 seconds.
 	if(curTimeMin <= 9)
 	{
 		if(curTimeSec <= 9) monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":0" + stimeMin.str() + ":0" + stimeSec.str();
@@ -501,9 +506,10 @@ void saveSettings()
 	else monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":" + stimeMin.str() + ":" + stimeSec.str();
 
 	string timeStamp = "Run:" + monthday;
-	const char *diretoryName = timeStamp.c_str();
+	const char *directoryName = timeStamp.c_str();
 	
-	if(mkdir(diretoryName, 0777) == 0)
+	// Creating the diretory to hold the run settings.
+	if(mkdir(directoryName, 0777) == 0)
 	{
 		printf("\n Directory '%s' created successfully.\n", diretoryName);
 	}
@@ -512,7 +518,8 @@ void saveSettings()
 		printf("\n Error creating directory '%s'.\n", diretoryName);
 	}
 	
-	chdir(diretoryName);
+	// Moving into the directory
+	chdir(directoryName);
 	
 	// Copying all the nodes and muscle (with their properties) into this folder in the file named run.
 	FILE *settingFile;
@@ -543,9 +550,12 @@ void saveSettings()
 		exit(0);
 	}
 
+	// Finding the size of the simulationSetup file.
 	fseek (fileIn , 0 , SEEK_END);
   	sizeOfFile = ftell(fileIn);
   	rewind (fileIn);
+  	
+  	// Creating a buffer to hold the simulationSetup file.
   	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
   	fread (buffer, 1, sizeOfFile, fileIn);
 	fileOut = fopen("simulationSetup", "wb");
