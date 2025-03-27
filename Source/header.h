@@ -8,9 +8,6 @@
 #include <fstream>
 #include <sstream>
 #include <string.h>
-#include <GL/glut.h>
-#include <GL/freeglut.h>
-//#include <GLFW/glfw3.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +16,16 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdbool.h>
+
+// OpenGL headers - GLAD must come BEFORE GLFW
+#include "../include/glad/glad.h"
+#include <GL/glu.h>
+#include <GLFW/glfw3.h>
+
+// ImGui headers - use quotes for local includes, not angle brackets
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
 using namespace std;
 
