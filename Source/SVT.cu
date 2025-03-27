@@ -67,7 +67,7 @@ void nBody(double dt)
 		}
 		
 		DrawTimer++;
-		if(DrawTimer == DrawRate) 
+		if(DrawTimer >= DrawRate) 
 		{
 			copyNodesMusclesFromGPU();
 			drawPicture();
@@ -426,6 +426,7 @@ int main(int argc, char** argv)
 	glfwSetMouseButtonCallback(Window, myMouse); //sets the callback for the mouse clicks
 	glfwSetScrollCallback(Window, scrollWheel); //sets the callback for the mouse wheel
 	glfwSetKeyCallback(Window, KeyPressed); //sets the callback for the keyboard
+	
 
 
 	// Set the viewport size and aspect ratio
@@ -472,37 +473,21 @@ int main(int argc, char** argv)
 
 	
 	//time variables to calculate the time between frames
-	double currentTime = glfwGetTime(); //get the current time in seconds
-	double lastTime = currentTime; //time at last frame
-	double elapsedTime = 0.0; //time between frames
-	double accumulatedTime = 0.0; //time accumulated for fixed timestep
+
 
 	// Main loop
 	while (!glfwWindowShouldClose(Window))
 	{
-		// Calculate the time elapsed since the last frame
-		currentTime = glfwGetTime(); //get the current time in seconds
-		elapsedTime = currentTime - lastTime; //calculate the time elapsed since the last frame
-		lastTime = currentTime; //set the last time to the current time
 
 		// Poll events
 		glfwPollEvents();
 	
-		//Render simulation every Dt seconds
 		if (!Simulation.isPaused)  //while runnning
 		{
-			accumulatedTime += elapsedTime; //add the time between frames to the total time
-			
-			// Update physics with fixed timestep (Dt)
-			while (accumulatedTime >= Dt)  //if the time between frames is past our Dt, recalculate the simulation
-			{
-				nBody(Dt); // Update simulation
-				accumulatedTime -= Dt; //reset the timer
-			}
+			nBody(Dt); //Update the simulation
 		}
 		
-		// render the scene
-		drawPicture();
+		//drawPicture(); //Draw the simulation
 		
 		// Swap buffers ONCE at the end
 		glfwSwapBuffers(Window);
