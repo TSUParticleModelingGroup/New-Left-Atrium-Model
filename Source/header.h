@@ -221,7 +221,7 @@ float4 CenterOfSimulation;
 float4 AngleOfSimulation;
 
 // Window globals
-static int Window;
+GLFWwindow* Window; // Window pointer
 int XWindowSize;
 int YWindowSize; 
 double Near; // Front and back of clip planes
@@ -273,6 +273,7 @@ void hardCodedIndividualMuscleAttributes();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
+void renderSphere(float, int, int);
 void orthogonalView();
 void frustumView();
 float4 findCenterOfMass();
@@ -289,28 +290,27 @@ void terminalPrint();
 void helpMenu();
 
 // Functions in the callBackFunctions.h file.
-void Display(void);
-void idle();
-void reshape(int, int);
-void mouseFunctionsOff();
-void mouseAblateMode();
-void mouseEctopicBeatMode();
-void mouseAdjustMusclesAreaMode();
-void mouseAdjustMusclesLineMode();
-void mouseIdentifyNodeMode();
-bool setMouseMuscleAttributes();
-void setMouseMuscleRefractoryPeriod();
-void setMouseMuscleConductionVelocity();
-void setEctopicBeat(int);
-void clearStdin();
-void getEctopicBeatPeriod(int);
-void getEctopicBeatOffset(int);
-string getTimeStamp();
-void movieOn();
-void movieOff();
-void screenShot();
-void saveSettings();
-void KeyPressed(unsigned char, int, int);
-void mousePassiveMotionCallback(int, int);
-void myMouse(int, int, int, int);
+ void reshape(GLFWwindow* window, int width, int height);
+ void mouseFunctionsOff();
+ void mouseAblateMode();
+ void mouseEctopicBeatMode();
+ void mouseAdjustMusclesAreaMode();
+ void mouseAdjustMusclesLineMode();
+ void mouseIdentifyNodeMode();
+ bool setMouseMuscleAttributes();
+ void setMouseMuscleRefractoryPeriod();
+ void setMouseMuscleConductionVelocity();
+ void setEctopicBeat(int nodeId);
+ void clearStdin();
+ void getEctopicBeatPeriod(int);
+ void getEctopicBeatOffset(int);
+ string getTimeStamp();
+ void movieOn();
+ void movieOff();
+ void screenShot();
+ void saveSettings();
+ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
+ void myMouse(GLFWwindow* window, int button, int state, double x, double y);
+ void scrollWheel(GLFWwindow*, double, double);
 

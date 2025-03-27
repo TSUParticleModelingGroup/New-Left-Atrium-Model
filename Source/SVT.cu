@@ -308,6 +308,8 @@ void setup()
 	time_t t;
 	srand((unsigned) time(&t));
 	
+	//GLFWwindow* Window = NULL; //initialize the window pointer to NULL
+
 	// Getting user inputs.
 	readSimulationParameters();
 	
@@ -387,21 +389,66 @@ int main(int argc, char** argv)
 	UpY = 1.0;
 	UpZ = 0.0;
 
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
-	glutInitWindowSize(XWindowSize,YWindowSize);
-	glutInitWindowPosition(5,5);
-	Window = glutCreateWindow("SVT");
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	
-	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
+    if(!glfwInit()) // Initialize GLFW, check for failure
+    {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        return -1;
+    }
+
+	// Set compatibility mode to allow legacy OpenGL (this is just standard)
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2); //these 2 lines are for compatibility with older versions of OpenGL (2.1+) ensures backwards compatibility
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE); //this line is for compatibility with older versions of OpenGL
+
+	// Create a windowed mode window and its OpenGL context
+	Window = glfwCreateWindow(XWindowSize, YWindowSize, "SVT", NULL, NULL); // args: width, height, title, monitor, share
+	if (!Window) // Check if window creation failed
+	{
+		glfwTerminate(); // Terminate GLFW
+		fprintf(stderr, "Failed to create window\n");
+		return -1;
+	}
+
+	// Make the window's context current
+    glfwMakeContextCurrent(Window); // Make the window's context current, meaning that all future OpenGL commands will apply to this window
+    glfwSwapInterval(1); // Enable vsync (1 = on, 0 = off), vsync is a method used to prevent screen tearing which occurs when the GPU is rendering frames at a rate faster than the monitor can display them
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))  // Initialize GLAD, check for failure
+	{
+		fprintf(stderr, "Failed to initialize GLAD\n");
+		glfwTerminate();
+		return -1;
+	}
+
+	//these set up our callbacks, most have been changed to adapters until GUI is implemented
+	glfwSetFramebufferSizeCallback(Window, reshape);  //sets the callback for the window resizing
+	glfwSetCursorPosCallback(Window, mousePassiveMotionCallback); //sets the callback for the cursor position
+	glfwSetMouseButtonCallback(Window, myMouse); //sets the callback for the mouse clicks
+	glfwSetScrollCallback(Window, scrollWheel); //sets the callback for the mouse wheel
+	glfwSetKeyCallback(Window, KeyPressed); //sets the callback for the keyboard
+
+
+	// Set the viewport size and aspect ratio
+	glViewport(0, 0, XWindowSize, YWindowSize);
+	float aspectRatio = (float)XWindowSize / (float)YWindowSize;
+
+	// PROJECTION MATRIX - this controls how wide your viewing area is
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+
 	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
-	glMatrixMode(GL_MODELVIEW);
-	glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
 	
+	// MODELVIEW MATRIX - this controls camera position
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
+
+	glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
+
+	
+	//Lighting and material properties
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	//GLfloat light_position[] = {EyeX, EyeY, EyeZ, 0.0};
 	GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
 	GLfloat light_ambient[]  = {1.0, 1.0, 1.0, 1.0}; //what color is the ambient light, {r,g,b,a}, a= opacity 1.0 is fully visible, 0.0 is invisible
@@ -422,26 +469,66 @@ int main(int argc, char** argv)
 
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_DEPTH_TEST);
+
+	
+	//time variables to calculate the time between frames
+	double currentTime = glfwGetTime(); //get the current time in seconds
+	double lastTime = currentTime; //time at last frame
+	double elapsedTime = 0.0; //time between frames
+	double accumulatedTime = 0.0; //time accumulated for fixed timestep
+
+	// Main loop
+	while (!glfwWindowShouldClose(Window))
+	{
+		// Calculate the time elapsed since the last frame
+		currentTime = glfwGetTime(); //get the current time in seconds
+		elapsedTime = currentTime - lastTime; //calculate the time elapsed since the last frame
+		lastTime = currentTime; //set the last time to the current time
+
+		// Poll events
+		glfwPollEvents();
+	
+		//Render simulation every Dt seconds
+		if (!Simulation.isPaused)  //while runnning
+		{
+			accumulatedTime += elapsedTime; //add the time between frames to the total time
+			
+			// Update physics with fixed timestep (Dt)
+			while (accumulatedTime >= Dt)  //if the time between frames is past our Dt, recalculate the simulation
+			{
+				nBody(Dt); // Update simulation
+				accumulatedTime -= Dt; //reset the timer
+			}
+		}
+		
+		// render the scene
+		drawPicture();
+		
+		// Swap buffers ONCE at the end
+		glfwSwapBuffers(Window);
+	}
 	
 	//glutMouseFunc(mouseWheelCallback);
 	//glutMouseWheelFunc(mouseWheelCallback);
 	//glutMotionFunc(mouseMotionCallback);
-    	glutPassiveMotionFunc(mousePassiveMotionCallback);
-	glutDisplayFunc(Display);
-	glutReshapeFunc(reshape);
-	glutMouseFunc(myMouse);
-	glutKeyboardFunc(KeyPressed);
-	glutIdleFunc(idle);
-	glutSetCursor(GLUT_CURSOR_DESTROY);
-	glEnable(GL_DEPTH_TEST);
-	
-	glutMainLoop();
+    // 	glutPassiveMotionFunc(mousePassiveMotionCallback);
+	// glutDisplayFunc(Display);
+	// glutReshapeFunc(reshape);
+	// glutMouseFunc(myMouse);
+	// glutKeyboardFunc(KeyPressed);
+	// glutIdleFunc(idle);
+	// glutSetCursor(GLUT_CURSOR_DESTROY);
+	// glEnable(GL_DEPTH_TEST);
 
 	//free up memory
 	free(Node);
-    	free(Muscle);
-    	cudaFree(NodeGPU);
-    	cudaFree(MuscleGPU);
+    free(Muscle);
+    cudaFree(NodeGPU);
+    cudaFree(MuscleGPU);
+
+	//destroy the window and terminate GLFW
+	glfwDestroyWindow(Window);
+    glfwTerminate();
 
 	return 0;
 }

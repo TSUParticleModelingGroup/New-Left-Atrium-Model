@@ -1,3 +1,3 @@
 cd ./Source
-nvcc SVT.cu -o svt -lglut -lm -lGLU -lGL
+nvcc SVT.cu glad.c -o svt -lglfw -lGL -lGLU -lm -lpthread -lX11 -ldl
 mv svt ../ExecutableFiles	

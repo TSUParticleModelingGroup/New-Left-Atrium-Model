@@ -5,9 +5,7 @@
  
  The functions in this file are listed below and in this order.
  
- void Display(void);
- void idle();
- void reshape(int, int);
+ void reshape(GLFWwindow* window, int width, int height);
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
@@ -26,33 +24,18 @@
  void movieOff();
  void screenShot();
  void saveSettings();
- void KeyPressed(unsigned char, int, int);
- void mousePassiveMotionCallback(int, int);
- void myMouse(int, int, int, int);
+ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
+ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
+ void myMouse(GLFWwindow* window, int button, int action, int mods)
+ void scrollWheel(GLFWwindow*, double, double);
 */
-
-/*
- OpenGL callback when the window is created or reshaped.
-*/
-void Display(void)
-{
-	drawPicture();
-}
-
-/*
- OpenGL callback when the window is doing nothing else.
-*/
-void idle()
-{
-	nBody(Dt);
-}
 
 /*
  OpenGL callback when the window is reshaped.
 */
-void reshape(int w, int h)
+void reshape(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
+	glViewport(0, 0, width, height);
 }
 
 /*
@@ -69,7 +52,7 @@ void mouseFunctionsOff()
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInMouseFunctionMode = false;
 	terminalPrint();
-	glutSetCursor(GLUT_CURSOR_DESTROY);
+	glfwSetCursor(Window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR)); // Set cursor to default arrow.
 	drawPicture();
 }
 
@@ -82,7 +65,7 @@ void mouseAblateMode()
 	Simulation.isPaused = true;
 	Simulation.isInAblateMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	terminalPrint();
 	drawPicture();
@@ -97,7 +80,7 @@ void mouseEctopicBeatMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicBeatMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	terminalPrint();
 	drawPicture();
@@ -116,7 +99,7 @@ void mouseEctopicEventMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicEventMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	terminalPrint();
@@ -131,7 +114,7 @@ void mouseAdjustMusclesAreaMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleAreaMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	
@@ -152,7 +135,7 @@ void mouseAdjustMusclesLineMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleLineMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	
@@ -173,7 +156,7 @@ void mouseIdentifyNodeMode()
 	Simulation.isPaused = true;
 	Simulation.isInFindNodeMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	terminalPrint();
@@ -511,11 +494,11 @@ void saveSettings()
 	// Creating the diretory to hold the run settings.
 	if(mkdir(directoryName, 0777) == 0)
 	{
-		printf("\n Directory '%s' created successfully.\n", diretoryName);
+		printf("\n Directory '%s' created successfully.\n", directoryName);
 	}
 	else
 	{
-		printf("\n Error creating directory '%s'.\n", diretoryName);
+		printf("\n Error creating directory '%s'.\n", directoryName);
 	}
 	
 	// Moving into the directory
@@ -575,431 +558,460 @@ void saveSettings()
  This function directs the action that needs to be taken if a user hits a key on the key board.
  The terminal screen lists out all the keys and what they will do.
 */
-void KeyPressed(unsigned char key, int x, int y)
+void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	float dAngle = 0.01;
-	float zoom = 0.01*RadiusOfLeftAtrium;
-	float temp;
-	float4 lookVector;
-	float d;
-	float4 centerOfMass;
-	
-	copyNodesMusclesFromGPU();
-	
-	lookVector.x = CenterX - EyeX;
-	lookVector.y = CenterY - EyeY;
-	lookVector.z = CenterZ - EyeZ;
-	d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
-	
-	if(d < 0.00001)
-	{
-		printf("\n lookVector is too small\n");
-		printf("\n Good Bye\n");
-		exit(0);
-	}
-	else
-	{
-		lookVector.x /= d;
-		lookVector.y /= d;
-		lookVector.z /= d;
-	}
-	
-	if(key == 'h')  // Help menu
-	{
-		helpMenu();
-	}
-	
-	if(key == 'q') // quit
-	{
-		glutDestroyWindow(Window);
-		free(Node);
-    		free(Muscle);
-    		cudaFree(NodeGPU);
-    		cudaFree(MuscleGPU);
-		printf("\n Good Bye\n");
-		exit(0);
-	}
-	
-	if(key == 'r')  // Run toggle
-	{
-		if(Simulation.isPaused == false) Simulation.isPaused = true;
-		else Simulation.isPaused = false;
-		terminalPrint();
-	}
-	
-	if(key == 'u')  // Contraction toggle
-	{
-		if(Simulation.ContractionisOn == false) Simulation.ContractionisOn = true;
-		else Simulation.ContractionisOn = false;
-		terminalPrint();
-	}
-	
-	if(key == 'n')  // Draw nodes toggle
-	{
-		if(Simulation.DrawNodesFlag == 0) Simulation.DrawNodesFlag = 1;
-		else if(Simulation.DrawNodesFlag == 1) Simulation.DrawNodesFlag = 2;
-		else Simulation.DrawNodesFlag = 0;
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'g')  // Draw full or front half toggle
-	{
-		if(Simulation.DrawFrontHalfFlag == 0) Simulation.DrawFrontHalfFlag = 1;
-		else Simulation.DrawFrontHalfFlag = 0;
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'B')  // Raising the beat period
-	{
-		Node[PulsePointNode].beatPeriod += 10;
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-		cudaErrorCheck(__FILE__, __LINE__);
-		terminalPrint();
-	}
-	if(key == 'b')  // Lowering the beat period
-	{
-		Node[PulsePointNode].beatPeriod -= 10;
-		if(Node[PulsePointNode].beatPeriod < 0) 
-		{
-			Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
-		}
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-		cudaErrorCheck(__FILE__, __LINE__);
-		terminalPrint();
-	}
-	
-	if(key == 'v') // Orthoganal/Fulstrium view
-	{
-		if(Simulation.ViewFlag == 0) 
-		{
-			Simulation.ViewFlag = 1;
-			frustumView();
-		}
-		else 
-		{
-			Simulation.ViewFlag = 0;
-			orthogonalView();
-		}
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'm')  // Movie on
-	{
-		if(!Simulation.isRecording) 
-		{
-			Simulation.isRecording = true;
-			movieOn();
-		}
-		else 
-		{
-			Simulation.isRecording = false;
-			movieOff();
-		}
-		terminalPrint();
-	}
-	
-	if(key == 'S')  // Screenshot
-	{	
-		screenShot();
-		terminalPrint();
-	}
-	
-	if(key == '0')
-	{
-		setView(0);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '1')
-	{
-		setView(1);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '2')
-	{
-		setView(2);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '3')
-	{
-		setView(3);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '4')
-	{
-		setView(4);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '5')
-	{
-		setView(5);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '6')
-	{
-		setView(6);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '7')
-	{
-		setView(7);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '8')
-	{
-		setView(8);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '9')
-	{
-		setView(9);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '?') // Finding front and top reference nodes.
-	{
-		float maxZ = -10000.0;
-		float maxY = -10000.0;
-		int indexZ = -1;
-		int indexY = -1;
-		
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			if(maxZ < Node[i].position.z) 
-			{
-				maxZ = Node[i].position.z;
-				indexZ = i;
-			}
-			
-			if(maxY < Node[i].position.y) 
-			{
-				maxY = Node[i].position.y;
-				indexY = i;
-			}
-		}
-		
-		Node[indexZ].color.x = 0.0;
-		Node[indexZ].color.y = 0.0;
-		Node[indexZ].color.z = 1.0;
-		
-		Node[indexY].color.x = 1.0;
-		Node[indexY].color.y = 0.0;
-		Node[indexY].color.z = 1.0;
-		
-		system("clear");
-		printf("\n Front node index = %d\n", indexZ);
-		printf("\n Top node index   = %d\n", indexY);
-		
-		drawPicture();
-	}
-	if(key == 'w')  // Rotate counterclockwise on the x-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.x += dAngle;
-	}
-	if(key == 's')  // Rotate clockwise on the x-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp; 
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.x -= dAngle;
-	}
-	if(key == 'd')  // Rotate counterclockwise on the y-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.y -= dAngle;
-	}
-	if(key == 'a')  // Rotate clockwise on the y-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.y += dAngle;
-	}
-	if(key == 'z')  // Rotate counterclockwise on the z-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
-			Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.z += dAngle;
-	}
-	if(key == 'Z')  // Rotate clockwise on the z-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
-			Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.z -= dAngle;
-	}
-	if(key == 'e')  // Zoom in
-	{
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= zoom*lookVector.x;
-			Node[i].position.y -= zoom*lookVector.y;
-			Node[i].position.z -= zoom*lookVector.z;
-		}
-		CenterOfSimulation.x -= zoom*lookVector.x;
-		CenterOfSimulation.y -= zoom*lookVector.y;
-		CenterOfSimulation.z -= zoom*lookVector.z;
-		drawPicture();
-	}
-	if(key == 'E')  // Zoom out
-	{
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x += zoom*lookVector.x;
-			Node[i].position.y += zoom*lookVector.y;
-			Node[i].position.z += zoom*lookVector.z;
-		}
-		CenterOfSimulation.x += zoom*lookVector.x;
-		CenterOfSimulation.y += zoom*lookVector.y;
-		CenterOfSimulation.z += zoom*lookVector.z;
-		drawPicture();
-	}
-	
-	if(key == ')')  // All mouse functions are off (shift 0)
-	{
-		mouseFunctionsOff();
-		Simulation.isInMouseFunctionMode = false;
-	}
-	if(key == '!')  // Ablate is on (shift 1)
-	{
-		mouseAblateMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '@')  // Ectopic beat is on (shift 2)
-	{
-		mouseEctopicBeatMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '#')  // You are in ectopic single trigger mode. (shift 3)
-	{
-		mouseEctopicEventMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '$') // muscle adjustment is on (shift 4)
-	{
-		mouseAdjustMusclesAreaMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '%') // muscle adjustment is on (shift 4)
-	{
-		mouseAdjustMusclesLineMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '^')  // Find node is on (shift 5)
-	{
-		mouseIdentifyNodeMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	
-	if(key == ']')  
-	{
-		HitMultiplier += 0.005;
-		terminalPrint();
-		//printf("\n Your selection area = %f times the radius of atrium. \n", HitMultiplier);
-	}
-	if(key == '[')
-	{
-		HitMultiplier -= 0.005;
-		if(HitMultiplier < 0.0) HitMultiplier = 0.0;
-		terminalPrint();
-		//printf("\n Your selection area = %f times the radius of atrium. \n", HitMultiplier);
-	}
-	
-	if(key == 'c')  // Recenter the simulation
-	{
-		centerObject();
-		drawPicture();
-	}
-	
-	if(key == 'k')  // Save your current setting so you can start with this run in the future.
-	{
-		saveSettings();
-	}
-	
-	copyNodesMusclesToGPU();
+    // Only process key press events, not releases or repeats
+    if (action != GLFW_PRESS)
+        return;
+        
+    float dAngle = 0.01;
+    float zoom = 0.01*RadiusOfLeftAtrium;
+    float temp;
+    float4 lookVector;
+    float d;
+    float4 centerOfMass;
+    
+    copyNodesMusclesFromGPU();
+    
+    lookVector.x = CenterX - EyeX;
+    lookVector.y = CenterY - EyeY;
+    lookVector.z = CenterZ - EyeZ;
+    d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
+    
+    if(d < 0.00001)
+    {
+        printf("\n lookVector is too small\n");
+        printf("\n Good Bye\n");
+        exit(0);
+    }
+    else
+    {
+        lookVector.x /= d;
+        lookVector.y /= d;
+        lookVector.z /= d;
+    }
+    
+    if(key == GLFW_KEY_H)  // Help menu
+    {
+        helpMenu();
+    }
+    
+    if(key == GLFW_KEY_Q) // quit
+    {
+        glfwDestroyWindow(Window);
+        free(Node);
+        free(Muscle);
+        cudaFree(NodeGPU);
+        cudaFree(MuscleGPU);
+        printf("\n Good Bye\n");
+        exit(0);
+    }
+    
+    if(key == GLFW_KEY_R)  // Run toggle
+    {
+        if(Simulation.isPaused == false) Simulation.isPaused = true;
+        else Simulation.isPaused = false;
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_U)  // Contraction toggle
+    {
+        if(Simulation.ContractionisOn == false) Simulation.ContractionisOn = true;
+        else Simulation.ContractionisOn = false;
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_N)  // Draw nodes toggle
+    {
+        if(Simulation.DrawNodesFlag == 0) Simulation.DrawNodesFlag = 1;
+        else if(Simulation.DrawNodesFlag == 1) Simulation.DrawNodesFlag = 2;
+        else Simulation.DrawNodesFlag = 0;
+        drawPicture();
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_G)  // Draw full or front half toggle
+    {
+        if(Simulation.DrawFrontHalfFlag == 0) Simulation.DrawFrontHalfFlag = 1;
+        else Simulation.DrawFrontHalfFlag = 0;
+        drawPicture();
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_B)
+    {
+        if(mods & GLFW_MOD_SHIFT)  // Uppercase B - Raising beat period
+        {
+            Node[PulsePointNode].beatPeriod += 10;
+            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+            cudaErrorCheck(__FILE__, __LINE__);
+            terminalPrint();
+        }
+        else  // Lowercase b - Lowering beat period
+        {
+            Node[PulsePointNode].beatPeriod -= 10;
+            if(Node[PulsePointNode].beatPeriod < 0) 
+            {
+                Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
+            }
+            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+            cudaErrorCheck(__FILE__, __LINE__);
+            terminalPrint();
+        }
+    }
+    
+    if(key == GLFW_KEY_V) // Orthoganal/Fulstrium view
+    {
+        if(Simulation.ViewFlag == 0) 
+        {
+            Simulation.ViewFlag = 1;
+            frustumView();
+        }
+        else 
+        {
+            Simulation.ViewFlag = 0;
+            orthogonalView();
+        }
+        drawPicture();
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_M)  // Movie on
+    {
+        if(!Simulation.isRecording) 
+        {
+            Simulation.isRecording = true;
+            movieOn();
+        }
+        else 
+        {
+            Simulation.isRecording = false;
+            movieOff();
+        }
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_S && (mods & GLFW_MOD_SHIFT))  // Screenshot (uppercase S)
+    {    
+        screenShot();
+        terminalPrint();
+    }
+    
+    // Numbers
+    if(key == GLFW_KEY_0) 
+    {
+        setView(0);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_1)
+    {
+        setView(1);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_2)
+    {
+        setView(2);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_3)
+    {
+        setView(3);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_4)
+    {
+        setView(4);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_5)
+    {
+        setView(5);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_6)
+    {
+        setView(6);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_7)
+    {
+        setView(7);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_8)
+    {
+        setView(8);
+        drawPicture();
+        terminalPrint();
+    }
+    if(key == GLFW_KEY_9)
+    {
+        setView(9);
+        drawPicture();
+        terminalPrint();
+    }
+    
+    // Special keys with shift modifiers
+    if(key == GLFW_KEY_SLASH && (mods & GLFW_MOD_SHIFT)) // ? key (Shift+/)
+    {
+        float maxZ = -10000.0;
+        float maxY = -10000.0;
+        int indexZ = -1;
+        int indexY = -1;
+        
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            if(maxZ < Node[i].position.z) 
+            {
+                maxZ = Node[i].position.z;
+                indexZ = i;
+            }
+            
+            if(maxY < Node[i].position.y) 
+            {
+                maxY = Node[i].position.y;
+                indexY = i;
+            }
+        }
+        
+        Node[indexZ].color.x = 0.0;
+        Node[indexZ].color.y = 0.0;
+        Node[indexZ].color.z = 1.0;
+        
+        Node[indexY].color.x = 1.0;
+        Node[indexY].color.y = 0.0;
+        Node[indexY].color.z = 1.0;
+        
+        system("clear");
+        printf("\n Front node index = %d\n", indexZ);
+        printf("\n Top node index   = %d\n", indexY);
+        
+        drawPicture();
+    }
+    
+    // WASD movement keys
+    if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
+    {
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
+            Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
+            Node[i].position.y  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.x += dAngle;
+    }
+    
+    if(key == GLFW_KEY_S)  // Rotate clockwise on the x-axis
+    {
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
+            Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
+            Node[i].position.y  = temp; 
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.x -= dAngle;
+    }
+    
+    if(key == GLFW_KEY_D)  // Rotate counterclockwise on the y-axis
+    {
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
+            Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
+            Node[i].position.x  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.y -= dAngle;
+    }
+    
+    if(key == GLFW_KEY_A)  // Rotate clockwise on the y-axis
+    {
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
+            Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
+            Node[i].position.x  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.y += dAngle;
+    }
+    
+    if(key == GLFW_KEY_Z)
+    {
+        if(mods & GLFW_MOD_SHIFT)  // Uppercase Z - Rotate clockwise on the z-axis
+        {
+            centerOfMass = findCenterOfMass();
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= centerOfMass.x;
+                Node[i].position.y -= centerOfMass.y;
+                Node[i].position.z -= centerOfMass.z;
+                temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
+                Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
+                Node[i].position.x  = temp;
+                Node[i].position.x += centerOfMass.x;
+                Node[i].position.y += centerOfMass.y;
+                Node[i].position.z += centerOfMass.z;
+            }
+            drawPicture();
+            AngleOfSimulation.z -= dAngle;
+        }
+        else  // Lowercase z - Rotate counterclockwise on the z-axis
+        {
+            centerOfMass = findCenterOfMass();
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= centerOfMass.x;
+                Node[i].position.y -= centerOfMass.y;
+                Node[i].position.z -= centerOfMass.z;
+                temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
+                Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
+                Node[i].position.x  = temp;
+                Node[i].position.x += centerOfMass.x;
+                Node[i].position.y += centerOfMass.y;
+                Node[i].position.z += centerOfMass.z;
+            }
+            drawPicture();
+            AngleOfSimulation.z += dAngle;
+        }
+    }
+    
+    if(key == GLFW_KEY_E)
+    {
+        if(mods & GLFW_MOD_SHIFT)  // Uppercase E - Zoom out
+        {
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x += zoom*lookVector.x;
+                Node[i].position.y += zoom*lookVector.y;
+                Node[i].position.z += zoom*lookVector.z;
+            }
+            CenterOfSimulation.x += zoom*lookVector.x;
+            CenterOfSimulation.y += zoom*lookVector.y;
+            CenterOfSimulation.z += zoom*lookVector.z;
+            drawPicture();
+        }
+        else  // Lowercase e - Zoom in
+        {
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= zoom*lookVector.x;
+                Node[i].position.y -= zoom*lookVector.y;
+                Node[i].position.z -= zoom*lookVector.z;
+            }
+            CenterOfSimulation.x -= zoom*lookVector.x;
+            CenterOfSimulation.y -= zoom*lookVector.y;
+            CenterOfSimulation.z -= zoom*lookVector.z;
+            drawPicture();
+        }
+    }
+    
+    // Special character functions (with shift key)
+    if(key == GLFW_KEY_0 && (mods & GLFW_MOD_SHIFT))  // ) - All mouse functions off
+    {
+        mouseFunctionsOff();
+        Simulation.isInMouseFunctionMode = false;
+    }
+    
+    if(key == GLFW_KEY_1 && (mods & GLFW_MOD_SHIFT))  // ! - Ablate mode
+    {
+        mouseAblateMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_2 && (mods & GLFW_MOD_SHIFT))  // @ - Ectopic beat mode
+    {
+        mouseEctopicBeatMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_3 && (mods & GLFW_MOD_SHIFT))  // # - Ectopic single trigger mode
+    {
+        mouseEctopicEventMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_4 && (mods & GLFW_MOD_SHIFT))  // $ - Muscle adjustment area mode
+    {
+        mouseAdjustMusclesAreaMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_5 && (mods & GLFW_MOD_SHIFT))  // % - Muscle adjustment line mode
+    {
+        mouseAdjustMusclesLineMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_6 && (mods & GLFW_MOD_SHIFT))  // ^ - Find node mode
+    {
+        mouseIdentifyNodeMode();
+        Simulation.isInMouseFunctionMode = true;
+    }
+    
+    if(key == GLFW_KEY_RIGHT_BRACKET)  // ]
+    {
+        HitMultiplier += 0.005;
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_LEFT_BRACKET)  // [
+    {
+        HitMultiplier -= 0.005;
+        if(HitMultiplier < 0.0) HitMultiplier = 0.0;
+        terminalPrint();
+    }
+    
+    if(key == GLFW_KEY_C)  // Recenter the simulation
+    {
+        centerObject();
+        drawPicture();
+    }
+    
+    if(key == GLFW_KEY_K)  // Save your current setting
+    {
+        saveSettings();
+    }
+    
+    copyNodesMusclesToGPU();
 }
 
 /*
@@ -1009,7 +1021,7 @@ void KeyPressed(unsigned char key, int x, int y)
  We translates them to MouseX (-1, 1) and MouseY (-1, 1) to corospond to the openGL window size.
  We then use MouseX and MouseY to determine where the mouse is in the simulation.
 */
-void mousePassiveMotionCallback(int x, int y) 
+void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 {
 	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
 	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
@@ -1018,18 +1030,18 @@ void mousePassiveMotionCallback(int x, int y)
 /*
  This function does an action based on the mode the viewer is in and which mouse button the user pressed.
 */
-void myMouse(int button, int state, int x, int y)
+void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
 	float d, dx, dy, dz;
 	float hit;
 	int muscleId;
 	
-	if(state == GLUT_DOWN)
+	if(action == GLFW_PRESS)
 	{
 		copyNodesMusclesFromGPU();
 		hit = HitMultiplier*RadiusOfLeftAtrium;
 		
-		if(button == GLUT_LEFT_BUTTON)
+		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
 			if(Simulation.isInAdjustMuscleLineMode)
 			{
@@ -1197,7 +1209,7 @@ void myMouse(int button, int state, int x, int y)
 				}
 			}
 		}
-		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
+		else if(button == GLFW_MOUSE_BUTTON_RIGHT) // Right Mouse button down
 		{
 			if(Simulation.isInAdjustMuscleLineMode)
 			{
@@ -1337,7 +1349,7 @@ void myMouse(int button, int state, int x, int y)
 				}
 			}
 		}
-		else if(button == GLUT_MIDDLE_BUTTON)
+		else if(button == GLFW_MOUSE_BUTTON_MIDDLE)
 		{
 			if(ScrollSpeedToggle == 0)
 			{
@@ -1358,17 +1370,18 @@ void myMouse(int button, int state, int x, int y)
 		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
 	
-	if(state == 0)
-	{
-		if(button == 3) //Scroll up
-		{
-			MouseZ -= ScrollSpeed;
-		}
-		else if(button == 4) //Scroll down
-		{
-			MouseZ += ScrollSpeed;
-		}
-		//printf("MouseZ = %f\n", MouseZ);
-		drawPicture();
-	}
+}
+
+void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if(yoffset > 0) // Scroll up
+    {
+        MouseZ -= ScrollSpeed;
+    }
+    else if(yoffset < 0) // Scroll down
+    {
+        MouseZ += ScrollSpeed;
+    }
+    // printf("MouseZ = %f\n", MouseZ);
+    drawPicture();
 }

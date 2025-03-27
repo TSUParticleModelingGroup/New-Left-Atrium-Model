@@ -6,7 +6,7 @@
  In short this file holds the functions that present information to the user.
  
  The functions are listed below in the order they appear.
- 
+ void renderSphere(float, int, int);
  void orthogonalView();
  void frustumView();
  float4 findCenterOfMass();
@@ -27,6 +27,41 @@
  This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.
  This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
 */
+
+// Add this to a utility file
+void renderSphere(float radius, int slices, int stacks) 
+{
+    // Sphere geometry parameters
+    float x, y, z, alpha, beta; // Storage for coordinates and angles
+    float sliceStep = 2.0f * PI / slices;
+    float stackStep = PI / stacks;
+
+    for (int i = 0; i < stacks; ++i) {
+        alpha = i * stackStep;
+        beta = alpha + stackStep;
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int j = 0; j <= slices; ++j) {
+            float theta = (j == slices) ? 0.0f : j * sliceStep;
+
+            // Vertex 1
+            x = -sin(alpha) * cos(theta);
+            y = cos(alpha);
+            z = sin(alpha) * sin(theta);
+            glNormal3f(x, y, z);
+            glVertex3f(x * radius, y * radius, z * radius);
+
+            // Vertex 2
+            x = -sin(beta) * cos(theta);
+            y = cos(beta);
+            z = sin(beta) * sin(theta);
+            glNormal3f(x, y, z);
+            glVertex3f(x * radius, y * radius, z * radius);
+        }
+        glEnd();
+    }
+}
+
 void orthogonalView()
 {
 	glMatrixMode(GL_PROJECTION);
@@ -310,7 +345,7 @@ void drawPicture()
 
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
-	glutSolidSphere(0.03*RadiusOfLeftAtrium,20,20);
+	renderSphere(0.03*RadiusOfLeftAtrium,20,20);
 	glPopMatrix();
 	
 	// Drawing center node
@@ -320,7 +355,7 @@ void drawPicture()
 		glColor3d(1.0,1.0,1.0);
 		glPushMatrix();
 		glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
-		glutSolidSphere(0.02*RadiusOfLeftAtrium,20,20);
+		renderSphere(0.02*RadiusOfLeftAtrium,20,20);
 		glPopMatrix();
 	}
 
@@ -336,7 +371,7 @@ void drawPicture()
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
 					glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-					glutSolidSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
+					renderSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
 					glPopMatrix();
 				}
 			}
@@ -345,7 +380,7 @@ void drawPicture()
 				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 				glPushMatrix();
 				glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-				glutSolidSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
+				renderSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
 				glPopMatrix();
 			}	
 		}
@@ -429,13 +464,13 @@ void drawPicture()
 		glPushMatrix();
 		glTranslatef(MouseX, MouseY, MouseZ);
 		
-		glutSolidSphere(HitMultiplier*RadiusOfLeftAtrium,20,20);
-		//glutSolidSphere(5.0*NodeRadiusAdjustment*RadiusOfAtria,20,20);
+		renderSphere(HitMultiplier*RadiusOfLeftAtrium,20,20);
+		//renderSphere(5.0*NodeRadiusAdjustment*RadiusOfAtria,20,20);
 		glPopMatrix();
 		glDisable(GL_BLEND);
 	}
 
-	glutSwapBuffers();
+	glfwSwapBuffers(Window);
 	
 	// Saves the picture if a movie is being recorded.
 	if(Simulation.isRecording)
