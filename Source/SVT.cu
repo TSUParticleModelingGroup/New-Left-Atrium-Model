@@ -430,7 +430,6 @@ int main(int argc, char** argv)
 
 	// Set the viewport size and aspect ratio
 	glViewport(0, 0, XWindowSize, YWindowSize);
-	float aspectRatio = (float)XWindowSize / (float)YWindowSize;
 
 	// PROJECTION MATRIX - this controls how wide your viewing area is
 	glMatrixMode(GL_PROJECTION);
