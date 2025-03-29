@@ -469,8 +469,6 @@ void drawPicture()
 		glPopMatrix();
 		glDisable(GL_BLEND);
 	}
-
-	glfwSwapBuffers(Window);
 	
 	// Saves the picture if a movie is being recorded.
 	if(Simulation.isRecording)
