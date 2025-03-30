@@ -402,10 +402,9 @@ int main(int argc, char** argv)
 
 	// Create a windowed mode window and its OpenGL context
 	Window = glfwCreateWindow(XWindowSize, YWindowSize, "SVT", NULL, NULL); // args: width, height, title, monitor, share
-	if (!Window) // Check if window creation failed
+	if (!glfwInit()) 
 	{
-		glfwTerminate(); // Terminate GLFW
-		fprintf(stderr, "Failed to create window\n");
+		fprintf(stderr, "Failed to initialize GLFW\n");
 		return -1;
 	}
 
@@ -475,22 +474,20 @@ int main(int argc, char** argv)
 
 
 	// Main loop
-	while (!glfwWindowShouldClose(Window))
-	{
+    while (!glfwWindowShouldClose(Window))
+    {
+        // Poll events
+        glfwPollEvents();
 
-		// Poll events
-		glfwPollEvents();
-	
-		if (!Simulation.isPaused)  //while runnning
-		{
-			nBody(Dt); //Update the simulation
-		}
-		
-		//drawPicture(); //Draw the simulation
-		
-		// Swap buffers ONCE at the end
-		glfwSwapBuffers(Window);
-	}
+        // Update physics with fixed timestep
+        nBody(Dt);
+
+        // Render the scene
+        drawPicture();
+
+        // Swap buffers
+        glfwSwapBuffers(Window);
+    }
 	
 	//glutMouseFunc(mouseWheelCallback);
 	//glutMouseWheelFunc(mouseWheelCallback);

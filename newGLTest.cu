@@ -22,8 +22,12 @@
 #define LJP 2.0
 #define LJQ 4.0
 
+dim3 BlockSize; //This variable will hold the Dimensions of your blocks
+dim3 GridSize; //This variable will hold the Dimensions of your grid
+
 // Globals
-float3 *P, *V, *F;
+float3 *P, *V, *F, *P_GPU, *V_GPU, *F_GPU;
+float *M_GPU;
 float *M;
 float GlobeRadius, Diameter, Radius;
 float Damp;
@@ -40,11 +44,26 @@ float UpX = 0.0f, UpY = 1.0f, UpZ = 0.0f;
 float3 BackGround = {0.0f, 0.0f, 0.0f};
 
 // Function prototypes
+void cudaErrorCheck(const char *file, int line);
 void renderSphere(float radius, int slices, int stacks);
 void setup();
+__global__ void getForces(float3 *P, float3 *V, float3 *F, float *M, int n);
+__global__ void updatePositions(float3 *P, float3 *V, float3 *F, float *M, int n, float dt, float damp, float time);
 void drawPicture();
 void nBody(float dt);
 int main(int, char**);
+
+void cudaErrorCheck(const char *file, int line)
+{
+	cudaError_t  error;
+	error = cudaGetLastError();
+
+	if(error != cudaSuccess)
+	{
+		printf("\n CUDA ERROR: message = %s, File = %s, Line = %d\n", cudaGetErrorString(error), file, line);
+		exit(0);
+	}
+}
 
 void renderSphere(float radius, int slices, int stacks) 
 {
@@ -81,72 +100,147 @@ void renderSphere(float radius, int slices, int stacks)
 
 void setup()
 {
-    float randomAngle1, randomAngle2, randomRadius;
-    float d, dx, dy, dz;
-    int test;
-    
-    DrawCount = 0;
-    Dt = 0.0001;
-    Damp = 0.5;
-    
-    M = (float*)malloc(N*sizeof(float));
-    P = (float3*)malloc(N*sizeof(float3));
-    V = (float3*)malloc(N*sizeof(float3));
-    F = (float3*)malloc(N*sizeof(float3));
-    
-    // This is the value where the force is zero for the L-J type force.
-    Diameter = pow(H/G, 1.0/(LJQ - LJP)); 
-    Radius = Diameter/2.0;
+    	float randomAngle1, randomAngle2, randomRadius;
+    	float d, dx, dy, dz;
+    	int test;
+    	
+    	Damp = 0.5;
+    	
+    	M = (float*)malloc(N*sizeof(float));
+    	P = (float3*)malloc(N*sizeof(float3));
+    	V = (float3*)malloc(N*sizeof(float3));
+    	F = (float3*)malloc(N*sizeof(float3));
 
-    // Using the radius of a body and a 68% packing ratio to find the radius of a global sphere that should hold all the bodies.
-    // Then we double this radius just so we can get all the bodies setup with no problems.
-    float totalVolume = float(N)*(4.0/3.0)*PI*Radius*Radius*Radius;
-    totalVolume /= 0.68;
-    float totalRadius = pow(3.0*totalVolume/(4.0*PI), 1.0/3.0);
-    GlobeRadius = 2.0*totalRadius;
+		// Allocate memory on the GPU, doing it here so all mallocs are in one place.
+		cudaMalloc(&P_GPU, N * sizeof(float3));
+		cudaErrorCheck(__FILE__, __LINE__);
 
-    // Randomly setting these bodies in the global sphere and setting the initial velocity, initial force, and mass.
-    for(int i = 0; i < N; i++)
-    {
-        test = 0;
-        while(test == 0)
-        {
-            // Get random position.
-            randomAngle1 = ((float)rand()/(float)RAND_MAX)*2.0*PI;
-            randomAngle2 = ((float)rand()/(float)RAND_MAX)*PI;
-            randomRadius = ((float)rand()/(float)RAND_MAX)*GlobeRadius;
-            P[i].x = randomRadius*cos(randomAngle1)*sin(randomAngle2);
-            P[i].y = randomRadius*sin(randomAngle1)*sin(randomAngle2);
-            P[i].z = randomRadius*cos(randomAngle2);
+		cudaMalloc(&V_GPU, N * sizeof(float3));
+		cudaErrorCheck(__FILE__, __LINE__);
 
-            // Making sure the balls centers are at least a diameter apart.
-            // If they are not throw these positions away and try again.
-            test = 1;
-            for(int j = 0; j < i; j++)
-            {
-                dx = P[i].x-P[j].x;
-                dy = P[i].y-P[j].y;
-                dz = P[i].z-P[j].z;
-                d = sqrt(dx*dx + dy*dy + dz*dz);
-                if(d < Diameter)
-                {
-                    test = 0;
-                    break;
-                }
-            }
-        }
+		cudaMalloc(&F_GPU, N * sizeof(float3));
+		cudaErrorCheck(__FILE__, __LINE__);
 
-        V[i].x = 0.0;
-        V[i].y = 0.0;
-        V[i].z = 0.0;
+		cudaMalloc(&M_GPU, N * sizeof(float));
+		cudaErrorCheck(__FILE__, __LINE__);
+    	
+	
+	Diameter = pow(H/G, 1.0/(LJQ - LJP)); // This is the value where the force is zero for the L-J type force.
+	Radius = Diameter/2.0;
+	
+	// Using the radius of a body and a 68% packing ratio to find the radius of a global sphere that should hold all the bodies.
+	// Then we double this radius just so we can get all the bodies setup with no problems. 
+	float totalVolume = float(N)*(4.0/3.0)*PI*Radius*Radius*Radius;
+	totalVolume /= 0.68;
+	float totalRadius = pow(3.0*totalVolume/(4.0*PI), 1.0/3.0);
+	GlobeRadius = 2.0*totalRadius;
+	
+	// Randomly setting these bodies in the glaobal sphere and setting the initial velosity, inotial force, and mass.
+	for(int i = 0; i < N; i++)
+	{
+		test = 0;
+		while(test == 0)
+		{
+			// Get random position.
+			randomAngle1 = ((float)rand()/(float)RAND_MAX)*2.0*PI;
+			randomAngle2 = ((float)rand()/(float)RAND_MAX)*PI;
+			randomRadius = ((float)rand()/(float)RAND_MAX)*GlobeRadius;
+			P[i].x = randomRadius*cos(randomAngle1)*sin(randomAngle2);
+			P[i].y = randomRadius*sin(randomAngle1)*sin(randomAngle2);
+			P[i].z = randomRadius*cos(randomAngle2);
+			
+			// Making sure the balls centers are at least a diameter apart.
+			// If they are not throw these positions away and try again.
+			test = 1;
+			for(int j = 0; j < i; j++)
+			{
+				dx = P[i].x-P[j].x;
+				dy = P[i].y-P[j].y;
+				dz = P[i].z-P[j].z;
+				d = sqrt(dx*dx + dy*dy + dz*dz);
+				if(d < Diameter)
+				{
+					test = 0;
+					break;
+				}
+			}
+		}
+	
+		V[i].x = 0.0;
+		V[i].y = 0.0;
+		V[i].z = 0.0;
+		
+		F[i].x = 0.0;
+		F[i].y = 0.0;
+		F[i].z = 0.0;
+		
+		M[i] = 1.0;
+	}
+	printf("\n To start timing type s.\n");
+}
 
-        F[i].x = 0.0;
-        F[i].y = 0.0;
-        F[i].z = 0.0;
+__global__ void getForces(float3 *P, float3 *V, float3 *F, float *M, int n)
+{
+	int idx = threadIdx.x; //rest isn't needed since we're only using one block.
 
-        M[i] = 1.0;
-    }
-    printf("\n Setup is done.\n");
+	if(idx < n)
+	{
+		//Set our forces to 0
+		F[idx].x = 0.0;
+		F[idx].y = 0.0;
+		F[idx].z = 0.0;
+
+		//Calculate my force based on everyone else
+		for(int i=0; i<n; i++)
+		{
+			if(i != idx) //If it's not me, it must be someone else
+			{
+				float dx = P[i].x-P[idx].x;
+				float dy = P[i].y-P[idx].y;
+				float dz = P[i].z-P[idx].z;
+				float d2 = dx*dx + dy*dy + dz*dz;
+				float d  = sqrt(d2);
+				
+				float force_mag  = (G*M[i]*M[idx])/(d2) - (H*M[i]*M[idx])/(d2*d2);
+
+				//update only my force
+				F[idx].x += force_mag*dx/d;
+				F[idx].y += force_mag*dy/d;
+				F[idx].z += force_mag*dz/d;
+
+				// messing with other people causes race conditions, because we're all trying to mess with the same people who are messing with us and who might have been messed with by someone else
+				//Dr. Wyatt is teaching us valuable life lessons, don't mess with other people's stuff cause it screws stuff up
+				// F[i].x -= force_mag*dx/d;
+				// F[i].y -= force_mag*dy/d;
+				// F[i].z -= force_mag*dz/d;
+			}
+		}
+	}
+}
+
+__global__ void updatePositions(float3 *P, float3 *V, float3 *F, float *M, int n, float dt, float damp, float time)
+{
+	int idx = threadIdx.x; //again, rest isn't needed since we're only using one block.
+
+	if(idx < n)
+	{
+		if(time == 0.0)
+		{
+			V[idx].x += (F[idx].x/M[idx])*0.5*dt;
+			V[idx].y += (F[idx].y/M[idx])*0.5*dt;
+			V[idx].z += (F[idx].z/M[idx])*0.5*dt;
+		}
+		else
+		{
+			V[idx].x += ((F[idx].x-damp*V[idx].x)/M[idx])*dt;
+			V[idx].y += ((F[idx].y-damp*V[idx].y)/M[idx])*dt;
+			V[idx].z += ((F[idx].z-damp*V[idx].z)/M[idx])*dt;
+		}
+
+		P[idx].x += V[idx].x*dt;
+		P[idx].y += V[idx].y*dt;
+		P[idx].z += V[idx].z*dt;
+	}
 }
 
 void drawPicture()
@@ -172,57 +266,104 @@ void drawPicture()
 
 void nBody(float dt)
 {
-    float force_mag;
-    float dx, dy, dz, d, d2;
 
-    // Reset forces
-    for(int i=0; i<N; i++)
+    int    drawCount = 0; 
+	float  time = 0.0;
+
+	//Copy data to the GPU since everything should be setup at this point.
+	cudaMemcpy(P_GPU, P, N * sizeof(float3), cudaMemcpyHostToDevice);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpy(V_GPU, V, N * sizeof(float3), cudaMemcpyHostToDevice);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpy(F_GPU, F, N * sizeof(float3), cudaMemcpyHostToDevice);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpy(M_GPU, M, N * sizeof(float), cudaMemcpyHostToDevice);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+    getForces<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, N);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+    updatePositions<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, N, dt, Damp, time);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+    //draw if we need to
+    if(drawCount == DRAW_RATE) 
     {
-        F[i].x = 0.0;
-        F[i].y = 0.0;
-        F[i].z = 0.0;
-    }
-
-    // Calculate forces between all pairs of bodies
-    for(int i=0; i<N; i++)
-    {
-        for(int j=i+1; j<N; j++)
-        {
-            dx = P[j].x-P[i].x;
-            dy = P[j].y-P[i].y;
-            dz = P[j].z-P[i].z;
-            d2 = dx*dx + dy*dy + dz*dz;
-            d  = sqrt(d2);
-
-            force_mag = (G*M[i]*M[j])/(d2) - (H*M[i]*M[j])/(d2*d2);
-            F[i].x += force_mag*dx/d;
-            F[j].x -= force_mag*dx/d;
-            F[i].y += force_mag*dy/d;
-            F[j].y -= force_mag*dy/d;
-            F[i].z += force_mag*dz/d;
-            F[j].z -= force_mag*dz/d;
-        }
-    }
-
-    // Update velocities and positions
-    for(int i=0; i<N; i++)
-    {
-        V[i].x += ((F[i].x-Damp*V[i].x)/M[i])*dt;
-        V[i].y += ((F[i].y-Damp*V[i].y)/M[i])*dt;
-        V[i].z += ((F[i].z-Damp*V[i].z)/M[i])*dt;
-
-        P[i].x += V[i].x*dt;
-        P[i].y += V[i].y*dt;
-        P[i].z += V[i].z*dt;
-    }
-
-    if(DrawCount == DRAW_RATE)
-    {
+        cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost); //only copy pos to CPU if drawing
+        cudaErrorCheck(__FILE__, __LINE__);
         drawPicture();
-        DrawCount = 0;
+        drawCount = 0;
     }
+    
+    time += dt;
+    drawCount++;
 
-    DrawCount++;
+	//now that we're done, copy the data back to the CPU
+	cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpy(V, V_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpy(F, F_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+
+
+    // float force_mag;
+    // float dx, dy, dz, d, d2;
+
+    // // Reset forces
+    // for(int i=0; i<N; i++)
+    // {
+    //     F[i].x = 0.0;
+    //     F[i].y = 0.0;
+    //     F[i].z = 0.0;
+    // }
+
+    // // Calculate forces between all pairs of bodies
+    // for(int i=0; i<N; i++)
+    // {
+    //     for(int j=i+1; j<N; j++)
+    //     {
+    //         dx = P[j].x-P[i].x;
+    //         dy = P[j].y-P[i].y;
+    //         dz = P[j].z-P[i].z;
+    //         d2 = dx*dx + dy*dy + dz*dz;
+    //         d  = sqrt(d2);
+
+    //         force_mag = (G*M[i]*M[j])/(d2) - (H*M[i]*M[j])/(d2*d2);
+    //         F[i].x += force_mag*dx/d;
+    //         F[j].x -= force_mag*dx/d;
+    //         F[i].y += force_mag*dy/d;
+    //         F[j].y -= force_mag*dy/d;
+    //         F[i].z += force_mag*dz/d;
+    //         F[j].z -= force_mag*dz/d;
+    //     }
+    // }
+
+    // // Update velocities and positions
+    // for(int i=0; i<N; i++)
+    // {
+    //     V[i].x += ((F[i].x-Damp*V[i].x)/M[i])*dt;
+    //     V[i].y += ((F[i].y-Damp*V[i].y)/M[i])*dt;
+    //     V[i].z += ((F[i].z-Damp*V[i].z)/M[i])*dt;
+
+    //     P[i].x += V[i].x*dt;
+    //     P[i].y += V[i].y*dt;
+    //     P[i].z += V[i].z*dt;
+    // }
+
+    // if(DrawCount == DRAW_RATE)
+    // {
+    //     drawPicture();
+    //     DrawCount = 0;
+    // }
+
+    // DrawCount++;
 }
 
 int main(int argc, char** argv)
