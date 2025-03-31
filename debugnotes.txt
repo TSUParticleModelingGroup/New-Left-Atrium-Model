@@ -12,3 +12,23 @@ Simulation slows down to about the same draw speed as SVT at ~50k spheres
 Putting all of this together, my guess is that this is due to some sort of CPU/GPU bottleneck within the code
     Possible solution: Optimization, shorten amnt of mem copies, use VBOs
 
+
+2nd attempt: Profling using NVIDIA NSight
+-g -G to use Nsight
+nvcc -g -G newGLTest.cu -o newGLTest -lGL -lglfw -lGLEW
+
+Profile code to identify bottlenecks
+nsys profile -t cuda,opengl,nvtx,osrt -o profile_report ./newGLTest
+
+To view report
+nsys-ui profile_report.qdrep
+
+
+
+Notable things from reading the chart
+
+most time is spent on memory transfers... minimize these
+
+In fact, went from barely working to easily working at n = 50k
+
+Used VBOS, reduced memory transfers & reduced drawrate from 10 to 1 and it works perfectly

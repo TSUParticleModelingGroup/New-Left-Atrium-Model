@@ -1,4 +1,4 @@
-//nvcc newGLTest.cu -o newGLTest -lGL -lglfw
+//nvcc newGLTest.cu -o newGLTest -lGL -lglfw -lGLEW
 
 // Include files
 //#include <GL/glut.h>
@@ -6,12 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <GL/glew.h> // Needed for VBOs + CUDA, using GLAD in main code
 #include <GLFW/glfw3.h>
+
+//needed for VBO rendering
+#include <vector>
+
 //#include <glad/glad.h> no glad needed for GLFW alone
 
 // Defines
 #define PI 3.14159265359
-#define DRAW_RATE 10
+#define DRAW_RATE 1
 #define N 50000
 
 // This is to create a Lennard-Jones type function G/(r^p) - H(r^q). (p < q) p has to be less than q.
@@ -31,9 +36,13 @@ float *M_GPU;
 float *M;
 float GlobeRadius, Diameter, Radius;
 float Damp;
-int DrawCount;
+int DrawCount = 0;
 float Dt;
 GLFWwindow* Window;
+
+//To use VBOs for sphere rendering
+GLuint sphereVBO, sphereIBO; // Vertex Buffer Object and Index Buffer Object for sphere rendering, Vertex is the sphere's vertices and Index is the order in which to draw them
+GLuint numSphereVertices, numSphereIndices; // Number of vertices and indices in the sphere geometry
 
 // Need to add these globals for GLFW
 float Near = 0.1f;
@@ -64,6 +73,108 @@ void cudaErrorCheck(const char *file, int line)
 		exit(0);
 	}
 }
+
+// Function to render a sphere using VBOs
+void createSphereVBO(float radius, int slices, int stacks) //this one builds a single sphere VBO that we can use for rendering each body in the simulation.
+{
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+    
+    // Generate sphere vertices with positions and normals
+    for (int i = 0; i <= stacks; ++i) 
+    {
+        float phi = PI * i / stacks;
+        float sinPhi = sin(phi);
+        float cosPhi = cos(phi);
+        
+        for (int j = 0; j <= slices; ++j) 
+        {
+            float theta = 2.0f * PI * j / slices;
+            float sinTheta = sin(theta);
+            float cosTheta = cos(theta);
+            
+            // Vertex position (x, y, z)
+            float x = radius * sinPhi * cosTheta;
+            float y = radius * cosPhi;
+            float z = radius * sinPhi * sinTheta;
+            
+            // Normal vector (normalized position for sphere)
+            float nx = sinPhi * cosTheta;
+            float ny = cosPhi;
+            float nz = sinPhi * sinTheta;
+            
+            // Add vertex (position + normal)
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(z);
+            vertices.push_back(nx);
+            vertices.push_back(ny);
+            vertices.push_back(nz);
+        }
+    }
+    
+    // Generate indices for triangle strips
+    for (int i = 0; i < stacks; ++i) 
+    {
+        for (int j = 0; j < slices; ++j) 
+        {
+            int first = i * (slices + 1) + j;
+            int second = first + slices + 1;
+            
+            indices.push_back(first);
+            indices.push_back(second);
+            indices.push_back(first + 1);
+            
+            indices.push_back(second);
+            indices.push_back(second + 1);
+            indices.push_back(first + 1);
+        }
+    }
+    
+    numSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
+    numSphereIndices = indices.size();
+    
+    // Create and bind the vertex buffer
+    glGenBuffers(1, &sphereVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    
+    // Create and bind the index buffer
+    glGenBuffers(1, &sphereIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    
+    // Unbind buffers
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void renderSphereVBO() 
+{
+    // Bind the VBO and IBO
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+    
+    // Enable vertex and normal arrays
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    // Set up pointers to vertex and normal data
+    glVertexPointer(3, GL_FLOAT, 6 * sizeof(float), 0);
+    glNormalPointer(GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    
+    // Draw the sphere
+    glDrawElements(GL_TRIANGLES, numSphereIndices, GL_UNSIGNED_INT, 0);
+    
+    // Disable arrays
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    
+    // Unbind buffers
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 
 void renderSphere(float radius, int slices, int stacks) 
 {
@@ -112,7 +223,13 @@ void setup()
 	GridSize.x = (N - 1)/BlockSize.x + 1;
 	GridSize.y = 1;
 	GridSize.z = 1;
+
+
+    Diameter = pow(H/G, 1.0/(LJQ - LJP)); // This is the value where the force is zero for the L-J type force.
+	Radius = Diameter/2.0;
     
+    
+
     Damp = 0.5;
     
     M = (float*)malloc(N*sizeof(float));
@@ -132,10 +249,6 @@ void setup()
 
     cudaMalloc(&M_GPU, N * sizeof(float));
     cudaErrorCheck(__FILE__, __LINE__);
-    	
-	
-	Diameter = pow(H/G, 1.0/(LJQ - LJP)); // This is the value where the force is zero for the L-J type force.
-	Radius = Diameter/2.0;
 	
 	// Using the radius of a body and a 68% packing ratio to find the radius of a global sphere that should hold all the bodies.
 	// Then we double this radius just so we can get all the bodies setup with no problems. 
@@ -211,9 +324,9 @@ __global__ void leapFrog(float3 *p, float3 *v, float3 *f, float *m, float g, flo
 				d  = sqrt(d2);
 				
 				force_mag  = (g*m[i]*m[j])/(d2) - (h*m[i]*m[j])/(d2*d2);
-				f[i].x += force_mag*dx/d * 100.0f;
-				f[i].y += force_mag*dy/d * 100.0f;
-				f[i].z += force_mag*dz/d * 100.0f;
+				f[i].x += force_mag*dx/d * 1000.0f;
+				f[i].y += force_mag*dy/d * 1000.0f;
+				f[i].z += force_mag*dz/d * 1000.0f;
 			}
 		}
 		__syncthreads();
@@ -253,61 +366,49 @@ void drawPicture()
 
         glPushMatrix();
         glTranslatef(P[i].x, P[i].y, P[i].z);
-        renderSphere(Radius, 20, 20);
+        //renderSphere(Radius, 20, 20);
+        renderSphereVBO(); // Use VBO for rendering instead of the above function, uncomment this line to use VBOs instead of the custom renderSphere function
         glPopMatrix();
     }
 
-    glfwSwapBuffers(Window);
+    //glfwSwapBuffers(Window);
 }
 
 void nBody(float dt)
 {
-
-    int    drawCount = 0; 
 	float  time = 0.0;
 
-	//Copy data to the GPU since everything should be setup at this point.
-	cudaMemcpy(P_GPU, P, N * sizeof(float3), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	cudaMemcpy(V_GPU, V, N * sizeof(float3), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	cudaMemcpy(F_GPU, F, N * sizeof(float3), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	cudaMemcpy(M_GPU, M, N * sizeof(float), cudaMemcpyHostToDevice);
-	cudaErrorCheck(__FILE__, __LINE__);
-
     leapFrog<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, G, H, Damp, dt, time, N);
+    cudaDeviceSynchronize();
 
     //draw if we need to
-    if(drawCount == DRAW_RATE) 
+    if(DrawCount == DRAW_RATE) 
     {
         cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost); //only copy pos to CPU if drawing
         cudaErrorCheck(__FILE__, __LINE__);
         drawPicture();
-        drawCount = 0;
+        DrawCount = 0;
     }
     
     time += dt;
-    drawCount++;
+    DrawCount++;
 
-	//now that we're done, copy the data back to the CPU
-	cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
 
-	cudaMemcpy(V, V_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	cudaMemcpy(F, F_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
 
 }
 
 int main(int argc, char** argv)
 {
     setup();
+
+	// cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	// cudaErrorCheck(__FILE__, __LINE__);
+
+	// cudaMemcpy(V, V_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	// cudaErrorCheck(__FILE__, __LINE__);
+
+	// cudaMemcpy(F, F_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
+	// cudaErrorCheck(__FILE__, __LINE__);
 
     int XWindowSize = 1000;
     int YWindowSize = 1000;
@@ -335,6 +436,17 @@ int main(int argc, char** argv)
     // Make the window's context current
     glfwMakeContextCurrent(Window);
     glfwSwapInterval(1); // Enable vsync
+
+    //initialize GLEW
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        fprintf(stderr, "GLEW initialization error: %s\n", glewGetErrorString(err));
+        glfwTerminate();
+        return -1;
+    }
+
+    //initialize the sphere VBO for rendering --MUST BE DONE AFTER GLEW/GLAD INIT
+    createSphereVBO(Radius, 20, 20); 
 
     // Set the viewport size and aspect ratio
     glViewport(0, 0, XWindowSize, YWindowSize);
@@ -385,6 +497,12 @@ int main(int argc, char** argv)
 
     // Time variables
     float Dt = 0.0001;
+    
+    //copy before we start the main loop to ensure we have the initial values on the GPU
+    cudaMemcpy(P_GPU, P, N * sizeof(float3), cudaMemcpyHostToDevice);
+    cudaMemcpy(V_GPU, V, N * sizeof(float3), cudaMemcpyHostToDevice);
+    cudaMemcpy(F_GPU, F, N * sizeof(float3), cudaMemcpyHostToDevice);
+    cudaMemcpy(M_GPU, M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Main loop
     while (!glfwWindowShouldClose(Window))
@@ -396,7 +514,7 @@ int main(int argc, char** argv)
         nBody(Dt);
 
         // Render the scene
-        drawPicture();
+        //drawPicture();
 
         // Swap buffers
         glfwSwapBuffers(Window);
