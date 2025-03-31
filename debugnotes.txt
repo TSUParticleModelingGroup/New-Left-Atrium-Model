@@ -1,0 +1,14 @@
+Observations based on newGL test and SVT simulations:
+
+GLFW is not slowing the simulation down
+GLFW works perfectly fine parallelized and with 2.3k nodes
+
+Both Circle24 and IdealLeftAtrium2.3k run slow, weirdly enough idealLA2.3k draws more often?
+
+Running on Circle24 confirms that the draw rate is significantly slower... why?
+
+Simulation slows down to about the same draw speed as SVT at ~50k spheres
+
+Putting all of this together, my guess is that this is due to some sort of CPU/GPU bottleneck within the code
+    Possible solution: Optimization, shorten amnt of mem copies, use VBOs
+

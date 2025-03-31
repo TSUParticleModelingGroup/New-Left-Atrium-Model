@@ -12,7 +12,7 @@
 // Defines
 #define PI 3.14159265359
 #define DRAW_RATE 10
-#define N 100
+#define N 50000
 
 // This is to create a Lennard-Jones type function G/(r^p) - H(r^q). (p < q) p has to be less than q.
 // In this code we will keep it a p = 2 and q = 4 problem. The diameter of a body is found using the general
@@ -100,29 +100,38 @@ void renderSphere(float radius, int slices, int stacks)
 
 void setup()
 {
-    	float randomAngle1, randomAngle2, randomRadius;
-    	float d, dx, dy, dz;
-    	int test;
-    	
-    	Damp = 0.5;
-    	
-    	M = (float*)malloc(N*sizeof(float));
-    	P = (float3*)malloc(N*sizeof(float3));
-    	V = (float3*)malloc(N*sizeof(float3));
-    	F = (float3*)malloc(N*sizeof(float3));
+    float randomAngle1, randomAngle2, randomRadius;
+    float d, dx, dy, dz;
+    int test;
 
-		// Allocate memory on the GPU, doing it here so all mallocs are in one place.
-		cudaMalloc(&P_GPU, N * sizeof(float3));
-		cudaErrorCheck(__FILE__, __LINE__);
+    // Set the block and grid sizes
+    BlockSize.x = 1024;
+	BlockSize.y = 1;
+	BlockSize.z = 1;
+	
+	GridSize.x = (N - 1)/BlockSize.x + 1;
+	GridSize.y = 1;
+	GridSize.z = 1;
+    
+    Damp = 0.5;
+    
+    M = (float*)malloc(N*sizeof(float));
+    P = (float3*)malloc(N*sizeof(float3));
+    V = (float3*)malloc(N*sizeof(float3));
+    F = (float3*)malloc(N*sizeof(float3));
 
-		cudaMalloc(&V_GPU, N * sizeof(float3));
-		cudaErrorCheck(__FILE__, __LINE__);
+    // Allocate memory on the GPU, doing it here so all mallocs are in one place.
+    cudaMalloc(&P_GPU, N * sizeof(float3));
+    cudaErrorCheck(__FILE__, __LINE__);
 
-		cudaMalloc(&F_GPU, N * sizeof(float3));
-		cudaErrorCheck(__FILE__, __LINE__);
+    cudaMalloc(&V_GPU, N * sizeof(float3));
+    cudaErrorCheck(__FILE__, __LINE__);
 
-		cudaMalloc(&M_GPU, N * sizeof(float));
-		cudaErrorCheck(__FILE__, __LINE__);
+    cudaMalloc(&F_GPU, N * sizeof(float3));
+    cudaErrorCheck(__FILE__, __LINE__);
+
+    cudaMalloc(&M_GPU, N * sizeof(float));
+    cudaErrorCheck(__FILE__, __LINE__);
     	
 	
 	Diameter = pow(H/G, 1.0/(LJQ - LJP)); // This is the value where the force is zero for the L-J type force.
@@ -176,71 +185,58 @@ void setup()
 		
 		M[i] = 1.0;
 	}
-	printf("\n To start timing type s.\n");
 }
 
-__global__ void getForces(float3 *P, float3 *V, float3 *F, float *M, int n)
+__global__ void leapFrog(float3 *p, float3 *v, float3 *f, float *m, float g, float h, float damp, float dt, float t, int n)
 {
-	int idx = threadIdx.x; //rest isn't needed since we're only using one block.
-
-	if(idx < n)
+	float dx, dy, dz,d,d2;
+	float force_mag;
+	
+	int i = threadIdx.x + blockIdx.x * blockDim.x;
+	
+	if(i < n)
 	{
-		//Set our forces to 0
-		F[idx].x = 0.0;
-		F[idx].y = 0.0;
-		F[idx].z = 0.0;
+		f[i].x = 0.0f;
+		f[i].y = 0.0f;
+		f[i].z = 0.0f;
 
-		//Calculate my force based on everyone else
-		for(int i=0; i<n; i++)
+		for(int j = 0; j < n; j++)
 		{
-			if(i != idx) //If it's not me, it must be someone else
+			if(i != j)
 			{
-				float dx = P[i].x-P[idx].x;
-				float dy = P[i].y-P[idx].y;
-				float dz = P[i].z-P[idx].z;
-				float d2 = dx*dx + dy*dy + dz*dz;
-				float d  = sqrt(d2);
+				dx = p[j].x-p[i].x;
+				dy = p[j].y-p[i].y;
+				dz = p[j].z-p[i].z;
+				d2 = dx*dx + dy*dy + dz*dz;
+				d  = sqrt(d2);
 				
-				float force_mag  = (G*M[i]*M[idx])/(d2) - (H*M[i]*M[idx])/(d2*d2);
-
-				//update only my force
-				F[idx].x += force_mag*dx/d;
-				F[idx].y += force_mag*dy/d;
-				F[idx].z += force_mag*dz/d;
-
-				// messing with other people causes race conditions, because we're all trying to mess with the same people who are messing with us and who might have been messed with by someone else
-				//Dr. Wyatt is teaching us valuable life lessons, don't mess with other people's stuff cause it screws stuff up
-				// F[i].x -= force_mag*dx/d;
-				// F[i].y -= force_mag*dy/d;
-				// F[i].z -= force_mag*dz/d;
+				force_mag  = (g*m[i]*m[j])/(d2) - (h*m[i]*m[j])/(d2*d2);
+				f[i].x += force_mag*dx/d * 100.0f;
+				f[i].y += force_mag*dy/d * 100.0f;
+				f[i].z += force_mag*dz/d * 100.0f;
 			}
 		}
-	}
-}
-
-__global__ void updatePositions(float3 *P, float3 *V, float3 *F, float *M, int n, float dt, float damp, float time)
-{
-	int idx = threadIdx.x; //again, rest isn't needed since we're only using one block.
-
-	if(idx < n)
-	{
-		if(time == 0.0)
+		__syncthreads();
+		
+		if(t == 0.0f)
 		{
-			V[idx].x += (F[idx].x/M[idx])*0.5*dt;
-			V[idx].y += (F[idx].y/M[idx])*0.5*dt;
-			V[idx].z += (F[idx].z/M[idx])*0.5*dt;
+			v[i].x += ((f[i].x-damp*v[i].x)/m[i])*dt/2.0f;
+			v[i].y += ((f[i].y-damp*v[i].y)/m[i])*dt/2.0f;
+			v[i].z += ((f[i].z-damp*v[i].z)/m[i])*dt/2.0f;
 		}
 		else
 		{
-			V[idx].x += ((F[idx].x-damp*V[idx].x)/M[idx])*dt;
-			V[idx].y += ((F[idx].y-damp*V[idx].y)/M[idx])*dt;
-			V[idx].z += ((F[idx].z-damp*V[idx].z)/M[idx])*dt;
+			v[i].x += ((f[i].x-damp*v[i].x)/m[i])*dt;
+			v[i].y += ((f[i].y-damp*v[i].y)/m[i])*dt;
+			v[i].z += ((f[i].z-damp*v[i].z)/m[i])*dt;
 		}
 
-		P[idx].x += V[idx].x*dt;
-		P[idx].y += V[idx].y*dt;
-		P[idx].z += V[idx].z*dt;
+		p[i].x += v[i].x*dt;
+		p[i].y += v[i].y*dt;
+		p[i].z += v[i].z*dt;
+		__syncthreads();
 	}
+	
 }
 
 void drawPicture()
@@ -283,11 +279,7 @@ void nBody(float dt)
 	cudaMemcpy(M_GPU, M, N * sizeof(float), cudaMemcpyHostToDevice);
 	cudaErrorCheck(__FILE__, __LINE__);
 
-    getForces<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, N);
-    cudaErrorCheck(__FILE__, __LINE__);
-
-    updatePositions<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, N, dt, Damp, time);
-    cudaErrorCheck(__FILE__, __LINE__);
+    leapFrog<<<GridSize, BlockSize>>>(P_GPU, V_GPU, F_GPU, M_GPU, G, H, Damp, dt, time, N);
 
     //draw if we need to
     if(drawCount == DRAW_RATE) 
@@ -311,59 +303,6 @@ void nBody(float dt)
 	cudaMemcpy(F, F_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 
-
-
-    // float force_mag;
-    // float dx, dy, dz, d, d2;
-
-    // // Reset forces
-    // for(int i=0; i<N; i++)
-    // {
-    //     F[i].x = 0.0;
-    //     F[i].y = 0.0;
-    //     F[i].z = 0.0;
-    // }
-
-    // // Calculate forces between all pairs of bodies
-    // for(int i=0; i<N; i++)
-    // {
-    //     for(int j=i+1; j<N; j++)
-    //     {
-    //         dx = P[j].x-P[i].x;
-    //         dy = P[j].y-P[i].y;
-    //         dz = P[j].z-P[i].z;
-    //         d2 = dx*dx + dy*dy + dz*dz;
-    //         d  = sqrt(d2);
-
-    //         force_mag = (G*M[i]*M[j])/(d2) - (H*M[i]*M[j])/(d2*d2);
-    //         F[i].x += force_mag*dx/d;
-    //         F[j].x -= force_mag*dx/d;
-    //         F[i].y += force_mag*dy/d;
-    //         F[j].y -= force_mag*dy/d;
-    //         F[i].z += force_mag*dz/d;
-    //         F[j].z -= force_mag*dz/d;
-    //     }
-    // }
-
-    // // Update velocities and positions
-    // for(int i=0; i<N; i++)
-    // {
-    //     V[i].x += ((F[i].x-Damp*V[i].x)/M[i])*dt;
-    //     V[i].y += ((F[i].y-Damp*V[i].y)/M[i])*dt;
-    //     V[i].z += ((F[i].z-Damp*V[i].z)/M[i])*dt;
-
-    //     P[i].x += V[i].x*dt;
-    //     P[i].y += V[i].y*dt;
-    //     P[i].z += V[i].z*dt;
-    // }
-
-    // if(DrawCount == DRAW_RATE)
-    // {
-    //     drawPicture();
-    //     DrawCount = 0;
-    // }
-
-    // DrawCount++;
 }
 
 int main(int argc, char** argv)
@@ -408,7 +347,7 @@ int main(int argc, char** argv)
     // MODELVIEW MATRIX
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0.0, 0.0, -5.0); // Move the camera back (Replaces gluLookAt)
+    glTranslatef(0.0, 0.0, -0.001*N); // Move the camera back (Replaces gluLookAt)
 
     glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
 
