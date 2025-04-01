@@ -511,11 +511,11 @@ void saveSettings()
 	// Creating the diretory to hold the run settings.
 	if(mkdir(directoryName, 0777) == 0)
 	{
-		printf("\n Directory '%s' created successfully.\n", diretoryName);
+		printf("\n Directory '%s' created successfully.\n", directoryName);
 	}
 	else
 	{
-		printf("\n Error creating directory '%s'.\n", diretoryName);
+		printf("\n Error creating directory '%s'.\n", directoryName);
 	}
 	
 	// Moving into the directory
