@@ -257,6 +257,8 @@ __global__ void recenter(nodeAttributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
+void copyPositionsFromGPU();
+void copyPositionsToGPU();
 
 // Functions in the setNodesAndMuscles.h file.
 void setNodesFromBlenderFile();

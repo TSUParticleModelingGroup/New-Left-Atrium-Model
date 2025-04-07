@@ -32,3 +32,19 @@ most time is spent on memory transfers... minimize these
 In fact, went from barely working to easily working at n = 50k
 
 Used VBOS, reduced memory transfers & reduced drawrate from 10 to 1 and it works perfectly
+
+
+
+Specifically for optimizing SVT:
+
+My suggestions: 
+- Draw using VBOs
+- Combine kernels into one?
+- Only copy positions before drawing in NBody, rather than copying everything
+- Only copy positions when translation is needed in the keypressed, not every attribute
+
+-97.3% of mem copies are DtoH and most of kernel is spent copying memory, try to minimize these
+
+Real problems: CPU Bottleneck on low simulations, GPU on high
+Moving to VBOs takes rendering off of CPU, so should fix that and most kernels are spent waiting on mem copies
+so minimizing these should fix that as well

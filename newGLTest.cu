@@ -1,4 +1,4 @@
-//nvcc newGLTest.cu -o newGLTest -lGL -lglfw -lGLEW
+//nvcc -use_fast_math newGLTest.cu -o newGLTest -lGL -lglfw -lGLEW
 
 // Include files
 //#include <GL/glut.h>
@@ -17,7 +17,7 @@
 // Defines
 #define PI 3.14159265359
 #define DRAW_RATE 1
-#define N 50000
+#define N 262'144
 
 // This is to create a Lennard-Jones type function G/(r^p) - H(r^q). (p < q) p has to be less than q.
 // In this code we will keep it a p = 2 and q = 4 problem. The diameter of a body is found using the general
@@ -322,11 +322,12 @@ __global__ void leapFrog(float3 *p, float3 *v, float3 *f, float *m, float g, flo
 				dz = p[j].z-p[i].z;
 				d2 = dx*dx + dy*dy + dz*dz;
 				d  = sqrt(d2);
+                dinv = rsqrtf(d2); 
 				
 				force_mag  = (g*m[i]*m[j])/(d2) - (h*m[i]*m[j])/(d2*d2);
-				f[i].x += force_mag*dx/d * 1000.0f;
-				f[i].y += force_mag*dy/d * 1000.0f;
-				f[i].z += force_mag*dz/d * 1000.0f;
+				f[i].x += force_mag*dx*dinv * 1000.0f;
+				f[i].y += force_mag*dy*dinv * 1000.0f;
+				f[i].z += force_mag*dz*dinv * 1000.0f;
 			}
 		}
 		__syncthreads();
@@ -387,6 +388,7 @@ void nBody(float dt)
         cudaMemcpy(P, P_GPU, N * sizeof(float3), cudaMemcpyDeviceToHost); //only copy pos to CPU if drawing
         cudaErrorCheck(__FILE__, __LINE__);
         drawPicture();
+        glfwSwapBuffers(Window); // Swap buffers to display the drawn picture
         DrawCount = 0;
     }
     
@@ -517,7 +519,7 @@ int main(int argc, char** argv)
         //drawPicture();
 
         // Swap buffers
-        glfwSwapBuffers(Window);
+        //glfwSwapBuffers(Window);
     }
 
     // Cleanup and exit

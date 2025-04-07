@@ -46,14 +46,16 @@ void nBody(double dt)
 		{
 			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 			cudaErrorCheck(__FILE__, __LINE__);
-			cudaDeviceSynchronize();
+			// cudaDeviceSynchronize();
 		}
+
 		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
 		cudaErrorCheck(__FILE__, __LINE__);
-		cudaDeviceSynchronize();
+		// cudaDeviceSynchronize();
+
 		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
 		cudaErrorCheck(__FILE__, __LINE__);
-		cudaDeviceSynchronize();
+		cudaDeviceSynchronize(); //only synch when we need to get off the GPU
 		
 		if(Simulation.ContractionisOn)
 		{
@@ -69,8 +71,9 @@ void nBody(double dt)
 		DrawTimer++;
 		if(DrawTimer >= DrawRate) 
 		{
-			copyNodesMusclesFromGPU();
+			copyPositionsFromGPU();
 			drawPicture();
+			glfwSwapBuffers(Window);
 			DrawTimer = 0;
 		}
 		
@@ -86,6 +89,7 @@ void nBody(double dt)
 	else
 	{
 		drawPicture();
+		glfwSwapBuffers(Window);
 	}
 }
 
@@ -483,7 +487,7 @@ int main(int argc, char** argv)
         nBody(Dt);
 
         // Render the scene
-        drawPicture();
+        //drawPicture();
 
         // Swap buffers
         glfwSwapBuffers(Window);

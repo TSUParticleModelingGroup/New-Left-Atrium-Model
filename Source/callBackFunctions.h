@@ -561,9 +561,10 @@ void saveSettings()
 void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // Only process key press events, not releases or repeats
-    if (action != GLFW_PRESS)
-        return;
-        
+
+	// if (action != GLFW_PRESS)
+	// 	return;
+
     float dAngle = 0.01;
     float zoom = 0.01*RadiusOfLeftAtrium;
     float temp;
@@ -571,7 +572,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
     float d;
     float4 centerOfMass;
     
-    copyNodesMusclesFromGPU();
+    //copyNodesMusclesFromGPU();
     
     lookVector.x = CenterX - EyeX;
     lookVector.y = CenterY - EyeY;
@@ -762,6 +763,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
     // Special keys with shift modifiers
     if(key == GLFW_KEY_SLASH && (mods & GLFW_MOD_SHIFT)) // ? key (Shift+/)
     {
+		copyNodesMusclesFromGPU(); 
         float maxZ = -10000.0;
         float maxY = -10000.0;
         int indexZ = -1;
@@ -795,11 +797,13 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         printf("\n Top node index   = %d\n", indexY);
         
         drawPicture();
+		copyNodesMusclesToGPU();
     }
     
     // WASD movement keys
     if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
     {
+		copyPositionsFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -815,10 +819,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.x += dAngle;
+		copyPositionsToGPU();
     }
     
     if(key == GLFW_KEY_S)  // Rotate clockwise on the x-axis
     {
+		copyPositionsFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -834,10 +840,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.x -= dAngle;
+		copyPositionsToGPU();
     }
     
     if(key == GLFW_KEY_D)  // Rotate counterclockwise on the y-axis
     {
+		copyPositionsFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -853,10 +861,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.y -= dAngle;
+		copyPositionsToGPU();
     }
     
     if(key == GLFW_KEY_A)  // Rotate clockwise on the y-axis
     {
+		copyPositionsFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -872,10 +882,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.y += dAngle;
+		copyPositionsToGPU();
     }
     
     if(key == GLFW_KEY_Z)
     {
+		copyPositionsFromGPU();
         if(mods & GLFW_MOD_SHIFT)  // Uppercase Z - Rotate clockwise on the z-axis
         {
             centerOfMass = findCenterOfMass();
@@ -912,10 +924,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             drawPicture();
             AngleOfSimulation.z += dAngle;
         }
+		copyPositionsToGPU();
     }
     
     if(key == GLFW_KEY_E)
     {
+		copyPositionsFromGPU();
         if(mods & GLFW_MOD_SHIFT)  // Uppercase E - Zoom out
         {
             for(int i = 0; i < NumberOfNodes; i++)
@@ -942,6 +956,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             CenterOfSimulation.z -= zoom*lookVector.z;
             drawPicture();
         }
+		copyPositionsToGPU();
     }
     
     // Special character functions (with shift key)
@@ -1010,8 +1025,6 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
         saveSettings();
     }
-    
-    copyNodesMusclesToGPU();
 }
 
 /*

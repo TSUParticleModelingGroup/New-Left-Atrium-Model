@@ -499,3 +499,23 @@ void copyNodesMusclesFromGPU()
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 }
+
+void copyPositionsFromGPU()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		cudaMemcpy(&Node[i].position, &NodeGPU[i].position, sizeof(float4), cudaMemcpyDeviceToHost);
+		cudaErrorCheck(__FILE__, __LINE__);
+	}
+}
+
+void copyPositionsToGPU()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		cudaMemcpy(&NodeGPU[i].position, &Node[i].position, sizeof(float4), cudaMemcpyHostToDevice);
+		cudaErrorCheck(__FILE__, __LINE__);
+	}
+}
+
+
