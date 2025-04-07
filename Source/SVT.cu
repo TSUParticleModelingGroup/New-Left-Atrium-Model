@@ -68,12 +68,12 @@ void nBody(double dt)
 			}
 		}
 		
+		// Update draw timer
 		DrawTimer++;
 		if(DrawTimer >= DrawRate) 
 		{
-			copyPositionsFromGPU();
-			drawPicture();
-			glfwSwapBuffers(Window);
+			copyNodesMusclesFromGPU();
+			Simulation.needsRedraw = true;
 			DrawTimer = 0;
 		}
 		
@@ -88,8 +88,7 @@ void nBody(double dt)
 	}
 	else
 	{
-		drawPicture();
-		glfwSwapBuffers(Window);
+		Simulation.needsRedraw = true; //if paused, we still want to redraw the screen
 	}
 }
 
@@ -446,7 +445,7 @@ int main(int argc, char** argv)
 	glLoadIdentity();
 	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
 
-	glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
+	glClearColor(BackGround.x, BackGround.y, BackGround.z, 1.0f);
 
 	
 	//Lighting and material properties
@@ -474,23 +473,56 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	
-	//time variables to calculate the time between frames
+	//*****************************************ImGUI stuff here********************************
+    // Initialize ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
+
+    // Setup ImGui style
+    ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
+    ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
+    ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
+
+    // Load a font
+    io.Fonts->AddFontDefault();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 	// Main loop
     while (!glfwWindowShouldClose(Window))
     {
-        // Poll events
-        glfwPollEvents();
-
-        // Update physics with fixed timestep
-        nBody(Dt);
-
-        // Render the scene
-        //drawPicture();
-
-        // Swap buffers
-        glfwSwapBuffers(Window);
+		glfwPollEvents();
+    
+		// Start ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		
+		// Update physics
+		nBody(Dt);
+		
+		// Draw scene if needed based on draw rate
+		if (Simulation.needsRedraw) 
+		{
+			drawPicture();
+			Simulation.needsRedraw = false;
+		}
+		
+		// Create and render GUI
+		createGUI();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
+		// Swap buffers once per frame
+		glfwSwapBuffers(Window);
     }
 	
 	//glutMouseFunc(mouseWheelCallback);
@@ -510,6 +542,11 @@ int main(int argc, char** argv)
     free(Muscle);
     cudaFree(NodeGPU);
     cudaFree(MuscleGPU);
+
+	//shutdown ImGui
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	//destroy the window and terminate GLFW
 	glfwDestroyWindow(Window);

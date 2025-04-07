@@ -483,7 +483,7 @@ void drawPicture()
 */
 void terminalPrint()
 {
-	system("clear");
+	//system("clear");
 	//printf("\033[0;34m"); // blue.
 	//printf("\033[0;36m"); // cyan
 	//printf("\033[0;33m"); // yellow
@@ -712,3 +712,279 @@ void helpMenu()
 	printf("\n");
 }
 
+void createGUI()
+{
+    // Setup ImGui window flags
+    ImGuiWindowFlags window_flags = 0;
+    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+    
+    // Main Controls Window
+    ImGui::Begin("Atrium Controls", NULL, window_flags);
+    
+    // Run/Pause button
+    if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause"))
+    {
+        Simulation.isPaused = !Simulation.isPaused;
+    }
+    
+    // General simulation controls
+    if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // Contraction toggle (what does this do?)
+        // bool contractionOn = Simulation.ContractionisOn;
+        // if (ImGui::Checkbox("Contraction", &contractionOn)) 
+        // {
+        //     Simulation.ContractionisOn = contractionOn;
+        // }
+        
+        // View controls
+        bool frontHalf = Simulation.DrawFrontHalfFlag == 1;
+        if (ImGui::Checkbox("Front Half Only", &frontHalf))
+        {
+            Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
+            drawPicture();
+        }
+        
+        // Node display options
+        const char* nodeOptions[] = { "Off", "Half", "Full" };
+        int nodeDisplay = Simulation.DrawNodesFlag;
+        if (ImGui::Combo("Nodes Display", &nodeDisplay, nodeOptions, 3))
+        {
+            Simulation.DrawNodesFlag = nodeDisplay;
+            drawPicture();
+        }
+        
+        // Projection mode {Do we REAAALLY need this??}
+        // bool frustumView = Simulation.ViewFlag == 1;
+        // if (ImGui::Checkbox("Frustum View", &frustumView))
+        // {
+        //     if (frustumView && Simulation.ViewFlag == 0)
+        //     {
+        //         Simulation.ViewFlag = 1;
+        //         frustumView();
+        //     }
+        //     else if (!frustumView && Simulation.ViewFlag == 1)
+        //     {
+        //         Simulation.ViewFlag = 0;
+        //         orthogonalView();
+        //     }
+        // }
+        
+        // Recording
+		if (Simulation.isRecording)
+		{
+			if (ImGui::Button("Stop Recording"))
+			{
+			movieOff();
+			Simulation.isRecording = false;
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Record Video"))
+			{
+			movieOn();
+			Simulation.isRecording = true;
+			}
+		}
+        // Screenshot
+        if (ImGui::Button("Screenshot"))
+        {
+            screenShot();
+        }
+    }
+    
+    // View angle controls
+    if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // Predefined views
+        if (ImGui::Button("PA"))  { setView(4); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("AP"))  { setView(2); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("Ref")) { setView(6); drawPicture(); }
+        
+        if (ImGui::Button("LAO")) { setView(1); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("RAO")) { setView(3); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("LL"))  { setView(7); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("RL"))  { setView(9); drawPicture(); }
+        
+        if (ImGui::Button("SUP")) { setView(8); drawPicture(); }
+        ImGui::SameLine();
+        if (ImGui::Button("INF")) { setView(5); drawPicture(); }
+        
+        if (ImGui::Button("Recenter")) { centerObject(); drawPicture(); }
+    }
+    
+	// Mouse mode selection
+	if (ImGui::CollapsingHeader("Mouse Functions", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		// Display current mouse mode
+		ImGui::Text("Current Mode: ");
+		if (!Simulation.isInMouseFunctionMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Mouse Off");
+		} else if (Simulation.isInAblateMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
+		} else if (Simulation.isInEctopicBeatMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
+		} else if (Simulation.isInEctopicEventMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
+		} else if (Simulation.isInAdjustMuscleAreaMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
+		} else if (Simulation.isInAdjustMuscleLineMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
+		} else if (Simulation.isInFindNodeMode) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
+		}
+
+		// Mouse mode buttons
+		if (ImGui::Button("Mouse Off"))
+		{
+			mouseFunctionsOff();
+			Simulation.isInMouseFunctionMode = false;
+		}
+
+		if (ImGui::Button("Ablate Mode")) 
+		{
+			mouseAblateMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInAblateMode = true;
+		}
+
+		if (ImGui::Button("Ectopic Beat")) {
+			mouseEctopicBeatMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInEctopicBeatMode = true;
+		}
+
+		if (ImGui::Button("Ectopic Trigger")) {
+			mouseEctopicEventMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInEctopicEventMode = true;
+		}
+
+		if (ImGui::Button("Adjust Area")) {
+			mouseAdjustMusclesAreaMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInAdjustMuscleAreaMode = true;
+		}
+
+		if (ImGui::Button("Adjust Line")) {
+			mouseAdjustMusclesLineMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInAdjustMuscleLineMode = true;
+		}
+
+		if (ImGui::Button("Identify Node")) {
+			mouseIdentifyNodeMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInFindNodeMode = true;
+		}
+
+		// Hit multiplier slider
+		float hitMult = HitMultiplier;
+		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f")) {
+			HitMultiplier = hitMult;
+		}
+	}
+    
+    // Heartbeat controls
+    if (ImGui::CollapsingHeader("Heartbeat Controls"))
+    {
+        float beatPeriod = Node[PulsePointNode].beatPeriod;
+        if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) {
+            Node[PulsePointNode].beatPeriod = beatPeriod;
+            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+            cudaErrorCheck(__FILE__, __LINE__);
+        }
+        
+        if (ImGui::Button("+ 10ms")) {
+            Node[PulsePointNode].beatPeriod += 10;
+            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+            cudaErrorCheck(__FILE__, __LINE__);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("- 10ms")) {
+            Node[PulsePointNode].beatPeriod -= 10;
+            if(Node[PulsePointNode].beatPeriod < 0) {
+                Node[PulsePointNode].beatPeriod = 0;
+            }
+            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+            cudaErrorCheck(__FILE__, __LINE__);
+        }
+    }
+    
+    // Utility functions
+    if (ImGui::CollapsingHeader("Utilities"))
+    {
+        if (ImGui::Button("Save Settings")) {
+            saveSettings();
+        }
+        
+        if (ImGui::Button("Find Nodes")) {
+            copyNodesMusclesFromGPU(); 
+            float maxZ = -10000.0;
+            float maxY = -10000.0;
+            int indexZ = -1;
+            int indexY = -1;
+            
+            for(int i = 0; i < NumberOfNodes; i++) {
+                if(maxZ < Node[i].position.z) {
+                    maxZ = Node[i].position.z;
+                    indexZ = i;
+                }
+                
+                if(maxY < Node[i].position.y) {
+                    maxY = Node[i].position.y;
+                    indexY = i;
+                }
+            }
+            
+            Node[indexZ].color.x = 0.0;
+            Node[indexZ].color.y = 0.0;
+            Node[indexZ].color.z = 1.0;
+            
+            Node[indexY].color.x = 1.0;
+            Node[indexY].color.y = 0.0;
+            Node[indexY].color.z = 1.0;
+            
+            ImGui::Text("Front node index = %d", indexZ);
+            ImGui::Text("Top node index = %d", indexY);
+            
+            drawPicture();
+            copyNodesMusclesToGPU();
+        }
+    }
+    
+    ImGui::End();
+    
+    // Stats window
+    ImGui::Begin("Simulation Stats", NULL, window_flags);
+    ImGui::Text("Run time: %.2f ms", RunTime);
+    ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
+    
+    if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) {
+        ImGui::Separator();
+        ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
+        ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
+    }
+    
+    ImGui::Separator();
+    for(int i = 0; i < NumberOfNodes; i++) {
+        if(Node[i].isBeatNode && i != PulsePointNode) {
+            ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
+        }
+    }
+    
+    ImGui::End();
+}

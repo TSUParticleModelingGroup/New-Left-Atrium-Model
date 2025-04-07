@@ -110,6 +110,8 @@ struct simulationSwitchesStructure
 	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
 	// orient yourself.
 	int DrawFrontHalfFlag;
+
+	bool needsRedraw; // This is used to tell the program to redraw the screen when it is needed.
 };
 
 // Globals Start ******************************************
@@ -290,6 +292,7 @@ void setView(int);
 void drawPicture();
 void terminalPrint();
 void helpMenu();
+void createGUI();
 
 // Functions in the callBackFunctions.h file.
  void reshape(GLFWwindow* window, int width, int height);

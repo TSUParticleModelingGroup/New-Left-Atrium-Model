@@ -161,7 +161,7 @@ The length of time between heart beats.
 A 1000 milliseconds is 60 beats per minute.
 Should be a float.
 
---BeatPeriod = 600.0;
+--BeatPeriod = 10.0;
 
 How often you update the terminal, in milliseconds.
 Should be a float.
