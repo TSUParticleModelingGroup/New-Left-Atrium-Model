@@ -54,6 +54,8 @@ void setNodesFromBlenderFile()
 	// Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
+	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
+	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
 	fscanf(inFile, "%d", &PulsePointNode);
 	printf("\n PulsePointNode = %d", PulsePointNode);
 	fscanf(inFile, "%d", &UpNode);
@@ -62,8 +64,17 @@ void setNodesFromBlenderFile()
 	printf("\n FrontNode = %d", FrontNode);
 	
 	// Allocating memory for the CPU and GPU nodes. 
-	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
+	cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
+	cudaErrorCheck(__FILE__, __LINE__);
+	
+	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
+	cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
+	cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	// Setting all nodes to zero or their default settings; 
@@ -106,6 +117,14 @@ void setNodesFromBlenderFile()
 		}
 	}
 	
+	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
+	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
+	{
+		fscanf(inFile, "%d ", &id);
+		
+		BachmannsBundle[i] = id;
+	}
+	
 	// Reading in the nodes positions.
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -115,7 +134,6 @@ void setNodesFromBlenderFile()
 		Node[id].position.y = y;
 		Node[id].position.z = z;
 	}
-	
 	
 	// Finding center on LA
 	float4 centerOfObject;
@@ -284,7 +302,10 @@ void setMusclesFromBlenderFile()
 	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
 	
 	// Allocating memory for the CPU and GPU muscles. 
-	Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
 	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 
@@ -415,6 +436,7 @@ double croppedRandomNumber(double stddev, double left, double right)
     If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
     The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
     can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
+ 5: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
     
  Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
@@ -499,6 +521,46 @@ void setRemainingNodeAndMuscleAttributes()
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
+	// 5:
+	int id, id2;
+	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
+	{	
+		if(i == -1)
+		{
+			id = PulsePointNode;
+		}
+		else
+		{
+			id = BachmannsBundle[i];
+			Node[id].color.x = 0.1;
+			Node[id].color.y = 0.2;
+			Node[id].color.z = 1.0;
+			Node[id].isDrawNode = true;
+		}
+		
+		for(int k = 0; k < MUSCLES_PER_NODE; k++)
+		{
+			id2 = Node[id].muscle[k];
+			if(id2 != -1)
+			{
+				for(int j = i+1; j < NumberOfNodesInBachmannsBundle; j++)
+				{
+					for(int l = 0; l < MUSCLES_PER_NODE; l++)
+					{
+						if(Node[BachmannsBundle[j]].muscle[l] == id2)
+						{
+							Muscle[id2].color.x = 1.0;
+							Muscle[id2].color.y = 1.0;
+							Muscle[id2].color.z = 1.0;
+							Muscle[id2].conductionDuration /= BachmannsBundleMultiplier;
+						}
+					}
+				
+				}
+			}
+		}
+	}
+	
 	printf("\n All node and muscle attributes have been set.");
 }
 
@@ -540,11 +602,18 @@ void getNodesandMusclesFromPreviousRun()
 		exit(0);
 	}
 	
-	Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
+	//Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
+	cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
-	Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
+	
+	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
 	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	

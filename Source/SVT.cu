@@ -220,7 +220,10 @@ void readSimulationParameters()
 		data >> BaseMuscleConductionVelocity;
 		
 		getline(data,name,'=');
-		data >> MuscleConductionVelocitySTD;
+		data >> MuscleConductionVelocitySTD; 
+		
+		getline(data,name,'=');
+		data >> BachmannsBundleMultiplier;
 		
 		getline(data,name,'=');
 		data >> BeatPeriod;
@@ -438,8 +441,8 @@ int main(int argc, char** argv)
 	glutMainLoop();
 
 	//free up memory
-	free(Node);
-    	free(Muscle);
+	cudaFreeHost(Node);
+    	cudaFreeHost(Muscle);
     	cudaFree(NodeGPU);
     	cudaFree(MuscleGPU);
 

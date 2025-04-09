@@ -350,24 +350,19 @@ void drawPicture()
 			}	
 		}
 	}
-	else
+	// If the nodes are not drawn as spheres you will be in this else case.
+	// Now some of the node we still draw as points, like node that have been ablated, ectopic nodes, or nodes connected to muscle
+	// that have been adjusted. This helps the user keep track of what has been done. This is what is done here and is based on
+	// the .isDrawNode flag.
+	else 
 	{
 		glPointSize(5.0);
 		glBegin(GL_POINTS);
-		 	for(int i = 1; i < NumberOfNodes; i++)
+	 	for(int i = 1; i < NumberOfNodes; i++)
+		{
+			if(Simulation.DrawFrontHalfFlag == 1)
 			{
-				if(Simulation.DrawFrontHalfFlag == 1)
-				{
-					if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
-					{
-						glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
-						if(Node[i].isDrawNode)
-						{
-							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-						}
-					}
-				}
-				else
+				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					if(Node[i].isDrawNode)
@@ -376,6 +371,15 @@ void drawPicture()
 					}
 				}
 			}
+			else
+			{
+				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
+				if(Node[i].isDrawNode)
+				{
+					glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
+				}
+			}
+		}
 		glEnd();
 	}
 	

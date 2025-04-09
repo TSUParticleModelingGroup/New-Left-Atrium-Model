@@ -511,11 +511,11 @@ void saveSettings()
 	// Creating the diretory to hold the run settings.
 	if(mkdir(directoryName, 0777) == 0)
 	{
-		printf("\n Directory '%s' created successfully.\n", diretoryName);
+		printf("\n Directory '%s' created successfully.\n", directoryName);
 	}
 	else
 	{
-		printf("\n Error creating directory '%s'.\n", diretoryName);
+		printf("\n Error creating directory '%s'.\n", directoryName);
 	}
 	
 	// Moving into the directory
@@ -612,8 +612,10 @@ void KeyPressed(unsigned char key, int x, int y)
 	if(key == 'q') // quit
 	{
 		glutDestroyWindow(Window);
-		free(Node);
-    		free(Muscle);
+		cudaFreeHost(Node);
+		cudaFreeHost(Muscle);
+		//free(Node);
+    		//free(Muscle);
     		cudaFree(NodeGPU);
     		cudaFree(MuscleGPU);
 		printf("\n Good Bye\n");
@@ -1191,7 +1193,7 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.x = 1.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
-							printf("\n Node number = %d", i);
+							printf("\n Node number = %d\n", i);
 						}
 					}
 				}

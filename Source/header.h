@@ -115,6 +115,10 @@ nodeAttributesStructure *NodeGPU;
 muscleAttributesStructure *Muscle;
 muscleAttributesStructure *MuscleGPU;
 
+// This will hold all the nodes that extend from the beat node to create Bachmann's Bundle.
+int *BachmannsBundle;
+int *BachmannsBundleGPU;
+
 // This will hold all the simulation switches.
 simulationSwitchesStructure Simulation;
 
@@ -173,6 +177,7 @@ double BaseAbsoluteRefractoryPeriodFraction;
 double AbsoluteRefractoryPeriodFractionSTD;
 double BaseMuscleConductionVelocity;
 double MuscleConductionVelocitySTD;
+double BachmannsBundleMultiplier;
 double BeatPeriod;
 double PrintRate;
 int DrawRate;
@@ -232,6 +237,7 @@ double UpZ;
 // How many nodes and muscle the simulation contains.
 int NumberOfNodes;
 int NumberOfMuscles;
+int NumberOfNodesInBachmannsBundle;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.
