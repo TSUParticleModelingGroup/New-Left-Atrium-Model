@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Mason/Downloads/Code/New-Left-Atrium-Model/Source",
-      "program": "c:/Users/Mason/Downloads/Code/New-Left-Atrium-Model/Source/build/Debug/outDebug",
+      "cwd": "c:/Users/Mason/Downloads/Code/New-Left-Atrium-Model",
+      "program": "c:/Users/Mason/Downloads/Code/New-Left-Atrium-Model/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

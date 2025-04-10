@@ -168,6 +168,7 @@ void mouseIdentifyNodeMode()
 */
 bool setMouseMuscleAttributes()
 {
+	// These functions now just set default values
 	setMouseMuscleRefractoryPeriod();
 	setMouseMuscleConductionVelocity();
 	return(true);
@@ -176,9 +177,12 @@ bool setMouseMuscleAttributes()
 /*
  This function asks the user to type in the terminal screen the value to be multiplied by the
  selected muscles' refractory period.
+
+ Not necessary anymore aside from staying here for the sake of not changing the code too much.
 */
 void setMouseMuscleRefractoryPeriod()
 {
+	/*
 	system("clear");
 	RefractoryPeriodAdjustmentMultiplier = -1.0;
 	
@@ -195,16 +199,23 @@ void setMouseMuscleRefractoryPeriod()
 		printf("\n Retry\n");
 		setMouseMuscleRefractoryPeriod();
 	}
+	*/
+	
+	// Just set default value - actual adjustment happens through GUI sliders
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
 }
 
 /*
  This function asks the user to type in the terminal screen the value to be multiplied by the
  selected muscles' conduction velocity.
+
+ Same case, not necessary anymore aside from staying here for the sake of not changing the code too much.
 */
 void setMouseMuscleConductionVelocity()
 {
+	/*
 	system("clear");
-	MuscleConductionVelocityAdjustmentMultiplier = -1.0; //init'd make sure the user enters a valid number
+	MuscleConductionVelocityAdjustmentMultiplier = -1.0;
 	
 	printf("\n\n Enter conduction velocity multiplier.");
 	printf("\n A number between 0 and 1 will slow it down.");
@@ -217,8 +228,12 @@ void setMouseMuscleConductionVelocity()
 		system("clear");
 		printf("\n You cannot adjust the the conduction velocity by a non-positive number.");
 		printf("\n Retry\n");
-		setMouseMuscleConductionVelocity();
+		setMouseConductionVelocity();
 	}
+	*/
+	
+	// Just set default value - actual adjustment happens through GUI sliders
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 }
 
 /*
@@ -237,8 +252,14 @@ void setEctopicBeat(int nodeId)
 	}
 	drawPicture();
 	
+	// Set default values - these used to come from user input functions
+	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
+	Node[nodeId].beatTimer = 0; // Default to start immediately
+	
+	/* dont need these anymore - just set default values
 	getEctopicBeatPeriod(nodeId);
 	getEctopicBeatOffset(nodeId);
+	*/
 	
 	// We only let you set 1 ectopic beat at a time.
 	Simulation.isInEctopicBeatMode = false;
@@ -262,6 +283,7 @@ void clearStdin()
 */
 void getEctopicBeatPeriod(int nodeId)
 {
+	/*
 	float period;
 	fflush(stdin);
 	system("clear");
@@ -284,6 +306,10 @@ void getEctopicBeatPeriod(int nodeId)
 		Node[nodeId].beatPeriod = period;
 	}
 	clearStdin();
+	*/
+	
+	// Just set default value - actual adjustment happens through GUI sliders
+	Node[nodeId].beatPeriod = BeatPeriod;
 }
 
 /*
@@ -294,6 +320,7 @@ void getEctopicBeatPeriod(int nodeId)
 */
 void getEctopicBeatOffset(int nodeId)
 {
+	/*
 	system("clear");
 	printf("\n The current Time into the beat is %f.", Node[nodeId].beatTimer);
 	printf("\n Enter the time offset of your ectopic event.");
@@ -317,6 +344,10 @@ void getEctopicBeatOffset(int nodeId)
 	{
 		Node[nodeId].beatTimer = Node[nodeId].beatPeriod - timeDelay;
 	}
+	*/
+	
+	// Just set default value - actual adjustment happens through GUI sliders
+	Node[nodeId].beatTimer = 0;
 }
 
 /*

@@ -311,7 +311,9 @@ void setup()
 	time_t t;
 	srand((unsigned) time(&t));
 	
-	//GLFWwindow* Window = NULL; //initialize the window pointer to NULL
+	// Initialize default adjustment values
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 
 	// Getting user inputs.
 	readSimulationParameters();

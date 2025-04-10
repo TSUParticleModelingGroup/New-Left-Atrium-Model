@@ -196,6 +196,7 @@ void rotateZAxis(float angle)
 */
 void ReferenceView()
 {	
+	printf("\n Setting view to Reference view.");
 	float angle, temp;
 	
 	centerObject();
@@ -240,6 +241,7 @@ void ReferenceView()
 */
 void PAView()
 {  
+	printf("\n Setting view to PA view.");
 	float angle;
 	
 	ReferenceView();
@@ -257,6 +259,8 @@ void PAView()
 */
 void APView()
 { 
+
+	printf("\n Setting view to AP view.");
 	float angle;
 	
 	PAView();
@@ -269,52 +273,53 @@ void APView()
 */
 void setView(int view)
 {
+	printf("\n Setting view to %d", view);
 	if(view == 6)
 	{
 		ReferenceView();
 		strcpy(ViewName, "Ref");
 	}
-	if(view == 4)
+	else if (view == 4)
 	{
 		PAView();
 		strcpy(ViewName, "PA");
 	}
-	if(view == 2)
+	else if (view == 2)
 	{
 		APView();
 		strcpy(ViewName, "AP");
 	}
-	if(view == 3)
+	else if (view == 3)
 	{
 		APView();
 		rotateYAxis(-PI/6.0);
 		strcpy(ViewName, "RAO");
 	}
-	if(view == 1)
+	else if (view == 1)
 	{
 		APView();
 		rotateYAxis(PI/3.0);
 		strcpy(ViewName, "LAO");
 	}
-	if(view == 7)
+	else if (view == 7)
 	{
 		APView();
 		rotateYAxis(PI/2.0);
 		strcpy(ViewName, "LL");
 	}
-	if(view == 9)
+	else if (view == 9)
 	{
 		APView();
 		rotateYAxis(-PI/2.0);
 		strcpy(ViewName, "RL");
 	}
-	if(view == 8)
+	else if (view == 8)
 	{
 		APView();
 		rotateXAxis(PI/2.0);
 		strcpy(ViewName, "SUP");
 	}
-	if(view == 5)
+	else if (view == 5)
 	{
 		APView();
 		rotateXAxis(-PI/2.0);
@@ -476,6 +481,8 @@ void drawPicture()
 		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
 	}
+
+	//glfwSwapBuffers(Window);
 }
 
 /*
@@ -665,7 +672,7 @@ void terminalPrint()
 */
 void helpMenu()
 {
-	system("clear");
+	//system("clear");
 	//Pause = 1;
 	printf("\n The simulation is paused.");
 	printf("\n");
@@ -730,7 +737,7 @@ void createGUI()
     // General simulation controls
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        // Contraction toggle (what does this do?)
+        // Contraction toggle (do we need this?? added it anyways)
         // bool contractionOn = Simulation.ContractionisOn;
         // if (ImGui::Checkbox("Contraction", &contractionOn)) 
         // {
@@ -750,8 +757,11 @@ void createGUI()
         int nodeDisplay = Simulation.DrawNodesFlag;
         if (ImGui::Combo("Nodes Display", &nodeDisplay, nodeOptions, 3))
         {
-            Simulation.DrawNodesFlag = nodeDisplay;
-            drawPicture();
+            if (nodeDisplay != Simulation.DrawNodesFlag) // Only update if the value changes
+            {
+                Simulation.DrawNodesFlag = nodeDisplay;
+                drawPicture();
+            }
         }
         
         // Projection mode {Do we REAAALLY need this??}
@@ -804,17 +814,17 @@ void createGUI()
         ImGui::SameLine();
         if (ImGui::Button("Ref")) { setView(6); drawPicture(); }
         
-        if (ImGui::Button("LAO")) { setView(1); drawPicture(); }
+        if (ImGui::Button("LAO")) { setView(1); }
         ImGui::SameLine();
-        if (ImGui::Button("RAO")) { setView(3); drawPicture(); }
+        if (ImGui::Button("RAO")) { setView(3); }
         ImGui::SameLine();
-        if (ImGui::Button("LL"))  { setView(7); drawPicture(); }
+        if (ImGui::Button("LL"))  { setView(7); }
         ImGui::SameLine();
-        if (ImGui::Button("RL"))  { setView(9); drawPicture(); }
+        if (ImGui::Button("RL"))  { setView(9); }
         
-        if (ImGui::Button("SUP")) { setView(8); drawPicture(); }
+        if (ImGui::Button("SUP")) { setView(8); }
         ImGui::SameLine();
-        if (ImGui::Button("INF")) { setView(5); drawPicture(); }
+        if (ImGui::Button("INF")) { setView(5); }
         
         if (ImGui::Button("Recenter")) { centerObject(); drawPicture(); }
     }
@@ -824,25 +834,38 @@ void createGUI()
 	{
 		// Display current mouse mode
 		ImGui::Text("Current Mode: ");
-		if (!Simulation.isInMouseFunctionMode) {
+		if (!Simulation.isInMouseFunctionMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Mouse Off");
-		} else if (Simulation.isInAblateMode) {
+		}
+		else if (Simulation.isInAblateMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
-		} else if (Simulation.isInEctopicBeatMode) {
+		}
+		else if (Simulation.isInEctopicBeatMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
-		} else if (Simulation.isInEctopicEventMode) {
+		} 
+		else if (Simulation.isInEctopicEventMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
-		} else if (Simulation.isInAdjustMuscleAreaMode) {
+		} 
+		else if (Simulation.isInAdjustMuscleAreaMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
-		} else if (Simulation.isInAdjustMuscleLineMode) {
+		} 
+		else if (Simulation.isInAdjustMuscleLineMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
-		} else if (Simulation.isInFindNodeMode) {
+		} 
+		else if (Simulation.isInFindNodeMode) 
+		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
 		}
@@ -861,31 +884,36 @@ void createGUI()
 			Simulation.isInAblateMode = true;
 		}
 
-		if (ImGui::Button("Ectopic Beat")) {
+		if (ImGui::Button("Ectopic Beat")) 
+		{
 			mouseEctopicBeatMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicBeatMode = true;
 		}
 
-		if (ImGui::Button("Ectopic Trigger")) {
+		if (ImGui::Button("Ectopic Trigger")) 
+		{
 			mouseEctopicEventMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicEventMode = true;
 		}
 
-		if (ImGui::Button("Adjust Area")) {
+		if (ImGui::Button("Adjust Area"))
+		{
 			mouseAdjustMusclesAreaMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleAreaMode = true;
 		}
 
-		if (ImGui::Button("Adjust Line")) {
+		if (ImGui::Button("Adjust Line")) 
+		{
 			mouseAdjustMusclesLineMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleLineMode = true;
 		}
 
-		if (ImGui::Button("Identify Node")) {
+		if (ImGui::Button("Identify Node")) 
+		{
 			mouseIdentifyNodeMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInFindNodeMode = true;
@@ -893,8 +921,38 @@ void createGUI()
 
 		// Hit multiplier slider
 		float hitMult = HitMultiplier;
-		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f")) {
+		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f")) 
+		{
 			HitMultiplier = hitMult;
+			
+			// Add sliders for muscle adjustment parameters when in those modes
+			if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
+			{
+				ImGui::Separator();
+				ImGui::Text("Muscle Adjustment Parameters");
+				
+				float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
+				if (ImGui::SliderFloat("Refractory Period Multiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
+				{
+					RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Reset##1")) 
+				{
+					RefractoryPeriodAdjustmentMultiplier = 1.0f;
+				}
+				
+				float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
+				if (ImGui::SliderFloat("Conduction Velocity Multiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
+				{
+					MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Reset##2"))
+				{
+					MuscleConductionVelocityAdjustmentMultiplier = 1.0f;
+				}
+			}
 		}
 	}
     
@@ -902,49 +960,121 @@ void createGUI()
     if (ImGui::CollapsingHeader("Heartbeat Controls"))
     {
         float beatPeriod = Node[PulsePointNode].beatPeriod;
-        if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) {
+        if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
+		{
             Node[PulsePointNode].beatPeriod = beatPeriod;
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
         }
         
-        if (ImGui::Button("+ 10ms")) {
+        if (ImGui::Button("+ 10ms")) 
+		{
             Node[PulsePointNode].beatPeriod += 10;
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
         }
+
         ImGui::SameLine();
-        if (ImGui::Button("- 10ms")) {
+        if (ImGui::Button("- 10ms")) 
+		{
             Node[PulsePointNode].beatPeriod -= 10;
-            if(Node[PulsePointNode].beatPeriod < 0) {
+            if(Node[PulsePointNode].beatPeriod < 0) 
+			{
                 Node[PulsePointNode].beatPeriod = 0;
             }
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
+        }
+        
+        //Ectopic beat Sliders
+        ImGui::Separator();
+        ImGui::Text("Ectopic Beats");
+        
+        // Show sliders for each ectopic beat node
+        bool hasEctopicBeats = false; // flag to see if we have any ectopic beats; consider adding to simulation struct?
+        for(int i = 0; i < NumberOfNodes; i++) 
+		{
+            if(Node[i].isBeatNode && i != PulsePointNode) //if this is an ectopic beat node and not the "SA node"
+			{
+                hasEctopicBeats = true;
+                
+                char nodeName[32];
+                sprintf(nodeName, "Ectopic Beat Node %d", i);
+                
+                if (ImGui::TreeNode(nodeName)) 
+				{
+                    float beatPeriod = Node[i].beatPeriod;
+                    if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
+					{
+                        Node[i].beatPeriod = beatPeriod;
+                        cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+                        cudaErrorCheck(__FILE__, __LINE__);
+                    }
+                    
+					// Set the time delay for the ectopic beat
+                    float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
+                    if (ImGui::SliderFloat("Time Until Next Beat", &timeDelay, 0.0f, Node[i].beatPeriod, "%.1f ms")) 
+					{
+                        // Convert back to beatTimer when storing
+                        Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
+                        cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+                        cudaErrorCheck(__FILE__, __LINE__);
+                    }
+                    
+                    //progress bar to show how far along the ectopic beat is in its cycle
+                    // float phasePercent = (Node[i].beatTimer / Node[i].beatPeriod) * 100.0f;
+                    // char progressLabel[32];
+                    // sprintf(progressLabel, "%% of cycle: %.1f", phasePercent); //sprintf is used to format the string
+                    // ImGui::ProgressBar(Node[i].beatTimer / Node[i].beatPeriod, ImVec2(-1, 0), progressLabel);
+                    
+					//button to remove ectopic beat nodes
+                    if (ImGui::Button("Delete Ectopic Beat")) 
+					{
+                        Node[i].isBeatNode = false;
+                        Node[i].isDrawNode = false;
+                        Node[i].color = {0.0f, 1.0f, 0.0f, 1.0f}; // Reset color
+                        cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+                        cudaErrorCheck(__FILE__, __LINE__);
+                    }
+                    
+                    ImGui::TreePop();
+                }
+            }
+        }
+        
+        if (!hasEctopicBeats) //if there are no ectopic beats, show a message
+		{
+            ImGui::TextDisabled("No ectopic beats configured.");
+            ImGui::Text("Use the Ectopic Beat button to add one.");
         }
     }
     
     // Utility functions
     if (ImGui::CollapsingHeader("Utilities"))
     {
-        if (ImGui::Button("Save Settings")) {
+        if (ImGui::Button("Save Settings"))
+		{
             saveSettings();
         }
         
-        if (ImGui::Button("Find Nodes")) {
+        if (ImGui::Button("Find Nodes"))
+		{
             copyNodesMusclesFromGPU(); 
             float maxZ = -10000.0;
             float maxY = -10000.0;
             int indexZ = -1;
             int indexY = -1;
             
-            for(int i = 0; i < NumberOfNodes; i++) {
-                if(maxZ < Node[i].position.z) {
+            for(int i = 0; i < NumberOfNodes; i++) 
+			{
+                if(maxZ < Node[i].position.z) 
+				{
                     maxZ = Node[i].position.z;
                     indexZ = i;
                 }
                 
-                if(maxY < Node[i].position.y) {
+                if(maxY < Node[i].position.y) 
+				{
                     maxY = Node[i].position.y;
                     indexY = i;
                 }
@@ -973,18 +1103,22 @@ void createGUI()
     ImGui::Text("Run time: %.2f ms", RunTime);
     ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
     
-    if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) {
+    if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
+	{
         ImGui::Separator();
         ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
         ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
     }
     
+	// Print ectopic beat nodes and their periods
     ImGui::Separator();
-    for(int i = 0; i < NumberOfNodes; i++) {
-        if(Node[i].isBeatNode && i != PulsePointNode) {
+    for(int i = 0; i < NumberOfNodes; i++) 
+	{
+        if(Node[i].isBeatNode && i != PulsePointNode) 
+		{
             ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
         }
     }
-    
+  
     ImGui::End();
 }
