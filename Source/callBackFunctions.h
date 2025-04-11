@@ -596,6 +596,14 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 	// if (action != GLFW_PRESS)
 	// 	return;
 
+	// Get ImGui IO to check if it's capturing input
+	ImGuiIO& io = ImGui::GetIO();
+    
+    // If ImGui is handling this event, return
+    if (io.WantCaptureKeyboard)
+        return;
+
+
     float dAngle = 0.01;
     float zoom = 0.01*RadiusOfLeftAtrium;
     float temp;
@@ -1076,6 +1084,14 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 */
 void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
+
+	// Get ImGui IO to check if it's capturing input
+	ImGuiIO& io = ImGui::GetIO();
+    
+    // If ImGui is handling this event, return
+    if (io.WantCaptureKeyboard)
+        return;
+	
 	float d, dx, dy, dz;
 	float hit;
 	int muscleId;

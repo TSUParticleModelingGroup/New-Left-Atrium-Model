@@ -27,7 +27,6 @@ The code is not currently written for models with depth, but it does work with t
 Place the Nodes and Muscle file you would like to run here.
 
 --InputFileName = IdealLeftAtrium2.3K
-
 Name of previous run files that were stored in GitHub.
 Test
 
@@ -166,7 +165,7 @@ Should be a float.
 How often you update the terminal, in milliseconds.
 Should be a float.
 
---PrintRate = 10.0;
+--PrintRate = 100.0;
 
 How often you update the picture of the simulation to the screen. This is in iterations not time.
 Should be an int.

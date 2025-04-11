@@ -196,7 +196,6 @@ void rotateZAxis(float angle)
 */
 void ReferenceView()
 {	
-	printf("\n Setting view to Reference view.");
 	float angle, temp;
 	
 	centerObject();
@@ -241,7 +240,6 @@ void ReferenceView()
 */
 void PAView()
 {  
-	printf("\n Setting view to PA view.");
 	float angle;
 	
 	ReferenceView();
@@ -259,8 +257,6 @@ void PAView()
 */
 void APView()
 { 
-
-	printf("\n Setting view to AP view.");
 	float angle;
 	
 	PAView();
@@ -273,62 +269,61 @@ void APView()
 */
 void setView(int view)
 {
-	printf("\n Setting view to %d", view);
-	if(view == 6)
-	{
-		ReferenceView();
-		strcpy(ViewName, "Ref");
-	}
-	else if (view == 4)
-	{
-		PAView();
-		strcpy(ViewName, "PA");
-	}
-	else if (view == 2)
-	{
-		APView();
-		strcpy(ViewName, "AP");
-	}
-	else if (view == 3)
-	{
-		APView();
-		rotateYAxis(-PI/6.0);
-		strcpy(ViewName, "RAO");
-	}
-	else if (view == 1)
-	{
-		APView();
-		rotateYAxis(PI/3.0);
-		strcpy(ViewName, "LAO");
-	}
-	else if (view == 7)
-	{
-		APView();
-		rotateYAxis(PI/2.0);
-		strcpy(ViewName, "LL");
-	}
-	else if (view == 9)
-	{
-		APView();
-		rotateYAxis(-PI/2.0);
-		strcpy(ViewName, "RL");
-	}
-	else if (view == 8)
-	{
-		APView();
-		rotateXAxis(PI/2.0);
-		strcpy(ViewName, "SUP");
-	}
-	else if (view == 5)
-	{
-		APView();
-		rotateXAxis(-PI/2.0);
-		strcpy(ViewName, "INF");
-	}
-	else
-	{
-		printf("\n Undefined view reverting back to Ref view.");
-	}
+    if(view == 6)
+    {
+        ReferenceView();
+        strcpy(ViewName, "Ref");
+    }
+    else if(view == 4)
+    {
+        PAView();
+        strcpy(ViewName, "PA");
+    }
+    else if(view == 2)
+    {
+        APView();
+        strcpy(ViewName, "AP");
+    }
+    else if(view == 3)
+    {
+        APView();
+        rotateYAxis(-PI/6.0);
+        strcpy(ViewName, "RAO");
+    }
+    else if(view == 1)
+    {
+        APView();
+        rotateYAxis(PI/3.0);
+        strcpy(ViewName, "LAO");
+    }
+    else if(view == 7)
+    {
+        APView();
+        rotateYAxis(PI/2.0);
+        strcpy(ViewName, "LL");
+    }
+    else if(view == 9)
+    {
+        APView();
+        rotateYAxis(-PI/2.0);
+        strcpy(ViewName, "RL");
+    }
+    else if(view == 8)
+    {
+        APView();
+        rotateXAxis(PI/2.0);
+        strcpy(ViewName, "SUP");
+    }
+    else if(view == 5)
+    {
+        APView();
+        rotateXAxis(-PI/2.0);
+        strcpy(ViewName, "INF");
+    }
+    else
+    {
+        printf("\n Undefined view reverting back to Ref view.");
+    }
 }
 
 /*
@@ -804,30 +799,74 @@ void createGUI()
         }
     }
     
-    // View angle controls
-    if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        // Predefined views
-        if (ImGui::Button("PA"))  { setView(4); drawPicture(); }
-        ImGui::SameLine();
-        if (ImGui::Button("AP"))  { setView(2); drawPicture(); }
-        ImGui::SameLine();
-        if (ImGui::Button("Ref")) { setView(6); drawPicture(); }
-        
-        if (ImGui::Button("LAO")) { setView(1); }
-        ImGui::SameLine();
-        if (ImGui::Button("RAO")) { setView(3); }
-        ImGui::SameLine();
-        if (ImGui::Button("LL"))  { setView(7); }
-        ImGui::SameLine();
-        if (ImGui::Button("RL"))  { setView(9); }
-        
-        if (ImGui::Button("SUP")) { setView(8); }
-        ImGui::SameLine();
-        if (ImGui::Button("INF")) { setView(5); }
-        
-        if (ImGui::Button("Recenter")) { centerObject(); drawPicture(); }
-    }
+		// View angle controls
+	if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		// Predefined views
+		if (ImGui::Button("PA"))
+		{ 
+			setView(4); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("AP"))  
+		{
+			setView(2); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Ref"))
+		{ 
+			setView(6); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		
+		if (ImGui::Button("LAO"))
+		{ 
+			setView(1); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("RAO"))
+		{ 
+			setView(3); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("LL"))
+		{ 
+			setView(7); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+
+
+		if (ImGui::Button("RL"))
+		{ 
+			setView(9); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGUI::SameLine();
+		if (ImGui::Button("SUP"))
+		{ 
+			setView(8); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("INF"))
+		{ 
+			setView(5); 
+			copyNodesToGPU(); 
+			drawPicture(); 
+		}
+	}
     
 	// Mouse mode selection
 	if (ImGui::CollapsingHeader("Mouse Functions", ImGuiTreeNodeFlags_DefaultOpen))
