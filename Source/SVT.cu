@@ -21,6 +21,8 @@
 #include "./viewDrawAndTerminalFunctions.h"
 #include "./cudaFunctions.h"
 
+std::chrono::time_point<std::chrono::steady_clock> simulationStartTime;
+
 /*
  This function is called by the openGL idle function. Hence this function is called every time openGL is not doing anything else,
  which is most of the time.
@@ -40,56 +42,87 @@
 
 void nBody(double dt)
 {	
-	if(!Simulation.isPaused) 
-	{	
-		if(Simulation.ContractionisOn)
-		{
-			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
-			cudaErrorCheck(__FILE__, __LINE__);
-			// cudaDeviceSynchronize();
-		}
 
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
+	//no need to check if we're paused because we handle that in main
+
+	// Start the timer when the simulation first begins running
+	if(SpeedTesting && !Simulation.isPaused && SimulationJustStarted) 
+	{
+		simulationStartTime = std::chrono::steady_clock::now();
+		SimulationJustStarted = false;
+		printf("Starting simulation timer...\n");
+	}
+
+
+	if(Simulation.ContractionisOn)
+	{
+		getForces<<<GridNodes, BlockNodes, 0, computeStream>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 		cudaErrorCheck(__FILE__, __LINE__);
 		// cudaDeviceSynchronize();
+	}
 
-		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
-		cudaErrorCheck(__FILE__, __LINE__);
-		cudaDeviceSynchronize(); //only synch when we need to get off the GPU
-		
-		if(Simulation.ContractionisOn)
-		{
-			RecenterCount++;
-			if(RecenterCount == RecenterRate) 
-			{
-				recenter<<<1, BLOCKCENTEROFMASS>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
-				cudaErrorCheck(__FILE__, __LINE__);
-				RecenterCount = 0;
-			}
-		}
-		
-		// Update draw timer
-		DrawTimer++;
-		if(DrawTimer >= DrawRate) 
-		{
-			copyNodesMusclesFromGPU();
-			Simulation.needsRedraw = true;
-			DrawTimer = 0;
-		}
-		
-		PrintTimer += dt;
-		if(PrintRate <= PrintTimer) 
-		{
-			terminalPrint();
-			PrintTimer = 0.0;
-		}
-		
-		RunTime += dt; 
-	}
-	else
+	updateNodes<<<GridNodes, BlockNodes, 0, computeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
+	cudaErrorCheck(__FILE__, __LINE__);
+	// cudaDeviceSynchronize();
+
+	updateMuscles<<<GridMuscles, BlockMuscles, 0, computeStream>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	//cudaDeviceSynchronize(); //Don't need this either since streams make sure we're done after each kernel call
+	
+	if(Simulation.ContractionisOn)
 	{
-		Simulation.needsRedraw = true; //if paused, we still want to redraw the screen
+		RecenterCount++;
+		if(RecenterCount == RecenterRate) 
+		{
+			recenter<<<1, BLOCKCENTEROFMASS, 0, computeStream>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
+			cudaErrorCheck(__FILE__, __LINE__);
+			RecenterCount = 0;
+		}
 	}
+	
+	//We have to draw every frame in GLFW interestingly enough
+	//Why? See My GUI Log
+	// // Update draw timer
+	// DrawTimer++;
+	// if(DrawTimer >= DrawRate) 
+	// {
+	// 	copyNodesMusclesFromGPU();
+	// 	Simulation.needsRedraw = true;
+	// 	DrawTimer = 0;
+	// }
+	
+	PrintTimer += dt;
+	if(PrintRate <= PrintTimer) 
+	{
+		cudaStreamSynchronize(computeStream); 
+		terminalPrint();
+		PrintTimer = 0.0;
+	}
+
+	// Add automatic pause at 10ms
+	if(RunTime >= 10.0 && SpeedTesting) 
+	{
+		// Calculate elapsed real time
+		auto currentTime = std::chrono::steady_clock::now();
+		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - simulationStartTime);
+		double elapsedSeconds = elapsedTime.count() / 1000.0;
+	
+		Simulation.isPaused = true;
+
+		cudaStreamSynchronize(computeStream); //wait for the compute stream to finish before copying back to CPU
+		cudaStreamSynchronize(memoryStream); //wait for the memory stream to finis what it's doing too
+		copyNodesMusclesFromGPU();
+		drawPicture();
+		terminalPrint();
+		printf("\nSimulation automatically paused at RunTime = %.2f ms\n", RunTime);
+		printf("Elapsed real time: %.3f seconds\n", elapsedSeconds);
+		// Force an update of the display and terminal when we pause
+
+	}
+	
+	RunTime += dt; 
+	
 }
 
 /*
@@ -307,6 +340,10 @@ void readSimulationParameters()
 */
 void setup()
 {	
+
+	SimulationJustStarted = true; //used for speed testing
+	SpeedTesting = false; // Set to true if you want to test the speed of the simulation. This will automatically pause the simulation after 10ms of run time.
+
 	// Seeding the random number generator.
 	time_t t;
 	srand((unsigned) time(&t));
@@ -350,8 +387,17 @@ void setup()
 	
 	// Setting up the CUDA parallel structure to be used.
 	setupCudaEnvironment();
+
+	//create CUDA streams for async memory copy and compute
+	cudaStreamCreate(&computeStream);
+	cudaStreamCreate(&memoryStream);
 	
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
+
+	// Use pinned memory for faster transfers
+	cudaHostRegister(Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostRegisterDefault);
+	cudaHostRegister(Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostRegisterDefault);
+
 	copyNodesMusclesToGPU();
         
 	printf("\n");
@@ -499,24 +545,34 @@ int main(int argc, char** argv)
 
 
 	// Main loop
-    while (!glfwWindowShouldClose(Window))
-    {
+	while (!glfwWindowShouldClose(Window))
+	{
 		glfwPollEvents();
-    
+
 		// Start ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		
-		// Update physics
-		nBody(Dt);
-		
-		// Draw scene if needed based on draw rate
-		if (Simulation.needsRedraw) 
+		// Update physics --multiple steps per frame for performance
+		if (!Simulation.isPaused) 
 		{
-			drawPicture();
-			Simulation.needsRedraw = false;
+			// Execute nBody DrawRate times before we draw
+			for (int i = 0; i < DrawRate; i++) 
+			{
+				nBody(Dt);
+				
+				// Check if we hit the 10ms mark and need to pause
+				if (Simulation.isPaused) {
+					break;  // Exit the loop if simulation gets paused
+				}
+			}
 		}
+		
+		// Always draw every frame - this is critical for GLFW performance
+		cudaStreamSynchronize(computeStream); 
+		copyNodesMusclesFromGPU();
+		drawPicture();
 		
 		// Create and render GUI
 		createGUI();
@@ -525,19 +581,11 @@ int main(int argc, char** argv)
 		
 		// Swap buffers once per frame
 		glfwSwapBuffers(Window);
-    }
-	
-	//glutMouseFunc(mouseWheelCallback);
-	//glutMouseWheelFunc(mouseWheelCallback);
-	//glutMotionFunc(mouseMotionCallback);
-    // 	glutPassiveMotionFunc(mousePassiveMotionCallback);
-	// glutDisplayFunc(Display);
-	// glutReshapeFunc(reshape);
-	// glutMouseFunc(myMouse);
-	// glutKeyboardFunc(KeyPressed);
-	// glutIdleFunc(idle);
-	// glutSetCursor(GLUT_CURSOR_DESTROY);
-	// glEnable(GL_DEPTH_TEST);
+	}
+		
+	//Destroy streams
+	cudaStreamDestroy(computeStream);
+    cudaStreamDestroy(memoryStream);
 
 	//free up memory
 	free(Node);

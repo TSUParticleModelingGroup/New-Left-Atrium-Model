@@ -483,39 +483,47 @@ void cudaErrorCheck(const char *file, int line)
 */
 void copyNodesMusclesToGPU()
 {
-	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
+    cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    // Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
 
 /*
- Copies nodes and muscle files down from the GPU.
-*/
+ * Copies nodes and muscle files down from the GPU.
+ */
 void copyNodesMusclesFromGPU()
 {
-	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
+    cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    // Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
 
-void copyPositionsFromGPU()
+void copyNodesFromGPU()
 {
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		cudaMemcpy(&Node[i].position, &NodeGPU[i].position, sizeof(float4), cudaMemcpyDeviceToHost);
-		cudaErrorCheck(__FILE__, __LINE__);
-	}
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
 
-void copyPositionsToGPU()
+void copyNodesToGPU()
 {
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		cudaMemcpy(&NodeGPU[i].position, &Node[i].position, sizeof(float4), cudaMemcpyHostToDevice);
-		cudaErrorCheck(__FILE__, __LINE__);
-	}
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
 
 

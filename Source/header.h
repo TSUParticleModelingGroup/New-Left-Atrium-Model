@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <chrono>
 
 // OpenGL headers - GLAD must come BEFORE GLFW
 #include "../include/glad/glad.h"
@@ -135,6 +136,9 @@ int* Buffer; // Buffer where you create each frame for a movie or the one frame 
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
 
+//CUDA streams for overlapping memory and kernel operations
+cudaStream_t computeStream, memoryStream;
+
 // This is the node that the beat initiates from.
 int PulsePointNode;
 
@@ -218,6 +222,11 @@ int RecenterCount;
 int RecenterRate;
 double RunTime;
 
+//ADDED FOR BENCHMARKING, CLEAN UP IF NEEDED
+bool SpeedTesting;
+bool SimulationJustStarted;
+
+
 // These keep track of where the view is as you zoom in and out and rotate.
 float4 CenterOfSimulation;
 float4 AngleOfSimulation;
@@ -259,8 +268,8 @@ __global__ void recenter(nodeAttributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
-void copyPositionsFromGPU();
-void copyPositionsToGPU();
+void copyNodesFromGPU();
+void copyNodesToGPU();
 
 // Functions in the setNodesAndMuscles.h file.
 void setNodesFromBlenderFile();

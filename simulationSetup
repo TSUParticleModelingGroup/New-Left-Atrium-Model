@@ -161,7 +161,7 @@ The length of time between heart beats.
 A 1000 milliseconds is 60 beats per minute.
 Should be a float.
 
---BeatPeriod = 10.0;
+--BeatPeriod = 600.0;
 
 How often you update the terminal, in milliseconds.
 Should be a float.
@@ -171,7 +171,7 @@ Should be a float.
 How often you update the picture of the simulation to the screen. This is in iterations not time.
 Should be an int.
 
---DrawRate = 10;
+--DrawRate = 100;
 
 Your time step, the fraction of the time unit for each iteration. 
 We suggest a value between 0.0001 and 0.001. 

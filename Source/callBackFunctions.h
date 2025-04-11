@@ -834,7 +834,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
     // WASD movement keys
     if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -850,12 +850,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.x += dAngle;
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     if(key == GLFW_KEY_S)  // Rotate clockwise on the x-axis
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -871,12 +871,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.x -= dAngle;
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     if(key == GLFW_KEY_D)  // Rotate counterclockwise on the y-axis
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -892,12 +892,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.y -= dAngle;
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     if(key == GLFW_KEY_A)  // Rotate clockwise on the y-axis
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         centerOfMass = findCenterOfMass();
         for(int i = 0; i < NumberOfNodes; i++)
         {
@@ -913,12 +913,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         drawPicture();
         AngleOfSimulation.y += dAngle;
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     if(key == GLFW_KEY_Z)
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         if(mods & GLFW_MOD_SHIFT)  // Uppercase Z - Rotate clockwise on the z-axis
         {
             centerOfMass = findCenterOfMass();
@@ -955,12 +955,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             drawPicture();
             AngleOfSimulation.z += dAngle;
         }
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     if(key == GLFW_KEY_E)
     {
-		copyPositionsFromGPU();
+		copyNodesFromGPU();
         if(mods & GLFW_MOD_SHIFT)  // Uppercase E - Zoom out
         {
             for(int i = 0; i < NumberOfNodes; i++)
@@ -987,7 +987,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             CenterOfSimulation.z -= zoom*lookVector.z;
             drawPicture();
         }
-		copyPositionsToGPU();
+		copyNodesToGPU();
     }
     
     // Special character functions (with shift key)
