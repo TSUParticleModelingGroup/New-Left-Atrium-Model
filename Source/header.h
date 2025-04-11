@@ -16,7 +16,9 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <chrono>
+#include <vector> //needed for VBOs
+
+#include <chrono> //needed for speed testing
 
 // OpenGL headers - GLAD must come BEFORE GLFW
 #include "../include/glad/glad.h"
@@ -112,7 +114,12 @@ struct simulationSwitchesStructure
 	// orient yourself.
 	int DrawFrontHalfFlag;
 
-	bool needsRedraw; // This is used to tell the program to redraw the screen when it is needed.
+
+	// For Find Nodes functionality
+	//These need to be globals or they get wiped when the GUI redraws
+	bool nodesFound;       // Whether nodes have been identified
+    int frontNodeIndex;    // Index of the frontmost node (max Z)
+    int topNodeIndex;      // Index of the topmost node (max Y)
 };
 
 // Globals Start ******************************************
@@ -138,6 +145,11 @@ dim3 BlockMuscles, GridMuscles;
 
 //CUDA streams for overlapping memory and kernel operations
 cudaStream_t computeStream, memoryStream;
+
+//To use VBOs for sphere rendering
+GLuint sphereVBO, sphereIBO; // Vertex Buffer Object and Index Buffer Object for sphere rendering, Vertex is the sphere's vertices and Index is the order in which to draw them
+GLuint numSphereVertices, numSphereIndices; // Number of vertices and indices in the sphere geometry
+
 
 // This is the node that the beat initiates from.
 int PulsePointNode;
@@ -287,6 +299,8 @@ void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
 void renderSphere(float, int, int);
+void createSphereVBO(float, int, int);
+void renderSphereVBO();
 void orthogonalView();
 void frustumView();
 float4 findCenterOfMass();

@@ -352,6 +352,11 @@ void setup()
 	RefractoryPeriodAdjustmentMultiplier = 1.0;
 	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 
+	// Initialize Find Nodes state
+	Simulation.nodesFound = false;
+	Simulation.frontNodeIndex = -1; //both init'd to -1 since we haven't found any nodes yet
+	Simulation.topNodeIndex = -1;
+
 	// Getting user inputs.
 	readSimulationParameters();
 	
@@ -469,6 +474,9 @@ int main(int argc, char** argv)
 		glfwTerminate();
 		return -1;
 	}
+
+	//create a sphere VBO for drawing the nodes
+	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
 
 	//these set up our callbacks, most have been changed to adapters until GUI is implemented
 	glfwSetFramebufferSizeCallback(Window, reshape);  //sets the callback for the window resizing

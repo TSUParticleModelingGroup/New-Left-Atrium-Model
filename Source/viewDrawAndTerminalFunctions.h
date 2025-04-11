@@ -28,7 +28,7 @@
  This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
 */
 
-// Add this to a utility file
+// Add this to a utility file, only used for the mouse selection since it's just 1 object
 void renderSphere(float radius, int slices, int stacks) 
 {
     // Sphere geometry parameters
@@ -60,6 +60,108 @@ void renderSphere(float radius, int slices, int stacks)
         }
         glEnd();
     }
+}
+
+// Function to render a sphere using a VBO
+// This function creates a VBO for a sphere and binds it for rendering.
+void createSphereVBO(float radius, int slices, int stacks)
+{
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+    
+    // Generate sphere vertices with positions and normals
+    for (int i = 0; i <= stacks; ++i) 
+    {
+        float phi = PI * i / stacks;
+        float sinPhi = sin(phi);
+        float cosPhi = cos(phi);
+        
+        for (int j = 0; j <= slices; ++j) 
+        {
+            float theta = 2.0f * PI * j / slices;
+            float sinTheta = sin(theta);
+            float cosTheta = cos(theta);
+            
+            // Vertex position (x, y, z)
+            float x = radius * sinPhi * cosTheta;
+            float y = radius * cosPhi;
+            float z = radius * sinPhi * sinTheta;
+            
+            // Normal vector (normalized position for sphere)
+            float nx = sinPhi * cosTheta;
+            float ny = cosPhi;
+            float nz = sinPhi * sinTheta;
+            
+            // Add vertex (position + normal)
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(z);
+            vertices.push_back(nx);
+            vertices.push_back(ny);
+            vertices.push_back(nz);
+        }
+    }
+    
+    // Generate indices for triangle strips
+    for (int i = 0; i < stacks; ++i) 
+    {
+        for (int j = 0; j < slices; ++j) 
+        {
+            int first = i * (slices + 1) + j;
+            int second = first + slices + 1;
+            
+            indices.push_back(first);
+            indices.push_back(second);
+            indices.push_back(first + 1);
+            
+            indices.push_back(second);
+            indices.push_back(second + 1);
+            indices.push_back(first + 1);
+        }
+    }
+    
+    numSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
+    numSphereIndices = indices.size();
+    
+    // Create and bind the vertex buffer
+    glGenBuffers(1, &sphereVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    
+    // Create and bind the index buffer
+    glGenBuffers(1, &sphereIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    
+    // Unbind buffers
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void renderSphereVBO() 
+{
+    // Bind the VBO and IBO
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+    
+    // Enable vertex and normal arrays
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    
+    // Set up pointers to vertex and normal data
+    glVertexPointer(3, GL_FLOAT, 6 * sizeof(float), 0);
+    glNormalPointer(GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    
+    // Draw the sphere
+    glDrawElements(GL_TRIANGLES, numSphereIndices, GL_UNSIGNED_INT, 0);
+    
+    // Disable arrays
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    
+    // Unbind buffers
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void orthogonalView()
@@ -345,7 +447,7 @@ void drawPicture()
 
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
-	renderSphere(0.03*RadiusOfLeftAtrium,20,20);
+	renderSphereVBO();
 	glPopMatrix();
 	
 	// Drawing center node
@@ -355,7 +457,7 @@ void drawPicture()
 		glColor3d(1.0,1.0,1.0);
 		glPushMatrix();
 		glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
-		renderSphere(0.02*RadiusOfLeftAtrium,20,20);
+		renderSphereVBO();
 		glPopMatrix();
 	}
 
@@ -371,7 +473,7 @@ void drawPicture()
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
 					glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-					renderSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
+					renderSphereVBO();
 					glPopMatrix();
 				}
 			}
@@ -380,7 +482,7 @@ void drawPicture()
 				glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 				glPushMatrix();
 				glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-				renderSphere(NodeRadiusAdjustment*RadiusOfLeftAtrium,20,20);
+				renderSphereVBO();
 				glPopMatrix();
 			}	
 		}
@@ -852,7 +954,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		ImGUI::SameLine();
+		ImGui::SameLine();
 		if (ImGui::Button("SUP"))
 		{ 
 			setView(8); 
@@ -963,34 +1065,34 @@ void createGUI()
 		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f")) 
 		{
 			HitMultiplier = hitMult;
+		}
+
+		//Muscle adjustment sliders
+		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
+		{
+			ImGui::Separator();
+			ImGui::Text("Muscle Adjustment Parameters");
 			
-			// Add sliders for muscle adjustment parameters when in those modes
-			if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
+			float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
+			if (ImGui::SliderFloat("Refractory Period Multiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
 			{
-				ImGui::Separator();
-				ImGui::Text("Muscle Adjustment Parameters");
-				
-				float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
-				if (ImGui::SliderFloat("Refractory Period Multiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
-				{
-					RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Reset##1")) 
-				{
-					RefractoryPeriodAdjustmentMultiplier = 1.0f;
-				}
-				
-				float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
-				if (ImGui::SliderFloat("Conduction Velocity Multiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
-				{
-					MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Reset##2"))
-				{
-					MuscleConductionVelocityAdjustmentMultiplier = 1.0f;
-				}
+				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset##1")) 
+			{
+				RefractoryPeriodAdjustmentMultiplier = 1.0f;
+			}
+			
+			float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
+			if (ImGui::SliderFloat("Conduction Velocity Multiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
+			{
+				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset##2"))
+			{
+				MuscleConductionVelocityAdjustmentMultiplier = 1.0f;
 			}
 		}
 	}
@@ -1060,12 +1162,6 @@ void createGUI()
                         cudaErrorCheck(__FILE__, __LINE__);
                     }
                     
-                    //progress bar to show how far along the ectopic beat is in its cycle
-                    // float phasePercent = (Node[i].beatTimer / Node[i].beatPeriod) * 100.0f;
-                    // char progressLabel[32];
-                    // sprintf(progressLabel, "%% of cycle: %.1f", phasePercent); //sprintf is used to format the string
-                    // ImGui::ProgressBar(Node[i].beatTimer / Node[i].beatPeriod, ImVec2(-1, 0), progressLabel);
-                    
 					//button to remove ectopic beat nodes
                     if (ImGui::Button("Delete Ectopic Beat")) 
 					{
@@ -1098,7 +1194,20 @@ void createGUI()
         
         if (ImGui::Button("Find Nodes"))
 		{
-            copyNodesMusclesFromGPU(); 
+            copyNodesMusclesFromGPU();
+
+			//Recolor the previous nodes to green
+
+			Node[Simulation.frontNodeIndex].color.x = 0.0;
+			Node[Simulation.frontNodeIndex].color.y = 1.0;
+			Node[Simulation.frontNodeIndex].color.z = 0.0;
+
+			Node[Simulation.topNodeIndex].color.x = 0.0;
+			Node[Simulation.topNodeIndex].color.y = 1.0;
+			Node[Simulation.topNodeIndex].color.z = 0.0;
+
+
+
             float maxZ = -10000.0;
             float maxY = -10000.0;
             int indexZ = -1;
@@ -1127,12 +1236,22 @@ void createGUI()
             Node[indexY].color.y = 0.0;
             Node[indexY].color.z = 1.0;
             
-            ImGui::Text("Front node index = %d", indexZ);
-            ImGui::Text("Top node index = %d", indexY);
+			// Store indices for persistent display
+			Simulation.frontNodeIndex = indexZ;
+			Simulation.topNodeIndex = indexY;
+			Simulation.nodesFound = true;
             
             drawPicture();
             copyNodesMusclesToGPU();
         }
+
+		// Display the information outside the button handler so it persists
+		if (Simulation.nodesFound) 
+		{
+			ImGui::Separator();
+			ImGui::Text("Front node (blue): %d", Simulation.frontNodeIndex);
+			ImGui::Text("Top node (purple): %d", Simulation.topNodeIndex);
+		}
     }
     
     ImGui::End();

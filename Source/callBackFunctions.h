@@ -1085,12 +1085,13 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
 
-	// Get ImGui IO to check if it's capturing input
-	ImGuiIO& io = ImGui::GetIO();
+	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
+	// // Get ImGui IO to check if it's capturing input
+	// ImGuiIO& io = ImGui::GetIO();
     
-    // If ImGui is handling this event, return
-    if (io.WantCaptureKeyboard)
-        return;
+    // // If ImGui is handling this event, return
+    // if (io.WantCaptureKeyboard)
+    //     return;
 	
 	float d, dx, dy, dz;
 	float hit;
