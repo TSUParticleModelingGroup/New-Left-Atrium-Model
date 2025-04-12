@@ -816,6 +816,22 @@ void helpMenu()
 	printf("\n");
 }
 
+
+/* 
+	 This function creates the GUI using ImGui.
+	 This is where the actual window is built
+
+	 All ImGui fields need to be in an if statement to check if the value has changed.
+	 ImGui::CollapsingHeader to create a collapsible section
+	 ImGui::Text to display text
+	 ImGui::Input<Type> to create input fields for user input
+	 ImGui::Slider<Type> to create sliders for user input
+	 ImGui::Checkbox to create checkboxes for toggling options (must be bools)
+	 ImGui::Combo to create dropdown menus for selecting options (must be int pointers)
+	 ImGui::Button to create buttons for actions
+	 ImGui::TextColored to display colored text (use vec4 to apply the color)
+
+*/
 void createGUI()
 {
     // Setup ImGui window flags
@@ -834,6 +850,7 @@ void createGUI()
     // General simulation controls
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen))
     {
+
         // Contraction toggle (do we need this?? added it anyways)
         // bool contractionOn = Simulation.ContractionisOn;
         // if (ImGui::Checkbox("Contraction", &contractionOn)) 
@@ -841,18 +858,22 @@ void createGUI()
         //     Simulation.ContractionisOn = contractionOn;
         // }
         
+
+
         // View controls
-        bool frontHalf = Simulation.DrawFrontHalfFlag == 1;
-        if (ImGui::Checkbox("Front Half Only", &frontHalf))
+        bool frontHalf = Simulation.DrawFrontHalfFlag == 1; //Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
+        if(ImGui::Checkbox("Front Half Only", &frontHalf)) //checkbox for if we only want to draw the first half of the nodes
         {
             Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
             drawPicture();
         }
         
         // Node display options
-        const char* nodeOptions[] = { "Off", "Half", "Full" };
+        const char* nodeOptions[] = { "Off", "Half", "Full" }; //array of options for the dropdown menu
         int nodeDisplay = Simulation.DrawNodesFlag;
-        if (ImGui::Combo("Nodes Display", &nodeDisplay, nodeOptions, 3))
+
+		//Combo makes a dropdown menu with the options in the array
+        if(ImGui::Combo("Nodes Display", &nodeDisplay, nodeOptions, 3)) //args are menu name, pointer to the selected option, array of text options, # of options
         {
             if (nodeDisplay != Simulation.DrawNodesFlag) // Only update if the value changes
             {
@@ -877,23 +898,24 @@ void createGUI()
         //     }
         // }
         
-        // Recording
+        // Button for recording
 		if (Simulation.isRecording)
 		{
 			if (ImGui::Button("Stop Recording"))
 			{
-			movieOff();
-			Simulation.isRecording = false;
+				movieOff();
+				Simulation.isRecording = false;
 			}
 		}
 		else
 		{
 			if (ImGui::Button("Record Video"))
 			{
-			movieOn();
-			Simulation.isRecording = true;
+				movieOn();
+				Simulation.isRecording = true;
 			}
 		}
+
         // Screenshot
         if (ImGui::Button("Screenshot"))
         {
@@ -911,7 +933,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		ImGui::SameLine();
+		ImGui::SameLine(); //Same line just tells the elements to be on the same line
 		if (ImGui::Button("AP"))  
 		{
 			setView(2); 
@@ -926,6 +948,7 @@ void createGUI()
 			drawPicture(); 
 		}
 		
+
 		if (ImGui::Button("LAO"))
 		{ 
 			setView(1); 
@@ -1179,7 +1202,7 @@ void createGUI()
         
         if (!hasEctopicBeats) //if there are no ectopic beats, show a message
 		{
-            ImGui::TextDisabled("No ectopic beats configured.");
+            ImGui::TextDisabled("No ectopic beats configured."); //TextDisabled makes it greyed out
             ImGui::Text("Use the Ectopic Beat button to add one.");
         }
     }
