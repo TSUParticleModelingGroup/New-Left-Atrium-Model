@@ -1,5 +1,3 @@
-#!/bin/bash
-# filepath: c:\Users\Mason\Downloads\Code\New-Left-Atrium-Model\compile.sh
 
 # Compiles and runs the program
 
@@ -8,7 +6,7 @@
 
 cd Source
 
-#Now we need to compile imGUI files too, they feel left out
+#compile the ImGui files
 
 nvcc -c imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp
 nvcc -c imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp
@@ -19,4 +17,7 @@ nvcc SVT.cu glad.c\
      -o svt \
      -lglfw -lGL -lGLU -lm -lpthread -ldl -lX11 -lXrandr -lXinerama -lXcursor -lXi
 
+#move svt and all .o files to ExecutableFiles
 mv svt ../ExecutableFiles
+
+mv *.o ../ExecutableFiles

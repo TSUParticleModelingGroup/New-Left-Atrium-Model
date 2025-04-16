@@ -7,6 +7,8 @@
  
  The functions are listed below in the order they appear.
  void renderSphere(float, int, int);
+ void createSphereVBO(float, int, int);
+ void renderSphereVBO();
  void orthogonalView();
  void frustumView();
  float4 findCenterOfMass();
@@ -19,8 +21,7 @@
  void APView();
  void setView(int);
  void drawPicture();
- void terminalPrint();
- void helpMenu();
+ void createGUI();
 */
 
 /*
@@ -603,241 +604,6 @@ void drawPicture()
 		fwrite(Buffer, sizeof(int)*XWindowSize*YWindowSize, 1, MovieFile);
 	}
 
-	//glfwSwapBuffers(Window);
-}
-
-/*
- This function prints all the run information to the terminal screen.
-*/
-void terminalPrint()
-{
-	//system("clear");
-	//printf("\033[0;34m"); // blue.
-	//printf("\033[0;36m"); // cyan
-	//printf("\033[0;33m"); // yellow
-	//printf("\033[0;31m"); // red
-	//printf("\033[0;32m"); // green
-	printf("\033[0m"); // back to white.
-	
-	printf("\n");
-	printf("\033[0;33m");
-	printf("\n **************************** Simulation Stats ****************************");
-	printf("\033[0m");
-	
-	printf("\n Total run time = %7.2f milliseconds", RunTime);
-	
-	//printf("\n Driving beat node is %d.", EctopicEvents[0].node);
-	printf("\n The beat rate is %f milliseconds.", Node[PulsePointNode].beatPeriod);
-	printf("\n");
-	
-	if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
-	{
-		printf("\n Muscle refractory period multiplier =");
-		printf("\033[0;36m");
-		printf(" %f", RefractoryPeriodAdjustmentMultiplier);
-		printf("\033[0m");
-		printf("\n Muscle electrical conduction speed multiplier =");
-		printf("\033[0;36m");
-		printf(" %f", MuscleConductionVelocityAdjustmentMultiplier);
-		printf("\033[0m");
-	}
-	
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(Node[i].isBeatNode && i != PulsePointNode)
-		{
-			printf("\n Ectopic Beat Node = %d Rate = %f milliseconds.", i, Node[i].beatPeriod);
-		}
-	}
-	
-	printf("\033[0;33m");
-	printf("\n **************************** Terminal Commands ****************************");
-	printf("\033[0m");
-	printf("\n h: Help");
-	printf("\n c: Recenter View");
-	printf("\n S: Screenshot");
-	printf("\n k: Save Current Run");
-	printf("\n B: Lengthen Beat");
-	printf("\n b: Shorten Beat");
-	printf("\n ?: Find Front and Top Nodes");
-	printf("\n");
-	
-	printf("\n Toggles");
-	printf("\n r: Run/Pause            - ");
-	if (Simulation.isPaused == false) 
-	{
-		printf("\033[0;32m");
-		printf(BOLD_ON "Simulation Running" BOLD_OFF);
-	} 
-	else 
-	{
-		printf("\033[0;31m");
-		printf(BOLD_ON "Simulation Paused" BOLD_OFF);
-	}
-	
-	printf("\n u: Contraction On/Off   - ");
-	if (Simulation.ContractionisOn == true) 
-	{
-		printf("\033[0;32m");
-		printf(BOLD_ON "Muscle Contractions on" BOLD_OFF);
-	} 
-	else 
-	{
-		printf("\033[0;31m");
-		printf(BOLD_ON "Muscle Contractions off" BOLD_OFF);
-	}
-	
-	printf("\n g: Front/Full           - ");
-	if (Simulation.DrawFrontHalfFlag == 0) printf(BOLD_ON "Full" BOLD_OFF); else printf(BOLD_ON "Front" BOLD_OFF);
-	printf("\n n: Nodes Off/Half/Full  - ");
-	if (Simulation.DrawNodesFlag == 0) printf(BOLD_ON "Off" BOLD_OFF); else if (Simulation.DrawNodesFlag == 1) printf(BOLD_ON "Half" BOLD_OFF); else printf(BOLD_ON "Full" BOLD_OFF);
-	printf("\n v: Orthogonal/Frustum   - ");
-	if (Simulation.ViewFlag == 0) printf(BOLD_ON "Orthogonal" BOLD_OFF); else printf(BOLD_ON "Frustum" BOLD_OFF);
-	printf("\n m: Video On/Off         - ");
-	if (!Simulation.isRecording) 
-	{
-		printf("\033[0;31m");
-		printf(BOLD_ON "Video Recording Off" BOLD_OFF); 
-	}
-	else 
-	{
-		printf("\033[0;32m");
-		printf(BOLD_ON "Video Recording On" BOLD_OFF);
-	}
-	printf("\n");
-	printf("\n Views" );
-	
-	printf("\n 7 8 9 | LL  SUP RL" );
-	printf("\n 4 5 6 | PA  INF Ref" );
-	printf("\n 1 2 3 | LOA AP  ROA" );
-	
-	printf("   You are in");
-	printf("\033[0;36m");
-	printf(BOLD_ON " %s", ViewName);
-	printf("\033[0m" BOLD_OFF);
-	printf(" view");
-	
-	printf("\n");
-	printf("\n Adjust views");
-	printf("\n w/s: CCW/CW x-axis");
-	printf("\n d/a: CCW/CW y-axis");
-	printf("\n z/Z: CCW/CW z-axis");
-	printf("\n e/E: In/Out Zoom");
-	printf("\n");
-	printf("\n Set Mouse actions");
-	
-	printf("\n !: Ablate ---------------------- ");
-	if (Simulation.isInAblateMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n @: Ectopic Beat ---------------- ");
-	if (Simulation.isInEctopicBeatMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n #: Ectopic Trigger ------------- ");
-	if (Simulation.isInEctopicEventMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n $: Muscle Adjustment Area Mode - ");
-	if (Simulation.isInAdjustMuscleAreaMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n %%: Muscle Adjustment Line Mode - ");
-	if (Simulation.isInAdjustMuscleLineMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n ^: Identify Node --------------- ");
-	if (Simulation.isInFindNodeMode) 
-	{
-		printf("\033[0;36m");
-		printf(BOLD_ON "On" BOLD_OFF); 
-	}
-	else printf(BOLD_ON "Off" BOLD_OFF);
-	
-	printf("\n ): Turns all Mouse functions off.");
-	printf("\n");
-	printf("\n [/]: (left/right bracket) Increase/Decrease mouse selection area.");
-	printf("\n      The current selection area is");
-	printf("\033[0;36m");
-	printf(" %f", HitMultiplier);
-	printf("\033[0m");
-	printf(" times the radius of atrium.");
-	printf("\033[0;33m");
-	printf("\n ********************************************************************");
-	printf("\033[0m");
-	printf("\n");
-}
-
-/*
- This function prints the help menu to the terminal screen.
-*/
-void helpMenu()
-{
-	//system("clear");
-	//Pause = 1;
-	printf("\n The simulation is paused.");
-	printf("\n");
-	printf("\n h: Help");
-	printf("\n q: Quit");
-	printf("\n r: Run/Pause (Toggle)");
-	printf("\n g: View front half only/View full image (Toggle)");
-	printf("\n n: Nodes off/half/full (Toggle)");
-	printf("\n v: Orthogonal/Frustum projection (Toggle)");
-	printf("\n");
-	printf("\n m: Movie on/Movie off (Toggle)");
-	printf("\n S: Screenshot");
-	printf("\n");
-	printf("\n Views: 7 8 9 | LL  SUP RL" );
-	printf("\n Views: 4 5 6 | PA  INF Ref" );
-	printf("\n Views: 1 2 3 | LOA AP  ROA" );
-	printf("\n");
-	printf("\n c: Recenter image");
-	printf("\n w: Counterclockwise rotation x-axis");
-	printf("\n s: Clockwise rotation x-axis");
-	printf("\n d: Counterclockwise rotation y-axis");
-	printf("\n a: Clockwise rotation y-axis");
-	printf("\n z: Counterclockwise rotation z-axis");
-	printf("\n Z: Clockwise rotation z-axis");
-	printf("\n e: Zoom in");
-	printf("\n E: Zoom out");
-	printf("\n");
-	printf("\n [ or ]: Increases/Decrease the selection area of the mouse");
-	printf("\n shift 0: Turns off all mouse action.");
-	printf("\n shift 1: Turns on ablating. Left mouse ablate node. Right mouse undo ablation.");
-	printf("\n shift 2: Turns on ectopic beat. Left mouse set node as an ectopic beat location.");
-	printf("\n Note this action will prompt you to enter the");
-	printf("\n beat period and time offset in the terminal.");
-	printf("\n shift 3: Turns on one ectopic trigger.");
-	printf("\n Left mouse will trigger that node to start a single pulse at that location.");
-	printf("\n shift 4: Turns on muscle adjustments. Left mouse set node muscles adjustments.");
-	printf("\n Note this action will prompt you to entire the ");
-	printf("\n contraction, recharge, and action potential adjustment multiplier in the terminal.");
-	printf("\n shift 5: Turns on find node. Left mouse displays the Id of the node in the terminal.");
-	printf("\n");
-	printf("\n k: Save your current muscle attributes.");
-	printf("\n    (note: previous run files are ignored by git. They must be uploaded manually)");
-	printf("\n ?: Find the up and front node at current view.");
-	printf("\n");
 }
 
 
@@ -854,6 +620,8 @@ void helpMenu()
 	 ImGui::Combo to create dropdown menus for selecting options (must be int pointers)
 	 ImGui::Button to create buttons for actions
 	 ImGui::TextColored to display colored text (use vec4 to apply the color)
+	 ImGui::SameLine to place elements on the same line
+	 ImGui::isItemHovered to check if an item is hovered over (used for tooltips)
 
 */
 void createGUI()
@@ -886,7 +654,7 @@ void createGUI()
 
         // View controls
         bool frontHalf = Simulation.DrawFrontHalfFlag == 1; //Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
-        if(ImGui::Checkbox("Front Half Only", &frontHalf)) //checkbox for if we only want to draw the first half of the nodes
+        if(ImGui::Checkbox("Draw Front Half Only", &frontHalf)) //checkbox for if we only want to draw the first half of the nodes
         {
             Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
             drawPicture();
@@ -897,7 +665,7 @@ void createGUI()
         int nodeDisplay = Simulation.DrawNodesFlag;
 
 		//Combo makes a dropdown menu with the options in the array
-        if(ImGui::Combo("Nodes Display", &nodeDisplay, nodeOptions, 3)) //args are menu name, pointer to the selected option, array of text options, # of options
+        if(ImGui::Combo("Show Nodes", &nodeDisplay, nodeOptions, 3)) //args are menu name, pointer to the selected option, array of text options, # of options
         {
             if (nodeDisplay != Simulation.DrawNodesFlag) // Only update if the value changes
             {
@@ -948,75 +716,132 @@ void createGUI()
     }
     
 		// View angle controls
-	if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen)) //2nd arg is the flags, DefaultOpen means it will be open by default
-	
-	{
-		// Predefined views
-		if (ImGui::Button("PA"))
-		{ 
-			setView(4); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		ImGui::SameLine(); //Same line just tells the elements to be on the same line
-		if (ImGui::Button("AP"))  
+		if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen))//2nd arg is the flags, DefaultOpen means it will be open by default
 		{
-			setView(2); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Ref"))
-		{ 
-			setView(6); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		
+			// Predefined views
+			if (ImGui::Button("PA"))
+			{ 
+				setView(4); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Posterior-Anterior View\nView from back to front");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("AP"))  
+			{
+				setView(2); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Anterior-Posterior View\nView from front to back");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("Ref"))
+			{ 
+				setView(6); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Reference View\nStandard orientation with pulmonary veins visible");
+				ImGui::EndTooltip();
+			}
+			
+			if (ImGui::Button("LAO"))
+			{ 
+				setView(1); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Left Anterior Oblique\nAngled view from front-left");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("RAO"))
+			{ 
+				setView(3); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Right Anterior Oblique\nAngled view from front-right");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("LL"))
+			{ 
+				setView(7); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Left Lateral\nDirect view from left side");
+				ImGui::EndTooltip();
+			}
 
-		if (ImGui::Button("LAO"))
-		{ 
-			setView(1); 
-			copyNodesToGPU(); 
-			drawPicture(); 
+			if (ImGui::Button("RL"))
+			{ 
+				setView(9); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Right Lateral\nDirect view from right side");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("SUP"))
+			{ 
+				setView(8); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Superior View\nView from above (top-down)");
+				ImGui::EndTooltip();
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("INF"))
+			{ 
+				setView(5); 
+				copyNodesToGPU(); 
+				drawPicture(); 
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Inferior View\nView from below (bottom-up)");
+				ImGui::EndTooltip();
+			}
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("RAO"))
-		{ 
-			setView(3); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("LL"))
-		{ 
-			setView(7); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-
-
-		if (ImGui::Button("RL"))
-		{ 
-			setView(9); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("SUP"))
-		{ 
-			setView(8); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("INF"))
-		{ 
-			setView(5); 
-			copyNodesToGPU(); 
-			drawPicture(); 
-		}
-	}
     
 	// Mouse mode selection
 	if (ImGui::CollapsingHeader("Mouse Functions", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1032,6 +857,8 @@ void createGUI()
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
+			ImGui::Text("Click on nodes to ablate");
+			ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
 		}
 		else if (Simulation.isInEctopicBeatMode) 
 		{
@@ -1065,12 +892,24 @@ void createGUI()
 			mouseFunctionsOff();
 			Simulation.isInMouseFunctionMode = false;
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Disables all mouse interaction with the model");
+			ImGui::EndTooltip();
+		}
 
 		if (ImGui::Button("Ablate Mode")) 
 		{
 			mouseAblateMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAblateMode = true;
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to ablate nodes\nRight-click to undo ablation");
+			ImGui::EndTooltip();
 		}
 
 		if (ImGui::Button("Ectopic Beat")) 
@@ -1079,12 +918,24 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicBeatMode = true;
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to set a node as an ectopic beat location\nwith a constant beat period");
+			ImGui::EndTooltip();
+		}
 
 		if (ImGui::Button("Ectopic Trigger")) 
 		{
 			mouseEctopicEventMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicEventMode = true;
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to trigger a single pulse at a node location");
+			ImGui::EndTooltip();
 		}
 
 		if (ImGui::Button("Adjust Area"))
@@ -1093,12 +944,24 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleAreaMode = true;
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to adjust muscle properties in an area\nAffects refractory period and conduction velocit\n\nRight-click to undo adjustment");
+			ImGui::EndTooltip();
+		}
 
 		if (ImGui::Button("Adjust Line")) 
 		{
 			mouseAdjustMusclesLineMode();
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleLineMode = true;
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
+			ImGui::EndTooltip();
 		}
 
 		if (ImGui::Button("Identify Node")) 
@@ -1107,12 +970,25 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInFindNodeMode = true;
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Left-click to display the ID of a node");
+			ImGui::EndTooltip();
+		}
 
 		// Selection area slider
 		float hitMult = HitMultiplier;
-		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) //al
+		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp))
 		{
 			HitMultiplier = hitMult;
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Adjusts the size of the selection area\nLarger values effect more nodes");
+			ImGui::Text("Double-click or click on value to enter manually");
+			ImGui::EndTooltip();
 		}
 
 		//Muscle adjustment sliders
@@ -1120,28 +996,75 @@ void createGUI()
 		{
 			ImGui::Separator(); //add a line to separate the sections
 			ImGui::Text("Muscle Adjustment Parameters");
-			ImGui::Text("");//new line (\n doesn't work)
+			ImGui::NewLine(); //add a new line for spacing
 			
 
 			ImGui::Text("Refractory Period Multiplier");
 			float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
-			// Use ## to create a "hidden" label that doesn't display but provides a unique ID, same principle for the reset button
+			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
 			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
 			{
 				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
 			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
+				ImGui::EndTooltip();
+			}
+
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(60); // Fixed width for input box
+			float originalRefMultiplier = refractoryMultiplier;
+			if (ImGui::InputFloat("##refractoryInput", &refractoryMultiplier, 0, 0, "%.2f"))
+			{
+				// Clamp to valid range
+				refractoryMultiplier = (refractoryMultiplier < 0.1f) ? 0.1f : (refractoryMultiplier > 5.0f ? 5.0f : refractoryMultiplier);
+				
+				// Update if changed
+				if (refractoryMultiplier != originalRefMultiplier)
+				{
+					RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
+				}
+			}
+
+
 			ImGui::SameLine();
 			if (ImGui::Button("Reset##1")) 
 			{
 				RefractoryPeriodAdjustmentMultiplier = 1.0f;
 			}
-			
+
+			// For the Conduction Velocity Multiplier slider:
 			ImGui::Text("Conduction Velocity Multiplier");
 			float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
+			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
 			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
 			{
 				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
 			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
+				ImGui::EndTooltip();
+			}
+
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(60); // Fixed width for input box
+			float originalConductionMultiplier = conductionMultiplier;
+			if (ImGui::InputFloat("##conductionInput", &conductionMultiplier, 0, 0, "%.2f"))
+			{
+				// Clamp to valid range
+				conductionMultiplier = (conductionMultiplier < 0.1f) ? 0.1f : (conductionMultiplier > 5.0f ? 5.0f : conductionMultiplier);
+				
+				// Update if changed
+				if (conductionMultiplier != originalConductionMultiplier)
+				{
+					MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
+				}
+			}
+
 			ImGui::SameLine();
 			if (ImGui::Button("Reset##2"))
 			{
@@ -1153,13 +1076,46 @@ void createGUI()
     // Heartbeat controls
     if (ImGui::CollapsingHeader("Heartbeat Controls"))
     {
+		//Slider for beat period of the Pulse Node
+		ImGui::Text("Beat Period (ms)");
         float beatPeriod = Node[PulsePointNode].beatPeriod;
-        if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
+		float beatPeriodMin = 10.0f; // Minimum value for beat period
+		float beatPeriodMax = 1000.0f; // Maximum value for beat period
+
+        if (ImGui::SliderFloat("##beatPeriodSlider", &beatPeriod, beatPeriodMin, beatPeriodMax, "%.1f ms")) 
 		{
             Node[PulsePointNode].beatPeriod = beatPeriod;
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
-        }
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Adjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
+			ImGui::EndTooltip();
+		}
+
+
+
+		ImGui::SameLine();
+
+		//Input field for beat period of the Pulse Node
+		ImGui::SetNextItemWidth(60);  // Make the input field smaller, fixed 60 pixels
+		
+		float originalBeatPeriod = beatPeriod; //Store the original value to check if it changed
+		if (ImGui::InputFloat("##beatPeriodInput", &beatPeriod, 0, 0, "%.1f")) 
+		{
+			//make sure input is valid
+			beatPeriod = (beatPeriod < beatPeriodMin) ? beatPeriodMin : (beatPeriod >  beatPeriodMax ?  beatPeriodMax : beatPeriod);
+			
+			// If value actually changed, update
+			if (beatPeriod != originalBeatPeriod) 
+			{
+				Node[PulsePointNode].beatPeriod = beatPeriod;
+				cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+				cudaErrorCheck(__FILE__, __LINE__);
+			}
+		}
         
         if (ImGui::Button("+ 10ms")) 
 		{
@@ -1197,25 +1153,77 @@ void createGUI()
                 
                 if (ImGui::TreeNode(nodeName))  //a tree node is a collapsible section, so we can have multiple ectopic beats in the same window
 				{
-					ImGui::Text("Node ID: %d", i);
-				{
-                    float beatPeriod = Node[i].beatPeriod;
-                    if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
+					ImGui::NewLine(); //add a new line for spacing
+
+					ImGui::Text("Ectopic Beat Period (ms)");
+					float beatPeriod = Node[i].beatPeriod;
+
+					ImGui::SetNextItemWidth(150); // Narrower slider so the input box fits better
+
+					if (ImGui::SliderFloat("##EctopicBeatPeriod", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
 					{
-                        Node[i].beatPeriod = beatPeriod;
-                        cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-                        cudaErrorCheck(__FILE__, __LINE__);
-                    }
-                    
-					// Set the time delay for the ectopic beat
-                    float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
-                    if (ImGui::SliderFloat("Time Until Next Beat", &timeDelay, 0.0f, Node[i].beatPeriod, "%.1f ms")) 
+						Node[i].beatPeriod = beatPeriod;
+						cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+						cudaErrorCheck(__FILE__, __LINE__);
+					}
+					if (ImGui::IsItemHovered())
 					{
-                        // Convert back to beatTimer when storing
-                        Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
-                        cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-                        cudaErrorCheck(__FILE__, __LINE__);
-                    }
+						ImGui::BeginTooltip();
+						ImGui::Text("Controls how often this node beats\n\nDrag the slider or enter a precise value in the input box");
+						ImGui::EndTooltip();
+					}
+
+					ImGui::SameLine();
+					ImGui::SetNextItemWidth(60);
+					float originalBeatPeriod = beatPeriod;
+					if (ImGui::InputFloat("##beatPeriodInput", &beatPeriod, 0, 0, "%.1f"))
+					{
+						// Clamp to valid range
+						beatPeriod = (beatPeriod < 10.0f) ? 10.0f : (beatPeriod > 1000.0f ? 1000.0f : beatPeriod);
+						
+						// Update if changed
+						if (beatPeriod != originalBeatPeriod)
+						{
+							Node[i].beatPeriod = beatPeriod;
+							cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+							cudaErrorCheck(__FILE__, __LINE__);
+						}
+					}
+
+					// For the Time Until Next Beat slider:
+					ImGui::Text("Time Until Next Beat (ms)");
+					float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
+					ImGui::SetNextItemWidth(150); // Narrower slider
+					if (ImGui::SliderFloat("##ectopicBeatPeriodDelay", &timeDelay, 0.0f, Node[i].beatPeriod, "%.1f ms")) 
+					{
+						// Convert back to beatTimer when storing
+						Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
+						cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+						cudaErrorCheck(__FILE__, __LINE__);
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::BeginTooltip();
+						ImGui::Text("Controls how long until this node beats\n\nDrag the slider or enter a precise value in the input box");
+						ImGui::EndTooltip();
+					}
+
+					ImGui::SameLine();
+					ImGui::SetNextItemWidth(60);
+					float originalTimeDelay = timeDelay;
+					if (ImGui::InputFloat("##timeDelayInput", &timeDelay, 0, 0, "%.1f"))
+					{
+						// Clamp to valid range
+						timeDelay = (timeDelay < 0.0f) ? 0.0f : (timeDelay > Node[i].beatPeriod ? Node[i].beatPeriod : timeDelay);
+						
+						// Update if changed
+						if (timeDelay != originalTimeDelay)
+						{
+							Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
+							cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+							cudaErrorCheck(__FILE__, __LINE__);
+						}
+					}
                     
 					//button to remove ectopic beat nodes
                     if (ImGui::Button("Delete Ectopic Beat")) 
@@ -1246,6 +1254,12 @@ void createGUI()
 		{
             saveSettings();
         }
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Save current muscle properties and simulation\nsettings to a file for later use");
+			ImGui::EndTooltip();
+		}
         
         if (ImGui::Button("Find Nodes"))
 		{
@@ -1298,6 +1312,12 @@ void createGUI()
             drawPicture(); // Redraw the picture to show the new colors
             copyNodesMusclesToGPU(); // Copy the updated nodes back to GPU (since the color changed)
         }
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomened to draw nodes to see the results clearly");
+			ImGui::EndTooltip();
+		}
 
 		// Display the information outside the button handler so it persists
 		if (Simulation.nodesFound) 
@@ -1307,6 +1327,19 @@ void createGUI()
 			ImGui::Text("Top node (purple): %d", Simulation.topNodeIndex);
 		}
     }
+
+	//Display movement controls
+	if (ImGui::CollapsingHeader("Keyboard Controls"))
+	{
+
+		ImGui::Text("Quit: q");
+		ImGui::NewLine(); //add a new line for spacing
+		ImGui::Text("Rotate X-axis: a/d");
+		ImGui::Text("Rotate Y-axis: w/s");
+		ImGui::Text("Rotate Z-axis: z/Z");
+		ImGui::Text("Zoom In/Out: e/E");
+		
+	}
     
     ImGui::End(); //end the main controls window
     

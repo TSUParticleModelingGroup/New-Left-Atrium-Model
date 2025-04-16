@@ -18,8 +18,6 @@
 #include <stdbool.h>
 #include <vector> //needed for VBOs
 
-#include <chrono> //needed for speed testing
-
 // OpenGL headers - GLAD must come BEFORE GLFW
 #include "../include/glad/glad.h"
 #include <GL/glu.h>
@@ -234,10 +232,6 @@ int RecenterCount;
 int RecenterRate;
 double RunTime;
 
-//ADDED FOR BENCHMARKING, CLEAN UP IF NEEDED
-bool SpeedTesting;
-bool SimulationJustStarted;
-
 
 // These keep track of where the view is as you zoom in and out and rotate.
 float4 CenterOfSimulation;
@@ -313,8 +307,6 @@ void PAView();
 void APView();
 void setView(int);
 void drawPicture();
-void terminalPrint();
-void helpMenu();
 void createGUI();
 
 // Functions in the callBackFunctions.h file.
@@ -326,12 +318,8 @@ void createGUI();
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
  bool setMouseMuscleAttributes();
- void setMouseMuscleRefractoryPeriod();
- void setMouseMuscleConductionVelocity();
  void setEctopicBeat(int nodeId);
  void clearStdin();
- void getEctopicBeatPeriod(int);
- void getEctopicBeatOffset(int);
  string getTimeStamp();
  void movieOn();
  void movieOff();

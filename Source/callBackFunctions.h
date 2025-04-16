@@ -13,22 +13,17 @@
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
  bool setMouseMuscleAttributes();
- void setMouseMuscleRefractoryPeriod();
- void setMouseMuscleConductionVelocity();
  void setEctopicBeat(int nodeId);
  void clearStdin();
- void getEctopicBeatPeriod(int);
- void getEctopicBeatOffset(int);
  string getTimeStamp();
  void movieOn();
  void movieOff();
  void screenShot();
  void saveSettings();
- void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
- void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
- void myMouse(GLFWwindow* window, int button, int action, int mods)
+ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
+ void myMouse(GLFWwindow* window, int button, int state, double x, double y);
  void scrollWheel(GLFWwindow*, double, double);
-*/
 
 /*
  OpenGL callback when the window is reshaped.
@@ -51,7 +46,6 @@ void mouseFunctionsOff()
 	Simulation.isInAdjustMuscleLineMode = false;
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInMouseFunctionMode = false;
-	terminalPrint();
 	glfwSetCursor(Window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR)); // Set cursor to default arrow.
 	drawPicture();
 }
@@ -67,7 +61,6 @@ void mouseAblateMode()
 	Simulation.isInMouseFunctionMode = true;
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
-	terminalPrint();
 	drawPicture();
 }
 
@@ -82,12 +75,7 @@ void mouseEctopicBeatMode()
 	Simulation.isInMouseFunctionMode = true;
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
-	terminalPrint();
 	drawPicture();
-	system("clear");
-	printf("\n You are in create ectopic beat mode.");
-	printf("\n\n Use the mouse to select a node.");
-	printf("\n");
 }
 
 /*
@@ -102,7 +90,6 @@ void mouseEctopicEventMode()
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
-	terminalPrint();
 }
 
 /*
@@ -120,10 +107,6 @@ void mouseAdjustMusclesAreaMode()
 	
 	bool returnFlag = setMouseMuscleAttributes();
 	
-	if(returnFlag)
-	{
-		terminalPrint();
-	}
 }
 
 /*
@@ -141,10 +124,6 @@ void mouseAdjustMusclesLineMode()
 	
 	bool returnFlag = setMouseMuscleAttributes();
 	
-	if(returnFlag)
-	{
-		terminalPrint();
-	}
 }
 
 /*
@@ -159,7 +138,6 @@ void mouseIdentifyNodeMode()
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
-	terminalPrint();
 }
 
 /*
@@ -169,71 +147,9 @@ void mouseIdentifyNodeMode()
 bool setMouseMuscleAttributes()
 {
 	// These functions now just set default values
-	setMouseMuscleRefractoryPeriod();
-	setMouseMuscleConductionVelocity();
-	return(true);
-}
-
-/*
- This function asks the user to type in the terminal screen the value to be multiplied by the
- selected muscles' refractory period.
-
- Not necessary anymore aside from staying here for the sake of not changing the code too much.
-*/
-void setMouseMuscleRefractoryPeriod()
-{
-	/*
-	system("clear");
-	RefractoryPeriodAdjustmentMultiplier = -1.0;
-	
-	printf("\n\n Enter the refractory period multiplier.");
-	printf("\n A number greater than 1 will make it longer.");
-	printf("\n A number between 0 and 1 will make it shorter.");
-	printf("\n\n Refractory period multiplier = ");
-	fflush(stdin);
-	scanf("%f", &RefractoryPeriodAdjustmentMultiplier);
-	if(RefractoryPeriodAdjustmentMultiplier < 0)
-	{
-		system("clear");
-		printf("\n You cannot adjust the the refractory period by a negative number.");
-		printf("\n Retry\n");
-		setMouseMuscleRefractoryPeriod();
-	}
-	*/
-	
-	// Just set default value - actual adjustment happens through GUI sliders
 	RefractoryPeriodAdjustmentMultiplier = 1.0;
-}
-
-/*
- This function asks the user to type in the terminal screen the value to be multiplied by the
- selected muscles' conduction velocity.
-
- Same case, not necessary anymore aside from staying here for the sake of not changing the code too much.
-*/
-void setMouseMuscleConductionVelocity()
-{
-	/*
-	system("clear");
-	MuscleConductionVelocityAdjustmentMultiplier = -1.0;
-	
-	printf("\n\n Enter conduction velocity multiplier.");
-	printf("\n A number between 0 and 1 will slow it down.");
-	printf("\n A number bigger than 1 will speed it up.");
-	printf("\n\n Conduction velocity multiplier = ");
-	fflush(stdin);
-	scanf("%f", &MuscleConductionVelocityAdjustmentMultiplier);
-	if(MuscleConductionVelocityAdjustmentMultiplier <= 0)
-	{
-		system("clear");
-		printf("\n You cannot adjust the the conduction velocity by a non-positive number.");
-		printf("\n Retry\n");
-		setMouseConductionVelocity();
-	}
-	*/
-	
-	// Just set default value - actual adjustment happens through GUI sliders
 	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+	return(true);
 }
 
 /*
@@ -256,14 +172,9 @@ void setEctopicBeat(int nodeId)
 	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
 	Node[nodeId].beatTimer = 0; // Default to start immediately
 	
-	/* dont need these anymore - just set default values
-	getEctopicBeatPeriod(nodeId);
-	getEctopicBeatOffset(nodeId);
-	*/
 	
 	// We only let you set 1 ectopic beat at a time.
 	Simulation.isInEctopicBeatMode = false;
-	terminalPrint();
 }
 
 /*
@@ -278,77 +189,6 @@ void clearStdin()
     }
 }
 
-/*
- This function gets the ectopic beat period from the user.
-*/
-void getEctopicBeatPeriod(int nodeId)
-{
-	/*
-	float period;
-	fflush(stdin);
-	system("clear");
-	printf("\n The current driving beat Period = %f.", BeatPeriod);
-	printf("\n Enter the period of your ectopic beat.");
-	
-	printf("\n\n Ectopic period = ");
-	scanf("%f", &period);
-
-	if(period <= 0)
-	{
-		system("clear");
-		printf("\n You entered %f.", Node[nodeId].beatPeriod);
-		printf("\n You cannot have a beat period that is a non-positive number.");
-		printf("\n Retry\n");
-		getEctopicBeatPeriod(nodeId);
-	}
-	else
-	{
-		Node[nodeId].beatPeriod = period;
-	}
-	clearStdin();
-	*/
-	
-	// Just set default value - actual adjustment happens through GUI sliders
-	Node[nodeId].beatPeriod = BeatPeriod;
-}
-
-/*
- This function gets the ectopic beat offset from the user. This is the amount of time the
- user wants to pause before turning on the ectopic beat. This allows the user to time the 
- ectopic beats relative to the current time. So the user can set beats to trigger at different 
- times.
-*/
-void getEctopicBeatOffset(int nodeId)
-{
-	/*
-	system("clear");
-	printf("\n The current Time into the beat is %f.", Node[nodeId].beatTimer);
-	printf("\n Enter the time offset of your ectopic event.");
-	printf("\n This will allow you to time your ectopic beat with the driving beat.");
-	printf("\n Zero will start the ectopic beat now.");
-	printf("\n A positive number will delay the ectopic beat by that amount.");
-	printf("\n\n Ectopic time delay = ");
-	fflush(stdin);
-
-	float timeDelay;
-	scanf("%f", &timeDelay);
-
-	if(timeDelay < 0)
-	{
-		system("clear");
-		printf("\n You cannot have a time delay that is a negative number.");
-		printf("\n Retry\n");
-		getEctopicBeatOffset(nodeId);
-	}
-	else
-	{
-		Node[nodeId].beatTimer = Node[nodeId].beatPeriod - timeDelay;
-	}
-	*/
-	
-	// Just set default value - actual adjustment happens through GUI sliders
-	Node[nodeId].beatTimer = 0;
-}
 
 /*
  This function returns a timestamp in M-D-Y-H.M.S format.
@@ -631,213 +471,6 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         lookVector.z /= d;
     }
     
-    if(key == GLFW_KEY_H)  // Help menu
-    {
-        helpMenu();
-    }
-    
-    if(key == GLFW_KEY_Q) // quit
-    {
-        glfwDestroyWindow(Window);
-        free(Node);
-        free(Muscle);
-        cudaFree(NodeGPU);
-        cudaFree(MuscleGPU);
-        printf("\n Good Bye\n");
-        exit(0);
-    }
-    
-    if(key == GLFW_KEY_R)  // Run toggle
-    {
-        if(Simulation.isPaused == false) Simulation.isPaused = true;
-        else Simulation.isPaused = false;
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_U)  // Contraction toggle
-    {
-        if(Simulation.ContractionisOn == false) Simulation.ContractionisOn = true;
-        else Simulation.ContractionisOn = false;
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_N)  // Draw nodes toggle
-    {
-        if(Simulation.DrawNodesFlag == 0) Simulation.DrawNodesFlag = 1;
-        else if(Simulation.DrawNodesFlag == 1) Simulation.DrawNodesFlag = 2;
-        else Simulation.DrawNodesFlag = 0;
-        drawPicture();
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_G)  // Draw full or front half toggle
-    {
-        if(Simulation.DrawFrontHalfFlag == 0) Simulation.DrawFrontHalfFlag = 1;
-        else Simulation.DrawFrontHalfFlag = 0;
-        drawPicture();
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_B)
-    {
-        if(mods & GLFW_MOD_SHIFT)  // Uppercase B - Raising beat period
-        {
-            Node[PulsePointNode].beatPeriod += 10;
-            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-            cudaErrorCheck(__FILE__, __LINE__);
-            terminalPrint();
-        }
-        else  // Lowercase b - Lowering beat period
-        {
-            Node[PulsePointNode].beatPeriod -= 10;
-            if(Node[PulsePointNode].beatPeriod < 0) 
-            {
-                Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
-            }
-            cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-            cudaErrorCheck(__FILE__, __LINE__);
-            terminalPrint();
-        }
-    }
-    
-    if(key == GLFW_KEY_V) // Orthoganal/Fulstrium view
-    {
-        if(Simulation.ViewFlag == 0) 
-        {
-            Simulation.ViewFlag = 1;
-            frustumView();
-        }
-        else 
-        {
-            Simulation.ViewFlag = 0;
-            orthogonalView();
-        }
-        drawPicture();
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_M)  // Movie on
-    {
-        if(!Simulation.isRecording) 
-        {
-            Simulation.isRecording = true;
-            movieOn();
-        }
-        else 
-        {
-            Simulation.isRecording = false;
-            movieOff();
-        }
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_S && (mods & GLFW_MOD_SHIFT))  // Screenshot (uppercase S)
-    {    
-        screenShot();
-        terminalPrint();
-    }
-    
-    // Numbers
-    if(key == GLFW_KEY_0) 
-    {
-        setView(0);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_1)
-    {
-        setView(1);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_2)
-    {
-        setView(2);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_3)
-    {
-        setView(3);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_4)
-    {
-        setView(4);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_5)
-    {
-        setView(5);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_6)
-    {
-        setView(6);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_7)
-    {
-        setView(7);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_8)
-    {
-        setView(8);
-        drawPicture();
-        terminalPrint();
-    }
-    if(key == GLFW_KEY_9)
-    {
-        setView(9);
-        drawPicture();
-        terminalPrint();
-    }
-    
-    // Special keys with shift modifiers
-    if(key == GLFW_KEY_SLASH && (mods & GLFW_MOD_SHIFT)) // ? key (Shift+/)
-    {
-		copyNodesMusclesFromGPU(); 
-        float maxZ = -10000.0;
-        float maxY = -10000.0;
-        int indexZ = -1;
-        int indexY = -1;
-        
-        for(int i = 0; i < NumberOfNodes; i++)
-        {
-            if(maxZ < Node[i].position.z) 
-            {
-                maxZ = Node[i].position.z;
-                indexZ = i;
-            }
-            
-            if(maxY < Node[i].position.y) 
-            {
-                maxY = Node[i].position.y;
-                indexY = i;
-            }
-        }
-        
-        Node[indexZ].color.x = 0.0;
-        Node[indexZ].color.y = 0.0;
-        Node[indexZ].color.z = 1.0;
-        
-        Node[indexY].color.x = 1.0;
-        Node[indexY].color.y = 0.0;
-        Node[indexY].color.z = 1.0;
-        
-        system("clear");
-        printf("\n Front node index = %d\n", indexZ);
-        printf("\n Top node index   = %d\n", indexY);
-        
-        drawPicture();
-		copyNodesMusclesToGPU();
-    }
     
     // WASD movement keys
     if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
@@ -998,72 +631,6 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		copyNodesToGPU();
     }
     
-    // Special character functions (with shift key)
-    if(key == GLFW_KEY_0 && (mods & GLFW_MOD_SHIFT))  // ) - All mouse functions off
-    {
-        mouseFunctionsOff();
-        Simulation.isInMouseFunctionMode = false;
-    }
-    
-    if(key == GLFW_KEY_1 && (mods & GLFW_MOD_SHIFT))  // ! - Ablate mode
-    {
-        mouseAblateMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_2 && (mods & GLFW_MOD_SHIFT))  // @ - Ectopic beat mode
-    {
-        mouseEctopicBeatMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_3 && (mods & GLFW_MOD_SHIFT))  // # - Ectopic single trigger mode
-    {
-        mouseEctopicEventMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_4 && (mods & GLFW_MOD_SHIFT))  // $ - Muscle adjustment area mode
-    {
-        mouseAdjustMusclesAreaMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_5 && (mods & GLFW_MOD_SHIFT))  // % - Muscle adjustment line mode
-    {
-        mouseAdjustMusclesLineMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_6 && (mods & GLFW_MOD_SHIFT))  // ^ - Find node mode
-    {
-        mouseIdentifyNodeMode();
-        Simulation.isInMouseFunctionMode = true;
-    }
-    
-    if(key == GLFW_KEY_RIGHT_BRACKET)  // ]
-    {
-        HitMultiplier += 0.005;
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_LEFT_BRACKET)  // [
-    {
-        HitMultiplier -= 0.005;
-        if(HitMultiplier < 0.0) HitMultiplier = 0.0;
-        terminalPrint();
-    }
-    
-    if(key == GLFW_KEY_C)  // Recenter the simulation
-    {
-        centerObject();
-        drawPicture();
-    }
-    
-    if(key == GLFW_KEY_K)  // Save your current setting
-    {
-        saveSettings();
-    }
 }
 
 /*
@@ -1209,7 +776,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 						if(Simulation.isInEctopicBeatMode)
 						{
 							Simulation.isPaused = true;
-							printf("\n Node number = %d", i);
+							// printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
@@ -1264,7 +831,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							Node[i].color.x = 1.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
-							printf("\n Node number = %d", i);
+							// printf("\n Node number = %d", i);
 						}
 					}
 				}
@@ -1416,13 +983,13 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 			{
 				ScrollSpeedToggle = 1;
 				ScrollSpeed = 1.0;
-				printf("\n speed = %f\n", ScrollSpeed);
+				// printf("\n speed = %f\n", ScrollSpeed);
 			}
 			else
 			{
 				ScrollSpeedToggle = 0;
 				ScrollSpeed = 0.1;
-				printf("\n speed = %f\n", ScrollSpeed);
+				// printf("\n speed = %f\n", ScrollSpeed);
 			}
 			
 		}
