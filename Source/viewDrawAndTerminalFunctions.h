@@ -61,81 +61,105 @@ void renderSphere(float radius, int slices, int stacks)
         glEnd();
     }
 }
+/*
+	Function to render a sphere using a VBO
+	This function creates a VBO for a sphere and binds it for rendering.
 
-// Function to render a sphere using a VBO
-// This function creates a VBO for a sphere and binds it for rendering.
+	This code creates vertices and indices to make a sphere using triangle strips.
+	It uses OpenGL functions to create and bind the VBO and IBO (what makes up the sphere).
+	The sphere stays in the GPU memory and is faster to render and puts less load on the CPU.
+
+*/
 void createSphereVBO(float radius, int slices, int stacks)
 {
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
     
     // Generate sphere vertices with positions and normals
-    for (int i = 0; i <= stacks; ++i) 
-    {
-        float phi = PI * i / stacks;
-        float sinPhi = sin(phi);
-        float cosPhi = cos(phi);
-        
-        for (int j = 0; j <= slices; ++j) 
-        {
-            float theta = 2.0f * PI * j / slices;
-            float sinTheta = sin(theta);
-            float cosTheta = cos(theta);
-            
-            // Vertex position (x, y, z)
-            float x = radius * sinPhi * cosTheta;
-            float y = radius * cosPhi;
-            float z = radius * sinPhi * sinTheta;
-            
-            // Normal vector (normalized position for sphere)
-            float nx = sinPhi * cosTheta;
-            float ny = cosPhi;
-            float nz = sinPhi * sinTheta;
-            
-            // Add vertex (position + normal)
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
-            vertices.push_back(nx);
-            vertices.push_back(ny);
-            vertices.push_back(nz);
-        }
-    }
+	for (int i = 0; i <= stacks; ++i) 
+	{
+		// Calculate the vertical angle phi (0 to PI, from top to bottom of sphere)
+		float phi = PI * i / stacks;
+		float sinPhi = sin(phi);
+		float cosPhi = cos(phi);
+		
+		for (int j = 0; j <= slices; ++j) 
+		{
+			// Calculate the horizontal angle theta (0 to 2PI, around the sphere)
+			float theta = 2.0f * PI * j / slices;
+			float sinTheta = sin(theta);
+			float cosTheta = cos(theta);
+			
+			// Convert spherical to Cartesian coordinates
+			// x = r * sin(phi) * cos(theta)
+			// y = r * cos(phi)          // y is up/down axis (poles of the sphere)
+			// z = r * sin(phi) * sin(theta)
+			float x = radius * sinPhi * cosTheta;
+			float y = radius * cosPhi;
+			float z = radius * sinPhi * sinTheta;
+			
+			// For a sphere, normal vectors point outward from center
+			// and are simply the normalized position vector (position/radius)
+			float nx = sinPhi * cosTheta;  // Same as x/radius
+			float ny = cosPhi;             // Same as y/radius
+			float nz = sinPhi * sinTheta;  // Same as z/radius
+			
+			// Store the vertex data in interleaved format:
+			// Each vertex has 6 floats - 3 for position (x,y,z) and 3 for normal (nx,ny,nz)
+			vertices.push_back(x);
+			vertices.push_back(y);
+			vertices.push_back(z);
+			vertices.push_back(nx);
+			vertices.push_back(ny);
+			vertices.push_back(nz);
+		}
+	}
     
-    // Generate indices for triangle strips
-    for (int i = 0; i < stacks; ++i) 
-    {
-        for (int j = 0; j < slices; ++j) 
-        {
-            int first = i * (slices + 1) + j;
-            int second = first + slices + 1;
-            
-            indices.push_back(first);
-            indices.push_back(second);
-            indices.push_back(first + 1);
-            
-            indices.push_back(second);
-            indices.push_back(second + 1);
-            indices.push_back(first + 1);
-        }
-    }
-    
-    numSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
-    numSphereIndices = indices.size();
-    
-    // Create and bind the vertex buffer
-    glGenBuffers(1, &sphereVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-    
-    // Create and bind the index buffer
-    glGenBuffers(1, &sphereIBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-    
-    // Unbind buffers
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	// Generate indices for triangle strips
+	// This section creates triangles by connecting the grid of vertices:
+	// - First defines index values that point to positions in the vertex array 
+	// - Creates two triangles for each grid cell (rectangular patch)
+	// - Each triangle is defined by three indices in counter-clockwise order
+	for (int i = 0; i < stacks; ++i) 
+	{
+		for (int j = 0; j < slices; ++j) 
+		{
+			// Calculate indices for the four corners of the current grid cell
+			int first = i * (slices + 1) + j;          // Current vertex
+			int second = first + slices + 1;           // Vertex below current
+			
+			// First triangle: Connect current vertex, vertex below, and vertex to the right
+			indices.push_back(first);
+			indices.push_back(second);
+			indices.push_back(first + 1);
+			
+			// Second triangle: Connect vertex below, vertex below+right, and vertex to the right
+			indices.push_back(second);
+			indices.push_back(second + 1);
+			indices.push_back(first + 1);
+		}
+	}
+
+	// Store the total counts for rendering
+	numSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
+	numSphereIndices = indices.size();
+
+	// Create and setup OpenGL buffers on the GPU
+	// - Generate unique buffer IDs
+	// - Bind buffers to set them as active
+	// - Copy data from CPU arrays to GPU memory
+	glGenBuffers(1, &sphereVBO);  // Generate Vertex Buffer Object for storing positions and normals
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+	// Same process for the index buffer
+	glGenBuffers(1, &sphereIBO);  // Generate Index Buffer Object for storing triangle connections
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+	// Unbind buffers to prevent accidental modification
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void renderSphereVBO() 
@@ -835,11 +859,11 @@ void helpMenu()
 void createGUI()
 {
     // Setup ImGui window flags
-    ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+    ImGuiWindowFlags window_flags = 0; // Initialize window flags to 0, flags are used to set window properties, like size, position, etc.
+    window_flags |= ImGuiWindowFlags_AlwaysAutoResize; // Always resize the window to fit the content
     
     // Main Controls Window
-    ImGui::Begin("Atrium Controls", NULL, window_flags);
+    ImGui::Begin("Atrium Controls", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
     
     // Run/Pause button
     if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause"))
@@ -848,7 +872,7 @@ void createGUI()
     }
     
     // General simulation controls
-    if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
     {
 
         // Contraction toggle (do we need this?? added it anyways)
@@ -916,7 +940,7 @@ void createGUI()
 			}
 		}
 
-        // Screenshot
+        // Screenshot button
         if (ImGui::Button("Screenshot"))
         {
             screenShot();
@@ -924,7 +948,8 @@ void createGUI()
     }
     
 		// View angle controls
-	if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("View Controls", ImGuiTreeNodeFlags_DefaultOpen)) //2nd arg is the flags, DefaultOpen means it will be open by default
+	
 	{
 		// Predefined views
 		if (ImGui::Button("PA"))
@@ -1083,9 +1108,9 @@ void createGUI()
 			Simulation.isInFindNodeMode = true;
 		}
 
-		// Hit multiplier slider
+		// Selection area slider
 		float hitMult = HitMultiplier;
-		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f")) 
+		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) //al
 		{
 			HitMultiplier = hitMult;
 		}
@@ -1093,11 +1118,15 @@ void createGUI()
 		//Muscle adjustment sliders
 		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
 		{
-			ImGui::Separator();
+			ImGui::Separator(); //add a line to separate the sections
 			ImGui::Text("Muscle Adjustment Parameters");
+			ImGui::Text("");//new line (\n doesn't work)
 			
+
+			ImGui::Text("Refractory Period Multiplier");
 			float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
-			if (ImGui::SliderFloat("Refractory Period Multiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
+			// Use ## to create a "hidden" label that doesn't display but provides a unique ID, same principle for the reset button
+			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
 			{
 				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
 			}
@@ -1107,8 +1136,9 @@ void createGUI()
 				RefractoryPeriodAdjustmentMultiplier = 1.0f;
 			}
 			
+			ImGui::Text("Conduction Velocity Multiplier");
 			float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
-			if (ImGui::SliderFloat("Conduction Velocity Multiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
+			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
 			{
 				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
 			}
@@ -1142,7 +1172,7 @@ void createGUI()
         if (ImGui::Button("- 10ms")) 
 		{
             Node[PulsePointNode].beatPeriod -= 10;
-            if(Node[PulsePointNode].beatPeriod < 0) 
+            if(Node[PulsePointNode].beatPeriod < 0) // Prevent negative beat period 
 			{
                 Node[PulsePointNode].beatPeriod = 0;
             }
@@ -1165,7 +1195,9 @@ void createGUI()
                 char nodeName[32];
                 sprintf(nodeName, "Ectopic Beat Node %d", i);
                 
-                if (ImGui::TreeNode(nodeName)) 
+                if (ImGui::TreeNode(nodeName))  //a tree node is a collapsible section, so we can have multiple ectopic beats in the same window
+				{
+					ImGui::Text("Node ID: %d", i);
 				{
                     float beatPeriod = Node[i].beatPeriod;
                     if (ImGui::SliderFloat("Beat Period", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
@@ -1195,7 +1227,7 @@ void createGUI()
                         cudaErrorCheck(__FILE__, __LINE__);
                     }
                     
-                    ImGui::TreePop();
+                    ImGui::TreePop(); // Close the tree node
                 }
             }
         }
@@ -1220,7 +1252,6 @@ void createGUI()
             copyNodesMusclesFromGPU();
 
 			//Recolor the previous nodes to green
-
 			Node[Simulation.frontNodeIndex].color.x = 0.0;
 			Node[Simulation.frontNodeIndex].color.y = 1.0;
 			Node[Simulation.frontNodeIndex].color.z = 0.0;
@@ -1229,14 +1260,13 @@ void createGUI()
 			Node[Simulation.topNodeIndex].color.y = 1.0;
 			Node[Simulation.topNodeIndex].color.z = 0.0;
 
-
-
+			//give bad values to the indices so we know they are not valid unless they are made valid again
             float maxZ = -10000.0;
             float maxY = -10000.0;
             int indexZ = -1;
             int indexY = -1;
             
-            for(int i = 0; i < NumberOfNodes; i++) 
+            for(int i = 0; i < NumberOfNodes; i++) // Loop through all nodes, checking for the max Z and Y values
 			{
                 if(maxZ < Node[i].position.z) 
 				{
@@ -1251,6 +1281,7 @@ void createGUI()
                 }
             }
             
+			//set the colors of the nodes to blue and purple, respectively
             Node[indexZ].color.x = 0.0;
             Node[indexZ].color.y = 0.0;
             Node[indexZ].color.z = 1.0;
@@ -1264,8 +1295,8 @@ void createGUI()
 			Simulation.topNodeIndex = indexY;
 			Simulation.nodesFound = true;
             
-            drawPicture();
-            copyNodesMusclesToGPU();
+            drawPicture(); // Redraw the picture to show the new colors
+            copyNodesMusclesToGPU(); // Copy the updated nodes back to GPU (since the color changed)
         }
 
 		// Display the information outside the button handler so it persists
@@ -1277,10 +1308,13 @@ void createGUI()
 		}
     }
     
-    ImGui::End();
+    ImGui::End(); //end the main controls window
     
-    // Stats window
+    // Beginning of stats window
+	//if there's any relevant information we should show for quick viewing, put it here., we can add toggles for what to show in the main window if we want to.
+
     ImGui::Begin("Simulation Stats", NULL, window_flags);
+	
     ImGui::Text("Run time: %.2f ms", RunTime);
     ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
     
@@ -1301,5 +1335,5 @@ void createGUI()
         }
     }
   
-    ImGui::End();
+    ImGui::End(); //end of stats window
 }
