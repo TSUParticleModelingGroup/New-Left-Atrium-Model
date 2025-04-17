@@ -977,6 +977,69 @@ void createGUI()
 			ImGui::EndTooltip();
 		}
 
+		// Display identified nodes
+		if (Simulation.isInFindNodeMode) 
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), "Click on nodes to identify them");
+			
+			// Display any identified nodes (purple nodes)
+			ImGui::BeginChild("IdentifiedNodes", ImVec2(0, 120), true); // Create a child window for displaying identified nodes, imVec2(0, 120) sets the size of the child window (0 means auto width, 120 is height), true means bordered
+			bool foundAny = false; // Flag to check if any nodes are identified
+			
+			for (int i = 0; i < NumberOfNodes; i++)
+			{
+				// Check if node is marked as drawn and is the purple identify color
+				if (Node[i].isDrawNode && 
+					Node[i].color.x == 1.0f && 
+					Node[i].color.y == 0.0f && 
+					Node[i].color.z == 1.0f)
+				{
+					foundAny = true;
+					ImGui::Text("Node %d: (%.1f, %.1f, %.1f)", i, 
+						Node[i].position.x, 
+						Node[i].position.y, 
+						Node[i].position.z);
+				}
+			}
+			
+			if (!foundAny) {
+				ImGui::TextDisabled("No nodes identified yet");
+			}
+			
+			ImGui::EndChild();
+			
+			if (ImGui::Button("Clear Identified Nodes"))
+			{
+				// Reset all purple nodes back to default
+				for (int i = 0; i < NumberOfNodes; i++)
+				{
+					if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f) //if the node is purple and is drawn
+					{
+						if (Node[i].isAblated) 
+						{
+							// Reset ablated nodes to ablated color (white)
+							Node[i].color.x = 1.0f;
+							Node[i].color.y = 1.0f; 
+							Node[i].color.z = 1.0f;
+							// isDrawNode stays true for ablated nodes
+						}
+						else 
+						{
+							// Reset non-ablated nodes to default color (green)
+							Node[i].isDrawNode = false;
+							Node[i].color.x = 0.0f;
+							Node[i].color.y = 1.0f; 
+							Node[i].color.z = 0.0f;
+						}
+					}
+				}
+				
+				// Update the GPU with changes
+				copyNodesMusclesToGPU();
+				drawPicture();
+			}
+		}
+
 		// Selection area slider
 		float hitMult = HitMultiplier;
 		if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp))
@@ -1143,7 +1206,7 @@ void createGUI()
         bool hasEctopicBeats = false; // flag to see if we have any ectopic beats; consider adding to simulation struct?
         for(int i = 0; i < NumberOfNodes; i++) 
 		{
-            if(Node[i].isBeatNode && i != PulsePointNode) //if this is an ectopic beat node and not the "SA node"
+            if(Node[i].isBeatNode && i != PulsePointNode) //if this is an ectopic beat node and not the pulse node
 			{
                 hasEctopicBeats = true;
                 
@@ -1189,7 +1252,7 @@ void createGUI()
 						}
 					}
 
-					// For the Time Until Next Beat slider:
+					// Delay/time until next beat slider for ectopic beats
 					ImGui::Text("Time Until Next Beat (ms)");
 					float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
 					ImGui::SetNextItemWidth(150); // Narrower slider
@@ -1264,14 +1327,42 @@ void createGUI()
 		{
             copyNodesMusclesFromGPU();
 
-			//Recolor the previous nodes to green
-			Node[Simulation.frontNodeIndex].color.x = 0.0;
-			Node[Simulation.frontNodeIndex].color.y = 1.0;
-			Node[Simulation.frontNodeIndex].color.z = 0.0;
+			// Reset previous nodes properly
+			if (Simulation.frontNodeIndex >= 0 && Simulation.topNodeIndex >= 0) //if the front and top node indices are valid
+			
+			{
+				// Reset front node based on ablation status
+				if (Node[Simulation.frontNodeIndex].isAblated) 
+				{
+					Node[Simulation.frontNodeIndex].isDrawNode = true; // Keep it visible, set to white
+					Node[Simulation.frontNodeIndex].color.x = 1.0f;
+					Node[Simulation.frontNodeIndex].color.y = 1.0f;
+					Node[Simulation.frontNodeIndex].color.z = 1.0f;
+				} 
+				else 
+				{
+					Node[Simulation.frontNodeIndex].isDrawNode = false; //back to default color
+					Node[Simulation.frontNodeIndex].color.x = 0.0f;
+					Node[Simulation.frontNodeIndex].color.y = 1.0f;
+					Node[Simulation.frontNodeIndex].color.z = 0.0f;
+				}
 
-			Node[Simulation.topNodeIndex].color.x = 0.0;
-			Node[Simulation.topNodeIndex].color.y = 1.0;
-			Node[Simulation.topNodeIndex].color.z = 0.0;
+				// Reset top node based on ablation status
+				if (Node[Simulation.topNodeIndex].isAblated) 
+				{
+					Node[Simulation.topNodeIndex].isDrawNode = true; // Keep it visible, set color to white
+					Node[Simulation.topNodeIndex].color.x = 1.0f;
+					Node[Simulation.topNodeIndex].color.y = 1.0f;
+					Node[Simulation.topNodeIndex].color.z = 1.0f;
+				} 
+				else 
+				{
+					Node[Simulation.topNodeIndex].isDrawNode = false; //back to default color
+					Node[Simulation.topNodeIndex].color.x = 0.0f;
+					Node[Simulation.topNodeIndex].color.y = 1.0f;
+					Node[Simulation.topNodeIndex].color.z = 0.0f;
+				}
+			}
 
 			//give bad values to the indices so we know they are not valid unless they are made valid again
             float maxZ = -10000.0;
@@ -1295,10 +1386,12 @@ void createGUI()
             }
             
 			//set the colors of the nodes to blue and purple, respectively
+			Node[indexZ].isDrawNode = true; // Set the front node to be drawn as blue
             Node[indexZ].color.x = 0.0;
             Node[indexZ].color.y = 0.0;
             Node[indexZ].color.z = 1.0;
             
+			Node[indexY].isDrawNode = true; // Set the top node to be drawn as purple
             Node[indexY].color.x = 1.0;
             Node[indexY].color.y = 0.0;
             Node[indexY].color.z = 1.0;
