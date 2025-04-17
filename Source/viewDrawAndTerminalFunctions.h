@@ -921,7 +921,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to set a node as an ectopic beat location\nwith a constant beat period");
+			ImGui::Text("Left-click to set a node as an ectopic beat node\nwith a constant beat period");
 			ImGui::EndTooltip();
 		}
 
@@ -934,7 +934,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to trigger a single pulse at a node location");
+			ImGui::Text("Left-click to trigger a single pulse at a node");
 			ImGui::EndTooltip();
 		}
 
@@ -947,7 +947,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to adjust muscle properties in an area\nAffects refractory period and conduction velocit\n\nRight-click to undo adjustment");
+			ImGui::Text("Left-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 			ImGui::EndTooltip();
 		}
 
@@ -987,7 +987,6 @@ void createGUI()
 		{
 			ImGui::BeginTooltip();
 			ImGui::Text("Adjusts the size of the selection area\nLarger values effect more nodes");
-			ImGui::Text("Double-click or click on value to enter manually");
 			ImGui::EndTooltip();
 		}
 
@@ -1315,7 +1314,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomened to draw nodes to see the results clearly");
+			ImGui::Text("Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomended to draw nodes to see the results clearly");
 			ImGui::EndTooltip();
 		}
 
