@@ -995,10 +995,7 @@ void createGUI()
 					Node[i].color.z == 1.0f)
 				{
 					foundAny = true;
-					ImGui::Text("Node %d: (%.1f, %.1f, %.1f)", i, 
-						Node[i].position.x, 
-						Node[i].position.y, 
-						Node[i].position.z);
+					ImGui::Text("Node ID: %d", i);
 				}
 			}
 			
