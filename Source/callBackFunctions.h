@@ -253,8 +253,7 @@ void movieOn()
 
 	//Max Quality, Low Speed, Large Size (change crf to 0 range[0,51] for lossless compression, but I wanted to keep the file size down)
 	sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"",
-		XWindowSize, YWindowSize, ts.c_str());
+		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
 
 	//use the command string to create the output file name
 	MovieFile = popen(baseCommand, "w");
@@ -285,7 +284,7 @@ void screenShot()
 {	
 	bool savedPauseState;
 	FILE* ScreenShotFile;
-	unsigned char* buffer;
+	unsigned char* buffer; //unsigned char because we are using RGBA data, which is 4 bytes per pixel, 1 char = 1 byte
 
     char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
 
