@@ -240,15 +240,28 @@ void movieOn()
 	/*const char* cmd = "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
 		      "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output.mp4";*/
 
-	string baseCommand = "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-				"-c:v libx264rgb -threads 0 -preset fast -y -pix_fmt yuv420p -crf 0 -vf vflip ";
+	char baseCommand[512]; // Command to run ffmpeg with the correct parameters for capturing a movie
+	//use sprintf to create the command string for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
 
-	string z = baseCommand + ts;
+	//Low Quality, Fast Speed, Small Size
+	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+	// 	"-c:v libx264 -threads 0 -preset fast -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
 
-	const char *ccx = z.c_str();
-	MovieFile = popen(ccx, "w");
+	//Medium Quality, Medium Speed, Medium Size
+	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+	// 			"-c:v libx264 -threads 0 -preset medium -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
+
+	//Max Quality, Low Speed, Large Size (change crf to 0 range[0,51] for lossless compression, but I wanted to keep the file size down)
+	sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"",
+		XWindowSize, YWindowSize, ts.c_str());
+
+	//use the command string to create the output file name
+	MovieFile = popen(baseCommand, "w");
+
 	//Buffer = new int[XWindowSize*YWindowSize];
-	Buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
+	Buffer = (unsigned char*)malloc(4* XWindowSize* YWindowSize);
+
 	Simulation.isRecording = true;
 }
 
@@ -272,14 +285,22 @@ void screenShot()
 {	
 	bool savedPauseState;
 	FILE* ScreenShotFile;
-	int* buffer;
+	unsigned char* buffer;
 
-	const char* cmd = "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-				"-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4";
+    char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
+
+	//commands for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
+    sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+                "-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4",
+                XWindowSize, YWindowSize);
+
+	
 	//const char* cmd = "ffmpeg -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
 	//              "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output1.mp4";
+	
+	//open the pipe to ffmpeg and allocate the buffer for the screenshot with the size of 4*XWin* YWin to hold the RGBA data
 	ScreenShotFile = popen(cmd, "w");
-	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
+	buffer = (unsigned char*)malloc(4 * XWindowSize*YWindowSize*sizeof(int));
 	
 	if(!Simulation.isPaused) //if the simulation is running
 	{
@@ -294,8 +315,8 @@ void screenShot()
 	for(int i =0; i < 1; i++)
 	{
 		drawPicture();
-		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		fwrite(buffer, sizeof(int)*XWindowSize*YWindowSize, 1, ScreenShotFile);
+		glReadPixels(0, 0, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		fwrite(buffer, 4*XWindowSize*YWindowSize, 1, ScreenShotFile);
 	}
 	
 	pclose(ScreenShotFile);
@@ -317,6 +338,7 @@ void screenShot()
 	Simulation.isPaused = savedPauseState; //restore the pause state before we took the screenshot
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
+
 
 /*
  This function saves all the node and muscle values set in the run to a file. This file can then be used at a
