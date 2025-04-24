@@ -477,7 +477,7 @@ void drawPicture()
 	
 	// Drawing center node
 	//This draws a center node at the center of the simulation for debugging purposes
-	if(false) // false turns it off, true turns it on.
+	if(true) // false turns it off, true turns it on.
 	{
 		glColor3d(1.0,1.0,1.0);
 		glPushMatrix();
@@ -989,17 +989,15 @@ void createGUI()
 			for (int i = 0; i < NumberOfNodes; i++)
 			{
 				// Check if node is marked as drawn and is the purple identify color
-				if (Node[i].isDrawNode && 
-					Node[i].color.x == 1.0f && 
-					Node[i].color.y == 0.0f && 
-					Node[i].color.z == 1.0f)
+				if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f)
 				{
 					foundAny = true;
 					ImGui::Text("Node ID: %d", i);
 				}
 			}
 			
-			if (!foundAny) {
+			if (!foundAny)
+			{
 				ImGui::TextDisabled("No nodes identified yet");
 			}
 			
