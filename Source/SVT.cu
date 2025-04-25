@@ -201,7 +201,10 @@ void readSimulationParameters()
 		data >> BaseMuscleConductionVelocity;
 		
 		getline(data,name,'=');
-		data >> MuscleConductionVelocitySTD;
+		data >> MuscleConductionVelocitySTD; 
+		
+		getline(data,name,'=');
+		data >> BachmannsBundleMultiplier;
 		
 		getline(data,name,'=');
 		data >> BeatPeriod;
@@ -471,26 +474,26 @@ int main(int argc, char** argv)
 
 	
 	//*****************************************ImGUI stuff here********************************
-    // Initialize ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
+  // Initialize ImGui
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
 
     // Setup ImGui style
-    ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
-    ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
-    style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
+  ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
+  ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
+  style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
-    ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
+  ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
+  ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
 
-    // Load a font
-    io.Fonts->AddFontDefault();
+  // Load a font
+  io.Fonts->AddFontDefault();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 	// Main loop
@@ -534,13 +537,13 @@ int main(int argc, char** argv)
 		
 	//Destroy streams
 	cudaStreamDestroy(computeStream);
-    cudaStreamDestroy(memoryStream);
+  cudaStreamDestroy(memoryStream);
 
 	//free up memory
 	free(Node);
-    free(Muscle);
-    cudaFree(NodeGPU);
-    cudaFree(MuscleGPU);
+  free(Muscle);
+  cudaFree(NodeGPU);
+  cudaFree(MuscleGPU);
 
 	//shutdown ImGui
 	ImGui_ImplOpenGL3_Shutdown();
@@ -549,7 +552,7 @@ int main(int argc, char** argv)
 
 	//destroy the window and terminate GLFW
 	glfwDestroyWindow(Window);
-    glfwTerminate();
+  glfwTerminate();
 
 	return 0;
 }

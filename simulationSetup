@@ -15,6 +15,7 @@ Circle200
 CSphere340
 CSphere5680
 IdealLeftAtrium2.3K
+IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
 LeftAtriumRealBase
 LeftAtriumRealRemovedAppendage
@@ -26,7 +27,8 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium2.3K
+--InputFileName = IdealLeftAtrium2.3K_BB
+
 Name of previous run files that were stored in GitHub.
 Test
 
@@ -95,7 +97,7 @@ and the average radius will be calculated solely from the node positions read fr
 The left atrium holds around 23,640 cubic millimeters of blood [7].
 The first value should be a float and the second value should be a 0 or a 1.
 
---VolumeOfLeftAtrium = 23640.0;
+--VolumeOfLeftAtrium = 50000.0;
 --KeepOriginalDimensions = 1;
 
 To remove energy buildup in the system, we add a drag coefficient that works opposite to velocity.
@@ -155,6 +157,12 @@ Both should be floats.
 
 --BaseMuscleConductionVelocity = 0.5;
 --MuscleConductionVelocitySTD = 0.0;
+
+This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle.
+I have no idea what this should be so at the moment we will set it to 2.0 (ie twice as fast).
+We need to look this up and site it [12]
+
+-- BachmannsBundleMultiplier = 5.0; 
 
 The length of time between heart beats. 
 A 1000 milliseconds is 60 beats per minute.
