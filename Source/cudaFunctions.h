@@ -4,14 +4,15 @@
  They are listed below in the order they appear.
  
  __device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
- __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float)
- __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, float, int);
+ __global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float);
+ __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, float, bool);
  __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
  __global__ void recenter(nodeAttributesStructure *, int, float, float4);
- void errorCheck(const char *);
  void cudaErrorCheck(const char *, int);
  void copyNodesMusclesToGPU();
  void copyNodesMusclesFromGPU();
+ void copyNodesFromGPU();
+ void copyNodesToGPU();
 */
 
 
@@ -483,19 +484,47 @@ void cudaErrorCheck(const char *file, int line)
 */
 void copyNodesMusclesToGPU()
 {
-	cudaMemcpy( MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-	cudaErrorCheck(__FILE__, __LINE__);
+    cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    // Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
 
 /*
- Copies nodes and muscle files down from the GPU.
-*/
+ * Copies nodes and muscle files down from the GPU.
+ */
 void copyNodesMusclesFromGPU()
 {
-	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
+    cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+    
+    // Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
 }
+
+void copyNodesFromGPU()
+{
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
+}
+
+void copyNodesToGPU()
+{
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+    cudaStreamSynchronize(memoryStream);
+}
+
+

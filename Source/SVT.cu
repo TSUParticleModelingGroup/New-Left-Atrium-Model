@@ -40,53 +40,34 @@
 
 void nBody(double dt)
 {	
-	if(!Simulation.isPaused) 
-	{	
-		if(Simulation.ContractionisOn)
-		{
-			getForces<<<GridNodes, BlockNodes>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
-			cudaErrorCheck(__FILE__, __LINE__);
-			cudaDeviceSynchronize();
-		}
-		updateNodes<<<GridNodes, BlockNodes>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
-		cudaErrorCheck(__FILE__, __LINE__);
-		cudaDeviceSynchronize();
-		updateMuscles<<<GridMuscles, BlockMuscles>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
-		cudaErrorCheck(__FILE__, __LINE__);
-		cudaDeviceSynchronize();
-		
-		if(Simulation.ContractionisOn)
-		{
-			RecenterCount++;
-			if(RecenterCount == RecenterRate) 
-			{
-				recenter<<<1, BLOCKCENTEROFMASS>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
-				cudaErrorCheck(__FILE__, __LINE__);
-				RecenterCount = 0;
-			}
-		}
-		
-		DrawTimer++;
-		if(DrawTimer == DrawRate) 
-		{
-			copyNodesMusclesFromGPU();
-			drawPicture();
-			DrawTimer = 0;
-		}
-		
-		PrintTimer += dt;
-		if(PrintRate <= PrintTimer) 
-		{
-			terminalPrint();
-			PrintTimer = 0.0;
-		}
-		
-		RunTime += dt; 
-	}
-	else
+
+	//no need to check if we're paused because we handle that in main
+
+	if(Simulation.ContractionisOn)
 	{
-		drawPicture();
+		getForces<<<GridNodes, BlockNodes, 0, computeStream>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
+		cudaErrorCheck(__FILE__, __LINE__);
 	}
+
+	updateNodes<<<GridNodes, BlockNodes, 0, computeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	updateMuscles<<<GridMuscles, BlockMuscles, 0, computeStream>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
+	cudaErrorCheck(__FILE__, __LINE__);
+	
+	if(Simulation.ContractionisOn)
+	{
+		RecenterCount++;
+		if(RecenterCount == RecenterRate) 
+		{
+			recenter<<<1, BLOCKCENTEROFMASS, 0, computeStream>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
+			cudaErrorCheck(__FILE__, __LINE__);
+			RecenterCount = 0;
+		}
+	}
+	
+	RunTime += dt; 
+	
 }
 
 /*
@@ -307,10 +288,20 @@ void readSimulationParameters()
 */
 void setup()
 {	
+
 	// Seeding the random number generator.
 	time_t t;
 	srand((unsigned) time(&t));
 	
+	// Initialize default adjustment values
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+
+	// Initialize Find Nodes state
+	Simulation.nodesFound = false;
+	Simulation.frontNodeIndex = -1; //both init'd to -1 since we haven't found any nodes yet
+	Simulation.topNodeIndex = -1;
+
 	// Getting user inputs.
 	readSimulationParameters();
 	
@@ -332,7 +323,7 @@ void setup()
 	}
 	else if(NodesMusclesFileOrPreviousRunsFile == 1)
 	{
-		getNodesandMusclesFromPreviousRun(); //Previous not Previuos
+		getNodesandMusclesFromPreviousRun();
 	}
 	else
 	{
@@ -346,8 +337,17 @@ void setup()
 	
 	// Setting up the CUDA parallel structure to be used.
 	setupCudaEnvironment();
+
+	//create CUDA streams for async memory copy and compute
+	cudaStreamCreate(&computeStream);
+	cudaStreamCreate(&memoryStream);
 	
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
+
+	// Use pinned memory for faster transfers
+	cudaHostRegister(Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostRegisterDefault);
+	cudaHostRegister(Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostRegisterDefault);
+
 	copyNodesMusclesToGPU();
         
 	printf("\n");
@@ -358,7 +358,6 @@ void setup()
 	printf("\033[0m");
 	scanf("%s", &temp); 
 	
-	terminalPrint();
 }
 
 /*
@@ -368,8 +367,8 @@ int main(int argc, char** argv)
 {
 	setup();
 	
-	XWindowSize = 1000;
-	YWindowSize = 1000; 
+	XWindowSize = 1300;
+	YWindowSize = 1300; 
 
 	// Clip plains
 	Near = 0.2;
@@ -390,23 +389,70 @@ int main(int argc, char** argv)
 	UpY = 1.0;
 	UpZ = 0.0;
 
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
-	glutInitWindowSize(XWindowSize,YWindowSize);
-	glutInitWindowPosition(5,5);
-	Window = glutCreateWindow("SVT");
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+    if(!glfwInit()) // Initialize GLFW, check for failure
+    {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        return -1;
+    }
+
+	// Set compatibility mode to allow legacy OpenGL (this is just standard)
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2); //these 2 lines are for compatibility with older versions of OpenGL (2.1+) ensures backwards compatibility
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE); //this line is for compatibility with older versions of OpenGL
+
+	// Create a windowed mode window and its OpenGL context
+	Window = glfwCreateWindow(XWindowSize, YWindowSize, "SVT", NULL, NULL); // args: width, height, title, monitor, share
+	if (!glfwInit()) 
+	{
+		fprintf(stderr, "Failed to initialize GLFW\n");
+		return -1;
+	}
+
+	// Make the window's context current
+    glfwMakeContextCurrent(Window); // Make the window's context current, meaning that all future OpenGL commands will apply to this window
+    glfwSwapInterval(1); // Enable vsync (1 = on, 0 = off), vsync is a method used to prevent screen tearing which occurs when the GPU is rendering frames at a rate faster than the monitor can display them
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))  // Initialize GLAD, check for failure
+	{
+		fprintf(stderr, "Failed to initialize GLAD\n");
+		glfwTerminate();
+		return -1;
+	}
+
+	//create a sphere VBO for drawing the nodes
+	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
+
+	//these set up our callbacks, most have been changed to adapters until GUI is implemented
+	glfwSetFramebufferSizeCallback(Window, reshape);  //sets the callback for the window resizing
+	glfwSetCursorPosCallback(Window, mousePassiveMotionCallback); //sets the callback for the cursor position
+	glfwSetMouseButtonCallback(Window, myMouse); //sets the callback for the mouse clicks
+	glfwSetScrollCallback(Window, scrollWheel); //sets the callback for the mouse wheel
+	glfwSetKeyCallback(Window, KeyPressed); //sets the callback for the keyboard
 	
-	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
+
+
+	// Set the viewport size and aspect ratio
+	glViewport(0, 0, XWindowSize, YWindowSize);
+
+	// PROJECTION MATRIX - this controls how wide your viewing area is
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+
 	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
-	glMatrixMode(GL_MODELVIEW);
-	glClearColor(BackGround.x, BackGround.y, BackGround.z, 0.0);
 	
+	// MODELVIEW MATRIX - this controls camera position
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
+
+	glClearColor(BackGround.x, BackGround.y, BackGround.z, 1.0f);
+
+	
+	//Lighting and material properties
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	//GLfloat light_position[] = {EyeX, EyeY, EyeZ, 0.0};
-	GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
+	GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0}; //where the light is: {x,y,z,w}, w=0.0 is infinite light aiming at x,y,z, w=1.0 is a point light radiating from x,y,z
 	GLfloat light_ambient[]  = {1.0, 1.0, 1.0, 1.0}; //what color is the ambient light, {r,g,b,a}, a= opacity 1.0 is fully visible, 0.0 is invisible
 	GLfloat light_diffuse[]  = {1.0, 1.0, 1.0, 1.0}; //does light reflect off of the object, {r,g,b,a}, a has no effect
 	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0}; //does light highlight shiny surfaces, {r,g,b,a}. i.e what light reflects to viewer
@@ -425,26 +471,88 @@ int main(int argc, char** argv)
 
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_DEPTH_TEST);
+
 	
-	//glutMouseFunc(mouseWheelCallback);
-	//glutMouseWheelFunc(mouseWheelCallback);
-	//glutMotionFunc(mouseMotionCallback);
-    	glutPassiveMotionFunc(mousePassiveMotionCallback);
-	glutDisplayFunc(Display);
-	glutReshapeFunc(reshape);
-	glutMouseFunc(myMouse);
-	glutKeyboardFunc(KeyPressed);
-	glutIdleFunc(idle);
-	glutSetCursor(GLUT_CURSOR_DESTROY);
-	glEnable(GL_DEPTH_TEST);
-	
-	glutMainLoop();
+	//*****************************************ImGUI stuff here********************************
+  // Initialize ImGui
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
+
+    // Setup ImGui style
+  ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
+  ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
+  style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
+
+    // Setup Platform/Renderer backends
+  ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
+  ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
+
+  // Load a font
+  io.Fonts->AddFontDefault();
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	// Main loop
+	while (!glfwWindowShouldClose(Window))
+	{
+		glfwPollEvents();
+
+		// Start ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		
+		// Update physics --multiple steps per frame for performance
+		if (!Simulation.isPaused) 
+		{
+			// Execute nBody DrawRate times before we draw
+			for (int i = 0; i < DrawRate; i++) 
+			{
+				nBody(Dt);
+				
+				// Check if we hit the 10ms mark and need to pause
+				if (Simulation.isPaused) {
+					break;  // Exit the loop if simulation gets paused
+				}
+			}
+		}
+		
+		// Always draw every frame - this is critical for GLFW performance
+		cudaStreamSynchronize(computeStream); 
+		copyNodesMusclesFromGPU();
+		drawPicture();
+		
+		// Create and render GUI
+		createGUI();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
+		// Swap buffers once per frame
+		glfwSwapBuffers(Window);
+	}
+		
+	//Destroy streams
+	cudaStreamDestroy(computeStream);
+  cudaStreamDestroy(memoryStream);
 
 	//free up memory
-	cudaFreeHost(Node);
-    	cudaFreeHost(Muscle);
-    	cudaFree(NodeGPU);
-    	cudaFree(MuscleGPU);
+	free(Node);
+  free(Muscle);
+  cudaFree(NodeGPU);
+  cudaFree(MuscleGPU);
+
+	//shutdown ImGui
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	//destroy the window and terminate GLFW
+	glfwDestroyWindow(Window);
+  glfwTerminate();
 
 	return 0;
 }

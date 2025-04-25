@@ -5,9 +5,7 @@
  
  The functions in this file are listed below and in this order.
  
- void Display(void);
- void idle();
- void reshape(int, int);
+ void reshape(GLFWwindow* window, int width, int height);
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
@@ -15,44 +13,24 @@
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
  bool setMouseMuscleAttributes();
- void setMouseMuscleRefractoryPeriod();
- void setMouseMuscleConductionVelocity();
  void setEctopicBeat(int nodeId);
  void clearStdin();
- void getEctopicBeatPeriod(int);
- void getEctopicBeatOffset(int);
  string getTimeStamp();
  void movieOn();
  void movieOff();
  void screenShot();
  void saveSettings();
- void KeyPressed(unsigned char, int, int);
- void mousePassiveMotionCallback(int, int);
- void myMouse(int, int, int, int);
-*/
-
-/*
- OpenGL callback when the window is created or reshaped.
-*/
-void Display(void)
-{
-	drawPicture();
-}
-
-/*
- OpenGL callback when the window is doing nothing else.
-*/
-void idle()
-{
-	nBody(Dt);
-}
+ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
+ void myMouse(GLFWwindow* window, int button, int state, double x, double y);
+ void scrollWheel(GLFWwindow*, double, double);
 
 /*
  OpenGL callback when the window is reshaped.
 */
-void reshape(int w, int h)
+void reshape(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
+	glViewport(0, 0, width, height);
 }
 
 /*
@@ -68,8 +46,7 @@ void mouseFunctionsOff()
 	Simulation.isInAdjustMuscleLineMode = false;
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInMouseFunctionMode = false;
-	terminalPrint();
-	glutSetCursor(GLUT_CURSOR_DESTROY);
+	glfwSetCursor(Window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR)); // Set cursor to default arrow.
 	drawPicture();
 }
 
@@ -82,9 +59,8 @@ void mouseAblateMode()
 	Simulation.isPaused = true;
 	Simulation.isInAblateMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
-	terminalPrint();
 	drawPicture();
 }
 
@@ -97,14 +73,9 @@ void mouseEctopicBeatMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicBeatMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
-	terminalPrint();
 	drawPicture();
-	system("clear");
-	printf("\n You are in create ectopic beat mode.");
-	printf("\n\n Use the mouse to select a node.");
-	printf("\n");
 }
 
 /*
@@ -116,10 +87,9 @@ void mouseEctopicEventMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicEventMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
-	terminalPrint();
 }
 
 /*
@@ -131,16 +101,12 @@ void mouseAdjustMusclesAreaMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleAreaMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	
 	bool returnFlag = setMouseMuscleAttributes();
 	
-	if(returnFlag)
-	{
-		terminalPrint();
-	}
 }
 
 /*
@@ -152,16 +118,12 @@ void mouseAdjustMusclesLineMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleLineMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
 	
 	bool returnFlag = setMouseMuscleAttributes();
 	
-	if(returnFlag)
-	{
-		terminalPrint();
-	}
 }
 
 /*
@@ -173,10 +135,9 @@ void mouseIdentifyNodeMode()
 	Simulation.isPaused = true;
 	Simulation.isInFindNodeMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	//orthogonalView();
 	drawPicture();
-	terminalPrint();
 }
 
 /*
@@ -185,57 +146,10 @@ void mouseIdentifyNodeMode()
 */
 bool setMouseMuscleAttributes()
 {
-	setMouseMuscleRefractoryPeriod();
-	setMouseMuscleConductionVelocity();
+	// These functions now just set default values
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 	return(true);
-}
-
-/*
- This function asks the user to type in the terminal screen the value to be multiplied by the
- selected muscles' refractory period.
-*/
-void setMouseMuscleRefractoryPeriod()
-{
-	system("clear");
-	RefractoryPeriodAdjustmentMultiplier = -1.0;
-	
-	printf("\n\n Enter the refractory period multiplier.");
-	printf("\n A number greater than 1 will make it longer.");
-	printf("\n A number between 0 and 1 will make it shorter.");
-	printf("\n\n Refractory period multiplier = ");
-	fflush(stdin);
-	scanf("%f", &RefractoryPeriodAdjustmentMultiplier);
-	if(RefractoryPeriodAdjustmentMultiplier < 0)
-	{
-		system("clear");
-		printf("\n You cannot adjust the the refractory period by a negative number.");
-		printf("\n Retry\n");
-		setMouseMuscleRefractoryPeriod();
-	}
-}
-
-/*
- This function asks the user to type in the terminal screen the value to be multiplied by the
- selected muscles' conduction velocity.
-*/
-void setMouseMuscleConductionVelocity()
-{
-	system("clear");
-	MuscleConductionVelocityAdjustmentMultiplier = -1.0; //init'd make sure the user enters a valid number
-	
-	printf("\n\n Enter conduction velocity multiplier.");
-	printf("\n A number between 0 and 1 will slow it down.");
-	printf("\n A number bigger than 1 will speed it up.");
-	printf("\n\n Conduction velocity multiplier = ");
-	fflush(stdin);
-	scanf("%f", &MuscleConductionVelocityAdjustmentMultiplier);
-	if(MuscleConductionVelocityAdjustmentMultiplier <= 0)
-	{
-		system("clear");
-		printf("\n You cannot adjust the the conduction velocity by a non-positive number.");
-		printf("\n Retry\n");
-		setMouseMuscleConductionVelocity();
-	}
 }
 
 /*
@@ -254,12 +168,13 @@ void setEctopicBeat(int nodeId)
 	}
 	drawPicture();
 	
-	getEctopicBeatPeriod(nodeId);
-	getEctopicBeatOffset(nodeId);
+	// Set default values - these used to come from user input functions
+	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
+	Node[nodeId].beatTimer = 0; // Default to start immediately
+	
 	
 	// We only let you set 1 ectopic beat at a time.
 	Simulation.isInEctopicBeatMode = false;
-	terminalPrint();
 }
 
 /*
@@ -274,67 +189,6 @@ void clearStdin()
     }
 }
 
-/*
- This function gets the ectopic beat period from the user.
-*/
-void getEctopicBeatPeriod(int nodeId)
-{
-	float period;
-	fflush(stdin);
-	system("clear");
-	printf("\n The current driving beat Period = %f.", BeatPeriod);
-	printf("\n Enter the period of your ectopic beat.");
-	
-	printf("\n\n Ectopic period = ");
-	scanf("%f", &period);
-
-	if(period <= 0)
-	{
-		system("clear");
-		printf("\n You entered %f.", Node[nodeId].beatPeriod);
-		printf("\n You cannot have a beat period that is a non-positive number.");
-		printf("\n Retry\n");
-		getEctopicBeatPeriod(nodeId);
-	}
-	else
-	{
-		Node[nodeId].beatPeriod = period;
-	}
-	clearStdin();
-}
-
-/*
- This function gets the ectopic beat offset from the user. This is the amount of time the
- user wants to pause before turning on the ectopic beat. This allows the user to time the 
- ectopic beats relative to the current time. So the user can set beats to trigger at different 
- times.
-*/
-void getEctopicBeatOffset(int nodeId)
-{
-	system("clear");
-	printf("\n The current Time into the beat is %f.", Node[nodeId].beatTimer);
-	printf("\n Enter the time offset of your ectopic event.");
-	printf("\n This will allow you to time your ectopic beat with the driving beat.");
-	printf("\n Zero will start the ectopic beat now.");
-	printf("\n A positive number will delay the ectopic beat by that amount.");
-	printf("\n\n Ectopic time delay = ");
-	fflush(stdin);
-
-	float timeDelay;
-	scanf("%f", &timeDelay);
-
-	if(timeDelay < 0)
-	{
-		system("clear");
-		printf("\n You cannot have a time delay that is a negative number.");
-		printf("\n Retry\n");
-		getEctopicBeatOffset(nodeId);
-	}
-	else
-	{
-		Node[nodeId].beatTimer = Node[nodeId].beatPeriod - timeDelay;
-	}
-}
 
 /*
  This function returns a timestamp in M-D-Y-H.M.S format.
@@ -386,15 +240,27 @@ void movieOn()
 	/*const char* cmd = "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
 		      "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output.mp4";*/
 
-	string baseCommand = "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-				"-c:v libx264rgb -threads 0 -preset fast -y -pix_fmt yuv420p -crf 0 -vf vflip ";
+	char baseCommand[512]; // Command to run ffmpeg with the correct parameters for capturing a movie
+	//use sprintf to create the command string for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
 
-	string z = baseCommand + ts;
+	//Low Quality, Fast Speed, Small Size
+	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+	// 	"-c:v libx264 -threads 0 -preset fast -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
 
-	const char *ccx = z.c_str();
-	MovieFile = popen(ccx, "w");
+	//Medium Quality, Medium Speed, Medium Size
+	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+	// 			"-c:v libx264 -threads 0 -preset medium -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
+
+	//Max Quality, Low Speed, Large Size (change crf to 0 range[0,51] for lossless compression, but I wanted to keep the file size down)
+	sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
+
+	//use the command string to create the output file name
+	MovieFile = popen(baseCommand, "w");
+
 	//Buffer = new int[XWindowSize*YWindowSize];
-	Buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
+	Buffer = (unsigned char*)malloc(4* XWindowSize* YWindowSize);
+
 	Simulation.isRecording = true;
 }
 
@@ -418,14 +284,22 @@ void screenShot()
 {	
 	bool savedPauseState;
 	FILE* ScreenShotFile;
-	int* buffer;
+	unsigned char* buffer; //unsigned char because we are using RGBA data, which is 4 bytes per pixel, 1 char = 1 byte
 
-	const char* cmd = "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-				"-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4";
+    char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
+
+	//commands for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
+    sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+                "-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4",
+                XWindowSize, YWindowSize);
+
+	
 	//const char* cmd = "ffmpeg -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
 	//              "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output1.mp4";
+	
+	//open the pipe to ffmpeg and allocate the buffer for the screenshot with the size of 4*XWin* YWin to hold the RGBA data
 	ScreenShotFile = popen(cmd, "w");
-	buffer = (int*)malloc(XWindowSize*YWindowSize*sizeof(int));
+	buffer = (unsigned char*)malloc(4 * XWindowSize*YWindowSize*sizeof(int));
 	
 	if(!Simulation.isPaused) //if the simulation is running
 	{
@@ -440,8 +314,8 @@ void screenShot()
 	for(int i =0; i < 1; i++)
 	{
 		drawPicture();
-		glReadPixels(5, 5, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		fwrite(buffer, sizeof(int)*XWindowSize*YWindowSize, 1, ScreenShotFile);
+		glReadPixels(0, 0, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		fwrite(buffer, 4*XWindowSize*YWindowSize, 1, ScreenShotFile);
 	}
 	
 	pclose(ScreenShotFile);
@@ -463,6 +337,7 @@ void screenShot()
 	Simulation.isPaused = savedPauseState; //restore the pause state before we took the screenshot
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
+
 
 /*
  This function saves all the node and muscle values set in the run to a file. This file can then be used at a
@@ -575,433 +450,208 @@ void saveSettings()
  This function directs the action that needs to be taken if a user hits a key on the key board.
  The terminal screen lists out all the keys and what they will do.
 */
-void KeyPressed(unsigned char key, int x, int y)
+void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	float dAngle = 0.01;
-	float zoom = 0.01*RadiusOfLeftAtrium;
-	float temp;
-	float4 lookVector;
-	float d;
-	float4 centerOfMass;
-	
-	copyNodesMusclesFromGPU();
-	
-	lookVector.x = CenterX - EyeX;
-	lookVector.y = CenterY - EyeY;
-	lookVector.z = CenterZ - EyeZ;
-	d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
-	
-	if(d < 0.00001)
-	{
-		printf("\n lookVector is too small\n");
-		printf("\n Good Bye\n");
-		exit(0);
-	}
-	else
-	{
-		lookVector.x /= d;
-		lookVector.y /= d;
-		lookVector.z /= d;
-	}
-	
-	if(key == 'h')  // Help menu
-	{
-		helpMenu();
-	}
-	
-	if(key == 'q') // quit
-	{
-		glutDestroyWindow(Window);
-		cudaFreeHost(Node);
-		cudaFreeHost(Muscle);
-		//free(Node);
-    		//free(Muscle);
-    		cudaFree(NodeGPU);
-    		cudaFree(MuscleGPU);
-		printf("\n Good Bye\n");
-		exit(0);
-	}
-	
-	if(key == 'r')  // Run toggle
-	{
-		if(Simulation.isPaused == false) Simulation.isPaused = true;
-		else Simulation.isPaused = false;
-		terminalPrint();
-	}
-	
-	if(key == 'u')  // Contraction toggle
-	{
-		if(Simulation.ContractionisOn == false) Simulation.ContractionisOn = true;
-		else Simulation.ContractionisOn = false;
-		terminalPrint();
-	}
-	
-	if(key == 'n')  // Draw nodes toggle
-	{
-		if(Simulation.DrawNodesFlag == 0) Simulation.DrawNodesFlag = 1;
-		else if(Simulation.DrawNodesFlag == 1) Simulation.DrawNodesFlag = 2;
-		else Simulation.DrawNodesFlag = 0;
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'g')  // Draw full or front half toggle
-	{
-		if(Simulation.DrawFrontHalfFlag == 0) Simulation.DrawFrontHalfFlag = 1;
-		else Simulation.DrawFrontHalfFlag = 0;
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'B')  // Raising the beat period
-	{
-		Node[PulsePointNode].beatPeriod += 10;
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-		cudaErrorCheck(__FILE__, __LINE__);
-		terminalPrint();
-	}
-	if(key == 'b')  // Lowering the beat period
-	{
-		Node[PulsePointNode].beatPeriod -= 10;
-		if(Node[PulsePointNode].beatPeriod < 0) 
-		{
-			Node[PulsePointNode].beatPeriod = 0;  // You don't want the beat to go negative
-		}
-		cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-		cudaErrorCheck(__FILE__, __LINE__);
-		terminalPrint();
-	}
-	
-	if(key == 'v') // Orthoganal/Fulstrium view
-	{
-		if(Simulation.ViewFlag == 0) 
-		{
-			Simulation.ViewFlag = 1;
-			frustumView();
-		}
-		else 
-		{
-			Simulation.ViewFlag = 0;
-			orthogonalView();
-		}
-		drawPicture();
-		terminalPrint();
-	}
-	
-	if(key == 'm')  // Movie on
-	{
-		if(!Simulation.isRecording) 
-		{
-			Simulation.isRecording = true;
-			movieOn();
-		}
-		else 
-		{
-			Simulation.isRecording = false;
-			movieOff();
-		}
-		terminalPrint();
-	}
-	
-	if(key == 'S')  // Screenshot
-	{	
-		screenShot();
-		terminalPrint();
-	}
-	
-	if(key == '0')
-	{
-		setView(0);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '1')
-	{
-		setView(1);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '2')
-	{
-		setView(2);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '3')
-	{
-		setView(3);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '4')
-	{
-		setView(4);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '5')
-	{
-		setView(5);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '6')
-	{
-		setView(6);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '7')
-	{
-		setView(7);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '8')
-	{
-		setView(8);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '9')
-	{
-		setView(9);
-		drawPicture();
-		terminalPrint();
-	}
-	if(key == '?') // Finding front and top reference nodes.
-	{
-		float maxZ = -10000.0;
-		float maxY = -10000.0;
-		int indexZ = -1;
-		int indexY = -1;
-		
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			if(maxZ < Node[i].position.z) 
-			{
-				maxZ = Node[i].position.z;
-				indexZ = i;
-			}
-			
-			if(maxY < Node[i].position.y) 
-			{
-				maxY = Node[i].position.y;
-				indexY = i;
-			}
-		}
-		
-		Node[indexZ].color.x = 0.0;
-		Node[indexZ].color.y = 0.0;
-		Node[indexZ].color.z = 1.0;
-		
-		Node[indexY].color.x = 1.0;
-		Node[indexY].color.y = 0.0;
-		Node[indexY].color.z = 1.0;
-		
-		system("clear");
-		printf("\n Front node index = %d\n", indexZ);
-		printf("\n Top node index   = %d\n", indexY);
-		
-		drawPicture();
-	}
-	if(key == 'w')  // Rotate counterclockwise on the x-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.x += dAngle;
-	}
-	if(key == 's')  // Rotate clockwise on the x-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp; 
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.x -= dAngle;
-	}
-	if(key == 'd')  // Rotate counterclockwise on the y-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.y -= dAngle;
-	}
-	if(key == 'a')  // Rotate clockwise on the y-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.y += dAngle;
-	}
-	if(key == 'z')  // Rotate counterclockwise on the z-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
-			Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.z += dAngle;
-	}
-	if(key == 'Z')  // Rotate clockwise on the z-axis
-	{
-		centerOfMass = findCenterOfMass();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfMass.x;
-			Node[i].position.y -= centerOfMass.y;
-			Node[i].position.z -= centerOfMass.z;
-			temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
-			Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfMass.x;
-			Node[i].position.y += centerOfMass.y;
-			Node[i].position.z += centerOfMass.z;
-		}
-		drawPicture();
-		AngleOfSimulation.z -= dAngle;
-	}
-	if(key == 'e')  // Zoom in
-	{
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= zoom*lookVector.x;
-			Node[i].position.y -= zoom*lookVector.y;
-			Node[i].position.z -= zoom*lookVector.z;
-		}
-		CenterOfSimulation.x -= zoom*lookVector.x;
-		CenterOfSimulation.y -= zoom*lookVector.y;
-		CenterOfSimulation.z -= zoom*lookVector.z;
-		drawPicture();
-	}
-	if(key == 'E')  // Zoom out
-	{
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x += zoom*lookVector.x;
-			Node[i].position.y += zoom*lookVector.y;
-			Node[i].position.z += zoom*lookVector.z;
-		}
-		CenterOfSimulation.x += zoom*lookVector.x;
-		CenterOfSimulation.y += zoom*lookVector.y;
-		CenterOfSimulation.z += zoom*lookVector.z;
-		drawPicture();
-	}
-	
-	if(key == ')')  // All mouse functions are off (shift 0)
-	{
-		mouseFunctionsOff();
-		Simulation.isInMouseFunctionMode = false;
-	}
-	if(key == '!')  // Ablate is on (shift 1)
-	{
-		mouseAblateMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '@')  // Ectopic beat is on (shift 2)
-	{
-		mouseEctopicBeatMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '#')  // You are in ectopic single trigger mode. (shift 3)
-	{
-		mouseEctopicEventMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '$') // muscle adjustment is on (shift 4)
-	{
-		mouseAdjustMusclesAreaMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '%') // muscle adjustment is on (shift 4)
-	{
-		mouseAdjustMusclesLineMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	if(key == '^')  // Find node is on (shift 5)
-	{
-		mouseIdentifyNodeMode();
-		Simulation.isInMouseFunctionMode = true;
-	}
-	
-	if(key == ']')  
-	{
-		HitMultiplier += 0.005;
-		terminalPrint();
-		//printf("\n Your selection area = %f times the radius of atrium. \n", HitMultiplier);
-	}
-	if(key == '[')
-	{
-		HitMultiplier -= 0.005;
-		if(HitMultiplier < 0.0) HitMultiplier = 0.0;
-		terminalPrint();
-		//printf("\n Your selection area = %f times the radius of atrium. \n", HitMultiplier);
-	}
-	
-	if(key == 'c')  // Recenter the simulation
-	{
-		centerObject();
-		drawPicture();
-	}
-	
-	if(key == 'k')  // Save your current setting so you can start with this run in the future.
-	{
-		saveSettings();
-	}
-	
-	copyNodesMusclesToGPU();
+    // Only process key press events, not releases or repeats
+
+	// if (action != GLFW_PRESS)
+	// 	return;
+
+	// Get ImGui IO to check if it's capturing input
+	ImGuiIO& io = ImGui::GetIO();
+    
+    // If ImGui is handling this event, return
+    if (io.WantCaptureKeyboard)
+        return;
+
+
+    float dAngle = 0.01;
+    float zoom = 0.01*RadiusOfLeftAtrium;
+    float temp;
+    float4 lookVector;
+    float d;
+    float4 centerOfMass;
+    
+    //copyNodesMusclesFromGPU();
+    
+    lookVector.x = CenterX - EyeX;
+    lookVector.y = CenterY - EyeY;
+    lookVector.z = CenterZ - EyeZ;
+    d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
+    
+    if(d < 0.00001)
+    {
+        printf("\n lookVector is too small\n");
+        printf("\n Good Bye\n");
+        exit(0);
+    }
+    else
+    {
+        lookVector.x /= d;
+        lookVector.y /= d;
+        lookVector.z /= d;
+    }
+    
+    
+    // WASD movement keys
+    if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
+    {
+		copyNodesFromGPU();
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
+            Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
+            Node[i].position.y  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.x += dAngle;
+		copyNodesToGPU();
+    }
+    
+    if(key == GLFW_KEY_S)  // Rotate clockwise on the x-axis
+    {
+		copyNodesFromGPU();
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
+            Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
+            Node[i].position.y  = temp; 
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.x -= dAngle;
+		copyNodesToGPU();
+    }
+    
+    if(key == GLFW_KEY_D)  // Rotate counterclockwise on the y-axis
+    {
+		copyNodesFromGPU();
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
+            Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
+            Node[i].position.x  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.y -= dAngle;
+		copyNodesToGPU();
+    }
+    
+    if(key == GLFW_KEY_A)  // Rotate clockwise on the y-axis
+    {
+		copyNodesFromGPU();
+        centerOfMass = findCenterOfMass();
+        for(int i = 0; i < NumberOfNodes; i++)
+        {
+            Node[i].position.x -= centerOfMass.x;
+            Node[i].position.y -= centerOfMass.y;
+            Node[i].position.z -= centerOfMass.z;
+            temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
+            Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
+            Node[i].position.x  = temp;
+            Node[i].position.x += centerOfMass.x;
+            Node[i].position.y += centerOfMass.y;
+            Node[i].position.z += centerOfMass.z;
+        }
+        drawPicture();
+        AngleOfSimulation.y += dAngle;
+		copyNodesToGPU();
+    }
+    
+    if(key == GLFW_KEY_Z)
+    {
+		copyNodesFromGPU();
+        if(mods & GLFW_MOD_SHIFT)  // Uppercase Z - Rotate clockwise on the z-axis
+        {
+            centerOfMass = findCenterOfMass();
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= centerOfMass.x;
+                Node[i].position.y -= centerOfMass.y;
+                Node[i].position.z -= centerOfMass.z;
+                temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
+                Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
+                Node[i].position.x  = temp;
+                Node[i].position.x += centerOfMass.x;
+                Node[i].position.y += centerOfMass.y;
+                Node[i].position.z += centerOfMass.z;
+            }
+            drawPicture();
+            AngleOfSimulation.z -= dAngle;
+        }
+        else  // Lowercase z - Rotate counterclockwise on the z-axis
+        {
+            centerOfMass = findCenterOfMass();
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= centerOfMass.x;
+                Node[i].position.y -= centerOfMass.y;
+                Node[i].position.z -= centerOfMass.z;
+                temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
+                Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
+                Node[i].position.x  = temp;
+                Node[i].position.x += centerOfMass.x;
+                Node[i].position.y += centerOfMass.y;
+                Node[i].position.z += centerOfMass.z;
+            }
+            drawPicture();
+            AngleOfSimulation.z += dAngle;
+        }
+		copyNodesToGPU();
+    }
+    
+    if(key == GLFW_KEY_E)
+    {
+		copyNodesFromGPU();
+        if(mods & GLFW_MOD_SHIFT)  // Uppercase E - Zoom out
+        {
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x += zoom*lookVector.x;
+                Node[i].position.y += zoom*lookVector.y;
+                Node[i].position.z += zoom*lookVector.z;
+            }
+            CenterOfSimulation.x += zoom*lookVector.x;
+            CenterOfSimulation.y += zoom*lookVector.y;
+            CenterOfSimulation.z += zoom*lookVector.z;
+            drawPicture();
+        }
+        else  // Lowercase e - Zoom in
+        {
+            for(int i = 0; i < NumberOfNodes; i++)
+            {
+                Node[i].position.x -= zoom*lookVector.x;
+                Node[i].position.y -= zoom*lookVector.y;
+                Node[i].position.z -= zoom*lookVector.z;
+            }
+            CenterOfSimulation.x -= zoom*lookVector.x;
+            CenterOfSimulation.y -= zoom*lookVector.y;
+            CenterOfSimulation.z -= zoom*lookVector.z;
+            drawPicture();
+        }
+		copyNodesToGPU();
+    }
+    
 }
 
 /*
@@ -1011,7 +661,7 @@ void KeyPressed(unsigned char key, int x, int y)
  We translates them to MouseX (-1, 1) and MouseY (-1, 1) to corospond to the openGL window size.
  We then use MouseX and MouseY to determine where the mouse is in the simulation.
 */
-void mousePassiveMotionCallback(int x, int y) 
+void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 {
 	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
 	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
@@ -1020,18 +670,27 @@ void mousePassiveMotionCallback(int x, int y)
 /*
  This function does an action based on the mode the viewer is in and which mouse button the user pressed.
 */
-void myMouse(int button, int state, int x, int y)
+void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
+
+	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
+	// // Get ImGui IO to check if it's capturing input
+	// ImGuiIO& io = ImGui::GetIO();
+    
+    // // If ImGui is handling this event, return
+    // if (io.WantCaptureKeyboard)
+    //     return;
+	
 	float d, dx, dy, dz;
 	float hit;
 	int muscleId;
 	
-	if(state == GLUT_DOWN)
+	if(action == GLFW_PRESS)
 	{
 		copyNodesMusclesFromGPU();
 		hit = HitMultiplier*RadiusOfLeftAtrium;
 		
-		if(button == GLUT_LEFT_BUTTON)
+		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
 			if(Simulation.isInAdjustMuscleLineMode)
 			{
@@ -1138,7 +797,7 @@ void myMouse(int button, int state, int x, int y)
 						if(Simulation.isInEctopicBeatMode)
 						{
 							Simulation.isPaused = true;
-							printf("\n Node number = %d", i);
+							// printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
@@ -1193,13 +852,13 @@ void myMouse(int button, int state, int x, int y)
 							Node[i].color.x = 1.0;
 							Node[i].color.y = 0.0;
 							Node[i].color.z = 1.0;
-							printf("\n Node number = %d\n", i);
+							// printf("\n Node number = %d", i);
 						}
 					}
 				}
 			}
 		}
-		else if(button == GLUT_RIGHT_BUTTON) // Right Mouse button down
+		else if(button == GLFW_MOUSE_BUTTON_RIGHT) // Right Mouse button down
 		{
 			if(Simulation.isInAdjustMuscleLineMode)
 			{
@@ -1339,19 +998,19 @@ void myMouse(int button, int state, int x, int y)
 				}
 			}
 		}
-		else if(button == GLUT_MIDDLE_BUTTON)
+		else if(button == GLFW_MOUSE_BUTTON_MIDDLE)
 		{
 			if(ScrollSpeedToggle == 0)
 			{
 				ScrollSpeedToggle = 1;
 				ScrollSpeed = 1.0;
-				printf("\n speed = %f\n", ScrollSpeed);
+				// printf("\n speed = %f\n", ScrollSpeed);
 			}
 			else
 			{
 				ScrollSpeedToggle = 0;
 				ScrollSpeed = 0.1;
-				printf("\n speed = %f\n", ScrollSpeed);
+				// printf("\n speed = %f\n", ScrollSpeed);
 			}
 			
 		}
@@ -1360,17 +1019,18 @@ void myMouse(int button, int state, int x, int y)
 		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
 	
-	if(state == 0)
-	{
-		if(button == 3) //Scroll up
-		{
-			MouseZ -= ScrollSpeed;
-		}
-		else if(button == 4) //Scroll down
-		{
-			MouseZ += ScrollSpeed;
-		}
-		//printf("MouseZ = %f\n", MouseZ);
-		drawPicture();
-	}
+}
+
+void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if(yoffset > 0) // Scroll up
+    {
+        MouseZ -= ScrollSpeed;
+    }
+    else if(yoffset < 0) // Scroll down
+    {
+        MouseZ += ScrollSpeed;
+    }
+    // printf("MouseZ = %f\n", MouseZ);
+    drawPicture();
 }

@@ -8,9 +8,6 @@
 #include <fstream>
 #include <sstream>
 #include <string.h>
-#include <GL/glut.h>
-#include <GL/freeglut.h>
-//#include <GLFW/glfw3.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +16,17 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <vector> //needed for VBOs
+
+// OpenGL headers - GLAD must come BEFORE GLFW
+#include "../include/glad/glad.h"
+#include <GL/glu.h>
+#include <GLFW/glfw3.h>
+
+// ImGui headers - use quotes for local includes, not angle brackets
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
 using namespace std;
 
@@ -103,6 +111,13 @@ struct simulationSwitchesStructure
 	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
 	// orient yourself.
 	int DrawFrontHalfFlag;
+
+
+	// For Find Nodes functionality
+	//These need to be globals or they get wiped when the GUI redraws
+	bool nodesFound;       // Whether nodes have been identified
+    int frontNodeIndex;    // Index of the frontmost node (max Z)
+    int topNodeIndex;      // Index of the topmost node (max Y)
 };
 
 // Globals Start ******************************************
@@ -124,11 +139,19 @@ simulationSwitchesStructure Simulation;
 
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.
-int* Buffer; // Buffer where you create each frame for a movie or the one frame for a screen shot.
+unsigned char* Buffer; // Buffer where you create each frame for a movie or the one frame for a screen shot.
 
 // To setup your CUDA device
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
+
+//CUDA streams for overlapping memory and kernel operations
+cudaStream_t computeStream, memoryStream;
+
+//To use VBOs for sphere rendering
+GLuint sphereVBO, sphereIBO; // Vertex Buffer Object and Index Buffer Object for sphere rendering, Vertex is the sphere's vertices and Index is the order in which to draw them
+GLuint numSphereVertices, numSphereIndices; // Number of vertices and indices in the sphere geometry
+
 
 // This is the node that the beat initiates from.
 int PulsePointNode;
@@ -214,12 +237,13 @@ int RecenterCount;
 int RecenterRate;
 double RunTime;
 
+
 // These keep track of where the view is as you zoom in and out and rotate.
 float4 CenterOfSimulation;
 float4 AngleOfSimulation;
 
 // Window globals
-static int Window;
+GLFWwindow* Window; // Window pointer
 int XWindowSize;
 int YWindowSize; 
 double Near; // Front and back of clip planes
@@ -256,6 +280,8 @@ __global__ void recenter(nodeAttributesStructure *, int, float, float4);
 void cudaErrorCheck(const char *, int);
 void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
+void copyNodesFromGPU();
+void copyNodesToGPU();
 
 // Functions in the setNodesAndMuscles.h file.
 void setNodesFromBlenderFile();
@@ -272,6 +298,9 @@ void hardCodedIndividualMuscleAttributes();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
+void renderSphere(float, int, int);
+void createSphereVBO(float, int, int);
+void renderSphereVBO();
 void orthogonalView();
 void frustumView();
 float4 findCenterOfMass();
@@ -284,32 +313,26 @@ void PAView();
 void APView();
 void setView(int);
 void drawPicture();
-void terminalPrint();
-void helpMenu();
+void createGUI();
 
 // Functions in the callBackFunctions.h file.
-void Display(void);
-void idle();
-void reshape(int, int);
-void mouseFunctionsOff();
-void mouseAblateMode();
-void mouseEctopicBeatMode();
-void mouseAdjustMusclesAreaMode();
-void mouseAdjustMusclesLineMode();
-void mouseIdentifyNodeMode();
-bool setMouseMuscleAttributes();
-void setMouseMuscleRefractoryPeriod();
-void setMouseMuscleConductionVelocity();
-void setEctopicBeat(int);
-void clearStdin();
-void getEctopicBeatPeriod(int);
-void getEctopicBeatOffset(int);
-string getTimeStamp();
-void movieOn();
-void movieOff();
-void screenShot();
-void saveSettings();
-void KeyPressed(unsigned char, int, int);
-void mousePassiveMotionCallback(int, int);
-void myMouse(int, int, int, int);
+ void reshape(GLFWwindow* window, int width, int height);
+ void mouseFunctionsOff();
+ void mouseAblateMode();
+ void mouseEctopicBeatMode();
+ void mouseAdjustMusclesAreaMode();
+ void mouseAdjustMusclesLineMode();
+ void mouseIdentifyNodeMode();
+ bool setMouseMuscleAttributes();
+ void setEctopicBeat(int nodeId);
+ void clearStdin();
+ string getTimeStamp();
+ void movieOn();
+ void movieOff();
+ void screenShot();
+ void saveSettings();
+ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
+ void myMouse(GLFWwindow* window, int button, int state, double x, double y);
+ void scrollWheel(GLFWwindow*, double, double);
 
