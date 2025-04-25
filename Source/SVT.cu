@@ -520,11 +520,10 @@ int main(int argc, char** argv)
   	cudaStreamDestroy(memoryStream);
 
 	//free up memory
-	free(Node);
-  	free(Muscle);
-  	cudaFree(NodeGPU);
-  	cudaFree(MuscleGPU);
-
+	cudaFreeHost(Node);
+	cudaFreeHost(Muscle);
+	cudaFree(NodeGPU);
+	cudaFree(MuscleGPU);
 	//shutdown ImGui
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
