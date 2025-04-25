@@ -480,7 +480,7 @@ void cudaErrorCheck(const char *file, int line)
 }
 
 /*
- Copies nodes and muscle files up to the GPU.
+ Copies nodes and muscle attributes up to the GPU.
 */
 void copyNodesMusclesToGPU()
 {
@@ -495,7 +495,7 @@ void copyNodesMusclesToGPU()
 }
 
 /*
- * Copies nodes and muscle files down from the GPU.
+ * Copies nodes and muscle attributes down from the GPU.
  */
 void copyNodesMusclesFromGPU()
 {
@@ -509,6 +509,9 @@ void copyNodesMusclesFromGPU()
     cudaStreamSynchronize(memoryStream);
 }
 
+/*
+ * Copies node attributes down from the GPU
+ */
 void copyNodesFromGPU()
 {
     cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
@@ -518,6 +521,9 @@ void copyNodesFromGPU()
     cudaStreamSynchronize(memoryStream);
 }
 
+/*
+ * Copies node attributes up to the GPU
+ */
 void copyNodesToGPU()
 {
     cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);

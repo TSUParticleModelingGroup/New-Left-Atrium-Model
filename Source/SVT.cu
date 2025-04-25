@@ -399,7 +399,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	//create a sphere VBO for drawing the nodes
+	//create a sphere VBO for drawing the nodes (since allnodes are the same we create pne VBO and use it for all nodes)
 	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
 
 	//these set up our callbacks, most have been changed to adapters until GUI is implemented
@@ -453,7 +453,7 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	
-	//*****************************************ImGUI stuff here********************************
+	//*****************************************Set up GUI********************************
 	// Initialize ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -466,8 +466,8 @@ int main(int argc, char** argv)
 	style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
-	ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
+	ImGui_ImplGlfw_InitForOpenGL(Window, true);  //connect ImGui to GLFW
+	ImGui_ImplOpenGL3_Init("#version 130");      //Chooses OpenGL version 3.0, this is the version that is compatible with the current version of ImGui
 
 	// Load a font
 	io.Fonts->AddFontDefault();
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		
-		// Swap buffers once per frame
+		// Swap buffers
 		glfwSwapBuffers(Window);
 	}
 		
@@ -519,11 +519,12 @@ int main(int argc, char** argv)
 	cudaStreamDestroy(computeStream);
   	cudaStreamDestroy(memoryStream);
 
-	//free up memory
+	//free memory
 	cudaFreeHost(Node);
 	cudaFreeHost(Muscle);
 	cudaFree(NodeGPU);
 	cudaFree(MuscleGPU);
+
 	//shutdown ImGui
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
