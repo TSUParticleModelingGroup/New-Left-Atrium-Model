@@ -286,6 +286,7 @@ void copyNodesToGPU();
 // Functions in the setNodesAndMuscles.h file.
 void setNodesFromBlenderFile();
 void checkNodes();
+void setBachmannBundleFromBlenderFile();
 void setMusclesFromBlenderFile();
 void linkNodesToMuscles();
 double croppedRandomNumber(double, double, double);

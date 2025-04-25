@@ -292,16 +292,11 @@ void setup()
 	// Seeding the random number generator.
 	time_t t;
 	srand((unsigned) time(&t));
-	
-	// Initialize default adjustment values
-	RefractoryPeriodAdjustmentMultiplier = 1.0;
-	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
 
-	// Initialize Find Nodes state
-	Simulation.nodesFound = false;
-	Simulation.frontNodeIndex = -1; //both init'd to -1 since we haven't found any nodes yet
-	Simulation.topNodeIndex = -1;
-
+	//create CUDA streams for async memory copy and compute
+	cudaStreamCreate(&computeStream);
+	cudaStreamCreate(&memoryStream);
+		
 	// Getting user inputs.
 	readSimulationParameters();
 	
@@ -310,6 +305,7 @@ void setup()
 	{
 		setNodesFromBlenderFile();
 		checkNodes();
+		setBachmannBundleFromBlenderFile();
 		setMusclesFromBlenderFile();
 		linkNodesToMuscles();
 		setRemainingNodeAndMuscleAttributes();
@@ -338,25 +334,9 @@ void setup()
 	// Setting up the CUDA parallel structure to be used.
 	setupCudaEnvironment();
 
-	//create CUDA streams for async memory copy and compute
-	cudaStreamCreate(&computeStream);
-	cudaStreamCreate(&memoryStream);
-	
+
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
-
-	// Use pinned memory for faster transfers
-	cudaHostRegister(Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostRegisterDefault);
-	cudaHostRegister(Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostRegisterDefault);
-
 	copyNodesMusclesToGPU();
-        
-	printf("\n");
-	char temp;
-	printf("\033[0;31m");
-	printf("\n\n The simulation has not been started.");
-	printf("\n Hit any key and return to begin.\n\n");
-	printf("\033[0m");
-	scanf("%s", &temp); 
 	
 }
 
@@ -474,26 +454,26 @@ int main(int argc, char** argv)
 
 	
 	//*****************************************ImGUI stuff here********************************
-  // Initialize ImGui
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO(); (void)io;
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
+	// Initialize ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
 
-    // Setup ImGui style
-  ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
-  ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
-  style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
+	// Setup ImGui style
+	ImGui::StyleColorsDark();  // Choose a style (Light, Dark, or Classic)
+	ImGuiStyle& style = ImGui::GetStyle(); // Get the current style
+	style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Set window background color
 
-    // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
-  ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(Window, true);  // Setup Platform bindings
+	ImGui_ImplOpenGL3_Init("#version 130");      // Setup Renderer bindings
 
-  // Load a font
-  io.Fonts->AddFontDefault();
+	// Load a font
+	io.Fonts->AddFontDefault();
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 	// Main loop
@@ -537,13 +517,13 @@ int main(int argc, char** argv)
 		
 	//Destroy streams
 	cudaStreamDestroy(computeStream);
-  cudaStreamDestroy(memoryStream);
+  	cudaStreamDestroy(memoryStream);
 
 	//free up memory
 	free(Node);
-  free(Muscle);
-  cudaFree(NodeGPU);
-  cudaFree(MuscleGPU);
+  	free(Muscle);
+  	cudaFree(NodeGPU);
+  	cudaFree(MuscleGPU);
 
 	//shutdown ImGui
 	ImGui_ImplOpenGL3_Shutdown();
@@ -552,7 +532,7 @@ int main(int argc, char** argv)
 
 	//destroy the window and terminate GLFW
 	glfwDestroyWindow(Window);
-  glfwTerminate();
+  	glfwTerminate();
 
 	return 0;
 }

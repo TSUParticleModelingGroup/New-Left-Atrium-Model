@@ -8,6 +8,7 @@
  
  void setNodesFromBlenderFile();
  void checkNodes();
+ void setBachmannBundleFromBlenderFile();
  void setMusclesFromBlenderFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
@@ -54,8 +55,6 @@ void setNodesFromBlenderFile()
 	// Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
-	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
-	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
 	fscanf(inFile, "%d", &PulsePointNode);
 	printf("\n PulsePointNode = %d", PulsePointNode);
 	fscanf(inFile, "%d", &UpNode);
@@ -68,13 +67,6 @@ void setNodesFromBlenderFile()
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
-	cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	// Setting all nodes to zero or their default settings; 
@@ -115,14 +107,6 @@ void setNodesFromBlenderFile()
 		{
 			Node[i].muscle[j] = -1; // -1 sets the muscle to not used.
 		}
-	}
-	
-	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
-	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
-	{
-		fscanf(inFile, "%d ", &id);
-		
-		BachmannsBundle[i] = id;
 	}
 	
 	// Reading in the nodes positions.
@@ -268,6 +252,60 @@ void checkNodes()
 	}
 	printf("\n Nodes have been checked for minimal separation.");
 }
+
+/*
+ This function 
+ 1. Opens the Bachmann's Bundle file.
+ 2. Reads the number of nodes in the BB.
+ 3. Reads the BB nodes
+ */
+
+void setBachmannBundleFromBlenderFile()
+{	
+	FILE *inFile;
+	//float x, y, z;
+	int id;
+	char fileName[256];
+	
+	// Generating the name of the file that holds the nodes.
+	char directory[] = "./NodesMuscles/";
+	strcpy(fileName, "");
+	strcat(fileName, directory);
+	strcat(fileName, NodesMusclesFileName);
+	strcat(fileName, "/BachmannsBundle");
+	
+	// Opening the node file.
+	inFile = fopen(fileName,"rb");
+	if(inFile == NULL)
+	{
+		printf("\n Can't open Bachmann's Bundle file.\n");
+		exit(0);
+	}
+	
+	// Reading the header information.
+	
+	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
+	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
+	
+	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
+	cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaErrorCheck(__FILE__, __LINE__);
+	
+	cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
+	cudaErrorCheck(__FILE__, __LINE__);
+	
+	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
+	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
+	{
+		fscanf(inFile, "%d ", &id);
+		
+		BachmannsBundle[i] = id;
+	}
+	
+	fclose(inFile);
+	printf("\n Bachmann's Bundle Node have been read in.");
+}
+
 
 /*
  This function 
@@ -664,6 +702,9 @@ void setRemainingParameters()
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInEctopicEventMode = false;
 	Simulation.isInMouseFunctionMode = false;
+	Simulation.nodesFound = false;
+	Simulation.frontNodeIndex = -1;
+	Simulation.topNodeIndex = -1;
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;

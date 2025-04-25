@@ -27,7 +27,7 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium2.3K_BB
+--InputFileName = 3DIdealLAtrium2.3K_BB
 
 Name of previous run files that were stored in GitHub.
 Test
