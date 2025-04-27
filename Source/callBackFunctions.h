@@ -674,12 +674,12 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
 
 	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
-	// // Get ImGui IO to check if it's capturing input
-	// ImGuiIO& io = ImGui::GetIO();
+    // Get ImGui IO to check if it's capturing input
+    ImGuiIO& io = ImGui::GetIO();
     
-    // // If ImGui is handling this event, return
-    // if (io.WantCaptureKeyboard)
-    //     return;
+    // If ImGui is handling this mouse event, return
+    if (io.WantCaptureMouse)
+        return;
 	
 	float d, dx, dy, dz;
 	float hit;
