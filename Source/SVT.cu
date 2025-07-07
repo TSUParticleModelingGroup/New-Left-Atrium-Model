@@ -66,7 +66,7 @@ void nBody(double dt)
 		}
 	}
 	
-	RunTime += dt; 
+	RunTime += dt;
 	
 }
 
@@ -347,8 +347,8 @@ int main(int argc, char** argv)
 {
 	setup();
 	
-	XWindowSize = 1300;
-	YWindowSize = 1300; 
+	XWindowSize = 1800;
+	YWindowSize = 1000; 
 
 	// Clip plains
 	Near = 0.2;
@@ -409,22 +409,7 @@ int main(int argc, char** argv)
 	glfwSetScrollCallback(Window, scrollWheel); //sets the callback for the mouse wheel
 	glfwSetKeyCallback(Window, KeyPressed); //sets the callback for the keyboard
 	
-
-
-	// Set the viewport size and aspect ratio
-	glViewport(0, 0, XWindowSize, YWindowSize);
-
-	// PROJECTION MATRIX - this controls how wide your viewing area is
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-
-	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
-	
-	// MODELVIEW MATRIX - this controls camera position
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
-
+	// Set the clear color to the background color
 	glClearColor(BackGround.x, BackGround.y, BackGround.z, 1.0f);
 
 	
@@ -452,6 +437,8 @@ int main(int argc, char** argv)
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_DEPTH_TEST);
 
+
+
 	
 	//*****************************************Set up GUI********************************
 	// Initialize ImGui
@@ -476,6 +463,54 @@ int main(int argc, char** argv)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
+	//*****************************************End GUI Setup********************************
+
+	//Initialize the window with aspect ratio and projection matrix
+
+	/*
+		NOTE (Remove this later): 
+
+		the reshape function which calculated the aspect ratio and projection matrix to allow us to resize without changing the aspect ratio
+		caused the simulation to not display properly when the window was first created and would stay that way until the window was resized.
+
+		and calling resize didn't work, so I basically copied everything here and got the window size instead of XWindowSize and YWindowSize
+		because X and Y windows size don't work for this
+
+	*/
+	// Get current size
+    int width, height;
+    glfwGetFramebufferSize(Window, &width, &height);
+    
+    // Reset viewport and matrices to ensure proper initial state
+    glViewport(0, 0, width, height);
+    
+    // Reset projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+	// Calculate aspect ratio
+    float aspect = (float)width / (float)height;
+
+	// Set projection based on the view flag
+	if(Simulation.ViewFlag == 0) // Orthogonal view
+	{
+		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthographic projection
+	}
+	else // Frustum view
+	{
+		glFrustum(-aspect, aspect, -1.0, 1.0, 1.0, 100.0); // Perspective projection
+	}
+    
+    // Reset modelview matrix
+	// MODELVIEW MATRIX - this controls camera position
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity(); //Necessary here
+    gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
+    
+    // Draw once to initialize everything
+    drawPicture();
+    glfwSwapBuffers(Window);
+	
 	// Main loop
 	while (!glfwWindowShouldClose(Window))
 	{

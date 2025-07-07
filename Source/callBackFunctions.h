@@ -30,7 +30,27 @@
 */
 void reshape(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, width, height); // Set the viewport size to match the window size
+
+	//calculate the image aspect ratio
+	float aspect = (float)width / (float)height;
+
+	//set the projection matrix -- this is basically the camera
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	//now we need to maintain the same aspect ratio for both orthogonal and frustum view
+	if(Simulation.ViewFlag == 0) // Orthogonal view
+	{
+		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthogonal projection
+	}
+	else // Frustum view
+	{
+		glFrustum(-aspect, aspect, -1.0, 1.0, 1.0, 100.0); // Frustum projection
+	}
+
+	glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity(); //don't need this because it resets the camera every time we reshape
 }
 
 /*
