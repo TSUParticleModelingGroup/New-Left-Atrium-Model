@@ -399,6 +399,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	glfwSetInputMode(Window, GLFW_STICKY_KEYS, GLFW_TRUE);
+	glfwSetInputMode(Window, GLFW_REPEAT, GLFW_TRUE);  // Explicitly enable key repeat
+
 	//create a sphere VBO for drawing the nodes (since allnodes are the same we create pne VBO and use it for all nodes)
 	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
 
@@ -515,6 +518,8 @@ int main(int argc, char** argv)
 	while (!glfwWindowShouldClose(Window))
 	{
 		glfwPollEvents();
+
+		keyHeld(Window); // Handle key hold events
 
 		// Start ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();

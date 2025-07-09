@@ -484,202 +484,218 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 	// 	return;
 
 	// Get ImGui IO to check if it's capturing input
-	ImGuiIO& io = ImGui::GetIO();
+	// ImGuiIO& io = ImGui::GetIO();
     
     // If ImGui is handling this event, return
-    if (io.WantCaptureKeyboard)
-        return;
+    // if (io.WantCaptureKeyboard)
+    //     return;
 
 
-    float dAngle = 0.01;
-    float zoom = 0.01*RadiusOfLeftAtrium;
-    float temp;
-    float4 lookVector;
-    float d;
-    float4 centerOfMass;
+
     
-    //copyNodesMusclesFromGPU();
-    
-    lookVector.x = CenterX - EyeX;
-    lookVector.y = CenterY - EyeY;
-    lookVector.z = CenterZ - EyeZ;
-    d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
-    
-    if(d < 0.00001)
-    {
-        printf("\n lookVector is too small\n");
-        printf("\n Good Bye\n");
-        exit(0);
-    }
-    else
-    {
-        lookVector.x /= d;
-        lookVector.y /= d;
-        lookVector.z /= d;
-    }
-    
-    
-    // WASD movement keys
-    if(key == GLFW_KEY_W)  // Rotate counterclockwise on the x-axis
-    {
-		copyNodesFromGPU();
-        centerOfMass = findCenterOfMass();
-        for(int i = 0; i < NumberOfNodes; i++)
-        {
-            Node[i].position.x -= centerOfMass.x;
-            Node[i].position.y -= centerOfMass.y;
-            Node[i].position.z -= centerOfMass.z;
-            temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
-            Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
-            Node[i].position.y  = temp;
-            Node[i].position.x += centerOfMass.x;
-            Node[i].position.y += centerOfMass.y;
-            Node[i].position.z += centerOfMass.z;
-        }
-        drawPicture();
-        AngleOfSimulation.x += dAngle;
-		copyNodesToGPU();
-    }
-    
-    if(key == GLFW_KEY_S)  // Rotate clockwise on the x-axis
-    {
-		copyNodesFromGPU();
-        centerOfMass = findCenterOfMass();
-        for(int i = 0; i < NumberOfNodes; i++)
-        {
-            Node[i].position.x -= centerOfMass.x;
-            Node[i].position.y -= centerOfMass.y;
-            Node[i].position.z -= centerOfMass.z;
-            temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
-            Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
-            Node[i].position.y  = temp; 
-            Node[i].position.x += centerOfMass.x;
-            Node[i].position.y += centerOfMass.y;
-            Node[i].position.z += centerOfMass.z;
-        }
-        drawPicture();
-        AngleOfSimulation.x -= dAngle;
-		copyNodesToGPU();
-    }
-    
-    if(key == GLFW_KEY_D)  // Rotate counterclockwise on the y-axis
-    {
-		copyNodesFromGPU();
-        centerOfMass = findCenterOfMass();
-        for(int i = 0; i < NumberOfNodes; i++)
-        {
-            Node[i].position.x -= centerOfMass.x;
-            Node[i].position.y -= centerOfMass.y;
-            Node[i].position.z -= centerOfMass.z;
-            temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
-            Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
-            Node[i].position.x  = temp;
-            Node[i].position.x += centerOfMass.x;
-            Node[i].position.y += centerOfMass.y;
-            Node[i].position.z += centerOfMass.z;
-        }
-        drawPicture();
-        AngleOfSimulation.y -= dAngle;
-		copyNodesToGPU();
-    }
-    
-    if(key == GLFW_KEY_A)  // Rotate clockwise on the y-axis
-    {
-		copyNodesFromGPU();
-        centerOfMass = findCenterOfMass();
-        for(int i = 0; i < NumberOfNodes; i++)
-        {
-            Node[i].position.x -= centerOfMass.x;
-            Node[i].position.y -= centerOfMass.y;
-            Node[i].position.z -= centerOfMass.z;
-            temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
-            Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
-            Node[i].position.x  = temp;
-            Node[i].position.x += centerOfMass.x;
-            Node[i].position.y += centerOfMass.y;
-            Node[i].position.z += centerOfMass.z;
-        }
-        drawPicture();
-        AngleOfSimulation.y += dAngle;
-		copyNodesToGPU();
-    }
-    
-    if(key == GLFW_KEY_Z)
-    {
-		copyNodesFromGPU();
-        if(mods & GLFW_MOD_SHIFT)  // Uppercase Z - Rotate clockwise on the z-axis
-        {
-            centerOfMass = findCenterOfMass();
-            for(int i = 0; i < NumberOfNodes; i++)
-            {
-                Node[i].position.x -= centerOfMass.x;
-                Node[i].position.y -= centerOfMass.y;
-                Node[i].position.z -= centerOfMass.z;
-                temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
-                Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
-                Node[i].position.x  = temp;
-                Node[i].position.x += centerOfMass.x;
-                Node[i].position.y += centerOfMass.y;
-                Node[i].position.z += centerOfMass.z;
-            }
-            drawPicture();
-            AngleOfSimulation.z -= dAngle;
-        }
-        else  // Lowercase z - Rotate counterclockwise on the z-axis
-        {
-            centerOfMass = findCenterOfMass();
-            for(int i = 0; i < NumberOfNodes; i++)
-            {
-                Node[i].position.x -= centerOfMass.x;
-                Node[i].position.y -= centerOfMass.y;
-                Node[i].position.z -= centerOfMass.z;
-                temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
-                Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
-                Node[i].position.x  = temp;
-                Node[i].position.x += centerOfMass.x;
-                Node[i].position.y += centerOfMass.y;
-                Node[i].position.z += centerOfMass.z;
-            }
-            drawPicture();
-            AngleOfSimulation.z += dAngle;
-        }
-		copyNodesToGPU();
-    }
-    
-    if(key == GLFW_KEY_E)
-    {
-		copyNodesFromGPU();
-        if(mods & GLFW_MOD_SHIFT)  // Uppercase E - Zoom out
-        {
-            for(int i = 0; i < NumberOfNodes; i++)
-            {
-                Node[i].position.x += zoom*lookVector.x;
-                Node[i].position.y += zoom*lookVector.y;
-                Node[i].position.z += zoom*lookVector.z;
-            }
-            CenterOfSimulation.x += zoom*lookVector.x;
-            CenterOfSimulation.y += zoom*lookVector.y;
-            CenterOfSimulation.z += zoom*lookVector.z;
-            drawPicture();
-        }
-        else  // Lowercase e - Zoom in
-        {
-            for(int i = 0; i < NumberOfNodes; i++)
-            {
-                Node[i].position.x -= zoom*lookVector.x;
-                Node[i].position.y -= zoom*lookVector.y;
-                Node[i].position.z -= zoom*lookVector.z;
-            }
-            CenterOfSimulation.x -= zoom*lookVector.x;
-            CenterOfSimulation.y -= zoom*lookVector.y;
-            CenterOfSimulation.z -= zoom*lookVector.z;
-            drawPicture();
-        }
-		copyNodesToGPU();
-    }
     
 }
 
+/*
+	This function will process held keys.
+	Since GLFW will not allow us to have 2 key call backs and seems to force us to use either presses or holds
+	we will use this function to process held keys.
+
+	We will need to consider all early exit cases for keys that don't need to be held and will need to handle shift keys in a different way
+
+*/
+void keyHeld(GLFWwindow* window)
+{
+	// Check if any movement keys (or keys we want to work if held) are pressed
+    bool validKey = 
+        glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS;
+
+	//early exit if no valid key is pressed
+	if (!validKey) return;
+
+	bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || 
+						glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+
+	// Copy nodes from GPU once per frame
+    copyNodesFromGPU();
+
+	float dAngle = 0.01;
+	float zoom = 0.01*RadiusOfLeftAtrium;
+	float temp;
+	float4 lookVector;
+	float d;
+	float4 centerOfMass;
+	
+	//copyNodesMusclesFromGPU();
+	
+	lookVector.x = CenterX - EyeX;
+	lookVector.y = CenterY - EyeY;
+	lookVector.z = CenterZ - EyeZ;
+	d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
+	
+	if(d < 0.00001)
+	{
+		printf("\n lookVector is too small\n");
+		printf("\n Good Bye\n");
+		exit(0);
+	}
+	else
+	{
+		lookVector.x /= d;
+		lookVector.y /= d;
+		lookVector.z /= d;
+	}
+
+	// WASD movement keys
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)   // Rotate counterclockwise on the x-axis
+	{
+		centerOfMass = findCenterOfMass();
+		for(int i = 0; i < NumberOfNodes; i++)
+		{
+			Node[i].position.x -= centerOfMass.x;
+			Node[i].position.y -= centerOfMass.y;
+			Node[i].position.z -= centerOfMass.z;
+			temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
+			Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
+			Node[i].position.y  = temp;
+			Node[i].position.x += centerOfMass.x;
+			Node[i].position.y += centerOfMass.y;
+			Node[i].position.z += centerOfMass.z;
+		}
+		AngleOfSimulation.x += dAngle;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)   // Rotate clockwise on the y-axis
+	{
+		centerOfMass = findCenterOfMass();
+		for(int i = 0; i < NumberOfNodes; i++)
+		{
+			Node[i].position.x -= centerOfMass.x;
+			Node[i].position.y -= centerOfMass.y;
+			Node[i].position.z -= centerOfMass.z;
+			temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
+			Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
+			Node[i].position.x  = temp;
+			Node[i].position.x += centerOfMass.x;
+			Node[i].position.y += centerOfMass.y;
+			Node[i].position.z += centerOfMass.z;
+		}
+		AngleOfSimulation.y += dAngle;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)   // Rotate clockwise on the x-axis
+	{
+		centerOfMass = findCenterOfMass();
+		for(int i = 0; i < NumberOfNodes; i++)
+		{
+			Node[i].position.x -= centerOfMass.x;
+			Node[i].position.y -= centerOfMass.y;
+			Node[i].position.z -= centerOfMass.z;
+			temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
+			Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
+			Node[i].position.y  = temp; 
+			Node[i].position.x += centerOfMass.x;
+			Node[i].position.y += centerOfMass.y;
+			Node[i].position.z += centerOfMass.z;
+		}
+		AngleOfSimulation.x -= dAngle;
+	}
+	
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)   // Rotate counterclockwise on the y-axis
+	{
+		centerOfMass = findCenterOfMass();
+		for(int i = 0; i < NumberOfNodes; i++)
+		{
+			Node[i].position.x -= centerOfMass.x;
+			Node[i].position.y -= centerOfMass.y;
+			Node[i].position.z -= centerOfMass.z;
+			temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
+			Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
+			Node[i].position.x  = temp;
+			Node[i].position.x += centerOfMass.x;
+			Node[i].position.y += centerOfMass.y;
+			Node[i].position.z += centerOfMass.z;
+		}
+		AngleOfSimulation.y -= dAngle;
+	}
+	
+
+	
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) 
+	{
+		if(shiftHeld)  // Uppercase Z - Rotate clockwise on the z-axis
+		{
+			centerOfMass = findCenterOfMass();
+			for(int i = 0; i < NumberOfNodes; i++)
+			{
+				Node[i].position.x -= centerOfMass.x;
+				Node[i].position.y -= centerOfMass.y;
+				Node[i].position.z -= centerOfMass.z;
+				temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
+				Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
+				Node[i].position.x  = temp;
+				Node[i].position.x += centerOfMass.x;
+				Node[i].position.y += centerOfMass.y;
+				Node[i].position.z += centerOfMass.z;
+			}
+			AngleOfSimulation.z -= dAngle;
+		}
+		else  // Lowercase z - Rotate counterclockwise on the z-axis
+		{
+			centerOfMass = findCenterOfMass();
+			for(int i = 0; i < NumberOfNodes; i++)
+			{
+				Node[i].position.x -= centerOfMass.x;
+				Node[i].position.y -= centerOfMass.y;
+				Node[i].position.z -= centerOfMass.z;
+				temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
+				Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
+				Node[i].position.x  = temp;
+				Node[i].position.x += centerOfMass.x;
+				Node[i].position.y += centerOfMass.y;
+				Node[i].position.z += centerOfMass.z;
+			}
+			AngleOfSimulation.z += dAngle;
+		}
+	}
+	
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) 
+	{
+		if(shiftHeld)  // Uppercase E - Zoom out
+		{
+			for(int i = 0; i < NumberOfNodes; i++)
+			{
+				Node[i].position.x += zoom*lookVector.x;
+				Node[i].position.y += zoom*lookVector.y;
+				Node[i].position.z += zoom*lookVector.z;
+			}
+			CenterOfSimulation.x += zoom*lookVector.x;
+			CenterOfSimulation.y += zoom*lookVector.y;
+			CenterOfSimulation.z += zoom*lookVector.z;
+		}
+		else  // Lowercase e - Zoom in
+		{
+			for(int i = 0; i < NumberOfNodes; i++)
+			{
+				Node[i].position.x -= zoom*lookVector.x;
+				Node[i].position.y -= zoom*lookVector.y;
+				Node[i].position.z -= zoom*lookVector.z;
+			}
+			CenterOfSimulation.x -= zoom*lookVector.x;
+			CenterOfSimulation.y -= zoom*lookVector.y;
+			CenterOfSimulation.z -= zoom*lookVector.z;
+		}
+	}
+
+	drawPicture(); // Redraw the picture after all the changes
+	copyNodesToGPU(); // Copy the modified nodes back to the GPU
+
+}
 /*
  This function is called when the mouse moves without any button pressed.
  x and y are the current mouse coordinates.
