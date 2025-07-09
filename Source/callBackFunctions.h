@@ -66,7 +66,7 @@ void mouseFunctionsOff()
 	Simulation.isInAdjustMuscleLineMode = false;
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInMouseFunctionMode = false;
-	glfwSetCursor(Window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR)); // Set cursor to default arrow.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
 	drawPicture();
 }
 
@@ -79,7 +79,8 @@ void mouseAblateMode()
 	Simulation.isPaused = true;
 	Simulation.isInAblateMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -93,7 +94,8 @@ void mouseEctopicBeatMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicBeatMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -107,7 +109,8 @@ void mouseEctopicEventMode()
 	Simulation.isPaused = true;
 	Simulation.isInEctopicEventMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -121,7 +124,8 @@ void mouseAdjustMusclesAreaMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleAreaMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 	
@@ -138,7 +142,8 @@ void mouseAdjustMusclesLineMode()
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleLineMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 	
@@ -155,7 +160,8 @@ void mouseIdentifyNodeMode()
 	Simulation.isPaused = true;
 	Simulation.isInFindNodeMode = true;
 	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -683,8 +689,26 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 */
 void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 {
-	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
-	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
+	// Get ImGui IO to check if mouse is over ImGui windows
+    ImGuiIO& io = ImGui::GetIO();
+
+	//Show cursor when highlighting over IMGUI elements
+
+	if (Simulation.isInMouseFunctionMode)
+	{
+		if (io.WantCaptureMouse)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+	}
+	
+	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
+	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
+	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
 }
 
 /*
