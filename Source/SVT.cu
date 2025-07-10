@@ -457,6 +457,7 @@ int main(int argc, char** argv)
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(Window, true);  //connect ImGui to GLFW
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard; //prevent ImGui from capturing keyboard input, allowing GLFW to handle it instead
 	ImGui_ImplOpenGL3_Init("#version 130");      //Chooses OpenGL version 3.0, this is the version that is compatible with the current version of ImGui
 
 	// Load a font
@@ -471,7 +472,7 @@ int main(int argc, char** argv)
 	//Initialize the window with aspect ratio and projection matrix
 
 	/*
-		NOTE (Remove this later): 
+		NOTE: 
 
 		the reshape function which calculated the aspect ratio and projection matrix to allow us to resize without changing the aspect ratio
 		caused the simulation to not display properly when the window was first created and would stay that way until the window was resized.

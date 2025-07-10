@@ -632,18 +632,33 @@ void drawPicture()
 */
 void createGUI()
 {
+
+	// Get actual viewport size -- this is the size of the window, not the size of the the openGL viewport
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+	//Set in top right corner of the window, 10px offset from both edges
+	//ImGUICond_Always means the position will always be set to this value, regardless of previous positions
+	//last arg anchors to the right and top of the window
+	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - 10, viewport->WorkPos.y + 10), ImGuiCond_Always,  ImVec2(1.0f, 0.0f));
+
     // Setup ImGui window flags
     ImGuiWindowFlags window_flags = 0; // Initialize window flags to 0, flags are used to set window properties, like size, position, etc. 0 means no flags are set
-    window_flags |= ImGuiWindowFlags_AlwaysAutoResize; // Always resize the window to fit the content
+    window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
     
     // Main Controls Window
-    ImGui::Begin("Atrium Controls", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
+    ImGui::Begin("Control Panel", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
     
     // Run/Pause button
     if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause")) //print whats happening
     {
         Simulation.isPaused = !Simulation.isPaused;
     }
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::BeginTooltip();
+		ImGui::Text("(F1)");
+		ImGui::EndTooltip();
+	}
     
     // General simulation controls
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
@@ -666,6 +681,12 @@ void createGUI()
             Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
             drawPicture();
         }
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("(F2)");
+			ImGui::EndTooltip();
+		}
         
         // Node display options
         const char* nodeOptions[] = { "Off", "Half", "Full" }; //array of options for the dropdown menu
@@ -680,6 +701,12 @@ void createGUI()
                 drawPicture();
             }
         }
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("(F3)");
+			ImGui::EndTooltip();
+		}
         
         // Change views
         // bool frustumView = Simulation.ViewFlag == 1;
@@ -710,12 +737,24 @@ void createGUI()
 			}
 			Simulation.isRecording = !Simulation.isRecording;
 		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("(F4)");
+			ImGui::EndTooltip();
+		}
 
         // Screenshot button
         if (ImGui::Button("Screenshot"))
         {
             screenShot();
         }
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("(F5)");
+			ImGui::EndTooltip();
+		}
 	}
     
 	// View presets
@@ -731,7 +770,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Posterior-Anterior View\nView from back to front");
+			ImGui::Text("(7)\nPosterior-Anterior View\nView from back to front");
 			ImGui::EndTooltip();
 		}
 		
@@ -745,7 +784,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Anterior-Posterior View\nView from front to back");
+			ImGui::Text("(8)\nAnterior-Posterior View\nView from front to back");
 			ImGui::EndTooltip();
 		}
 		
@@ -759,7 +798,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Reference View\nStandard orientation with pulmonary veins visible");
+			ImGui::Text("(9)\nReference View\nStandard orientation with pulmonary veins visible");
 			ImGui::EndTooltip();
 		}
 		
@@ -772,7 +811,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left Anterior Oblique\nAngled view from front-left");
+			ImGui::Text("(4)\nLeft Anterior Oblique\nAngled view from front-left");
 			ImGui::EndTooltip();
 		}
 		
@@ -786,7 +825,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Right Anterior Oblique\nAngled view from front-right");
+			ImGui::Text("(5)\nRight Anterior Oblique\nAngled view from front-right");
 			ImGui::EndTooltip();
 		}
 		
@@ -800,7 +839,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left Lateral\nDirect view from left side");
+			ImGui::Text("(6)\nLeft Lateral\nDirect view from left side");
 			ImGui::EndTooltip();
 		}
 
@@ -813,7 +852,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Right Lateral\nDirect view from right side");
+			ImGui::Text("(1)\nRight Lateral\nDirect view from right side");
 			ImGui::EndTooltip();
 		}
 		
@@ -827,7 +866,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Superior View\nView from above (top-down)");
+			ImGui::Text("(2)\nSuperior View\nView from above (top-down)");
 			ImGui::EndTooltip();
 		}
 		
@@ -841,7 +880,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Inferior View\nView from below (bottom-up)");
+			ImGui::Text("(3)\nInferior View\nView from below (bottom-up)");
 			ImGui::EndTooltip();
 		}
 	}
@@ -898,7 +937,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Disables all mouse interaction with the model");
+			ImGui::Text("(Alt + Q)\nDisables all mouse interaction with the model");
 			ImGui::EndTooltip();
 		}
 
@@ -911,7 +950,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to ablate nodes\nRight-click to undo ablation");
+			ImGui::Text("(F7)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 			ImGui::EndTooltip();
 		}
 
@@ -924,7 +963,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to set a node as an ectopic beat node\nwith a constant beat period");
+			ImGui::Text("(F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
 			ImGui::EndTooltip();
 		}
 
@@ -937,7 +976,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to trigger a single pulse at a node");
+			ImGui::Text("(F9)\nLeft-click to trigger a single pulse at a node");
 			ImGui::EndTooltip();
 		}
 
@@ -950,7 +989,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
+			ImGui::Text("(F10)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 			ImGui::EndTooltip();
 		}
 
@@ -963,7 +1002,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
+			ImGui::Text("(F11)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 			ImGui::EndTooltip();
 		}
 
@@ -976,7 +1015,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Left-click to display the ID of a node");
+			ImGui::Text("(F12)\nLeft-click to display the ID of a node");
 			ImGui::EndTooltip();
 		}
 
@@ -1050,7 +1089,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Adjusts the size of the selection area\nLarger values effect more nodes");
+			ImGui::Text("(-/=): decrease/increase\nAdjusts the size of the selection area\nLarger values effect more nodes");
 			ImGui::EndTooltip();
 		}
 
@@ -1159,7 +1198,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Adjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
+			ImGui::Text("([/]): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
 			ImGui::EndTooltip();
 		}
 
@@ -1333,7 +1372,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Save current muscle properties and simulation\nsettings to a file for later use");
+			ImGui::Text("(F6)\nSave current muscle properties and simulation\nsettings to a file for later use");
 			ImGui::EndTooltip();
 		}
 
@@ -1423,7 +1462,7 @@ void createGUI()
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
-			ImGui::Text("Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomended to draw nodes to see the results clearly");
+			ImGui::Text("(Alt + F) Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomended to draw nodes to see the results clearly");
 			ImGui::EndTooltip();
 		}
 
@@ -1440,7 +1479,7 @@ void createGUI()
 	if (ImGui::CollapsingHeader("Keyboard Controls"))
 	{
 
-		ImGui::Text("Quit: q");
+		ImGui::Text("Quit: esc");
 		ImGui::NewLine(); //add a new line for spacing
 		ImGui::Text("Rotate X-axis: a/d");
 		ImGui::Text("Rotate Y-axis: w/s");
@@ -1454,13 +1493,16 @@ void createGUI()
     // Beginning of stats window
 	//if there's any relevant information we should show for quick viewing, put it here., we can add toggles for what to show in the main window if we want to.
 
+	//Offset stats window by 10px from top-left edges. anchor to top left corner
+	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 10, viewport->WorkPos.y + 10),ImGuiCond_Always,ImVec2(0.0f, 0.0f));
+
     ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
 	
 	//Shows run time of the simulation and beat rate of the pulse node
     ImGui::Text("Run time: %.2f ms", RunTime);
     ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
     
-	//shows our current refraxtory period and conduction velocity multipliers
+	//shows our current refractory period and conduction velocity multipliers
     if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
 	{
         ImGui::Separator();

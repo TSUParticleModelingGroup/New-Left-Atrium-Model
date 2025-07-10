@@ -478,20 +478,277 @@ void saveSettings()
 */
 void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+
+	//See if GUI wants this event (Prevents keys from being registered when doing things like typing in a text box)
+	    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+        return;
+
+
     // Only process key press events, not releases or repeats
 
-	// if (action != GLFW_PRESS)
-	// 	return;
+	if (action != GLFW_PRESS) return;
 
-	// Get ImGui IO to check if it's capturing input
-	// ImGuiIO& io = ImGui::GetIO();
-    
-    // If ImGui is handling this event, return
-    // if (io.WantCaptureKeyboard)
-    //     return;
+	// Check for specific key presses
+	switch (key)
+	{
+		case GLFW_KEY_ESCAPE: // Escape key to exit
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+			break;
 
+		case GLFW_KEY_F1: // F1 key to toggle run/pause
+			if(Simulation.isPaused)
+			{
+				Simulation.isPaused = false;
+			}
+			else
+			{
+				Simulation.isPaused = true;
+			}
+			break;
 
+		case GLFW_KEY_F2: // F2 key to draw only half of the nodes
+			if(Simulation.DrawFrontHalfFlag)
+			{
+				Simulation.DrawFrontHalfFlag = false;
+			}
+			else
+			{
+				Simulation.DrawFrontHalfFlag = true;
+			}
+			drawPicture();
+			break;
 
+		case GLFW_KEY_F3: //show nodes 0 = none 1 = half 2 = all
+			if(Simulation.DrawNodesFlag == 0)
+			{
+				Simulation.DrawNodesFlag = 1;
+			}
+			else if(Simulation.DrawNodesFlag == 1)
+			{
+				Simulation.DrawNodesFlag = 2;
+			}
+			else
+			{
+				Simulation.DrawNodesFlag = 0;
+			}
+			drawPicture();
+			break;
+
+		case GLFW_KEY_F4: // Toggle movie recording
+			if(Simulation.isRecording)
+			{
+				movieOff();
+			}
+			else
+			{
+				movieOn();
+			}
+			break;
+
+		case GLFW_KEY_F5: // Take a screenshot
+			screenShot();
+			break;
+
+		case GLFW_KEY_F6: // Save settings
+			saveSettings();
+			break;
+
+		case GLFW_KEY_F7: // Toggle ablate mode
+			if(Simulation.isInAblateMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseAblateMode();
+			}
+			break;
+		
+		case GLFW_KEY_F8: // Toggle ectopic beat mode
+			if(Simulation.isInEctopicBeatMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseEctopicBeatMode();
+			}
+			break;
+
+		case GLFW_KEY_F9: // Toggle ectopic event mode
+			if(Simulation.isInEctopicEventMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseEctopicEventMode();
+			}
+			break;
+
+		case GLFW_KEY_F10: // Toggle adjust muscle area mode
+			if(Simulation.isInAdjustMuscleAreaMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseAdjustMusclesAreaMode();
+			}
+			break;
+		
+		case GLFW_KEY_F11: // Toggle adjust muscle line mode
+			if(Simulation.isInAdjustMuscleLineMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseAdjustMusclesLineMode();
+			}
+			break;
+
+		case GLFW_KEY_F12: // Toggle identify node mode
+			if(Simulation.isInFindNodeMode)
+			{
+				mouseFunctionsOff();
+			}
+			else
+			{
+				mouseIdentifyNodeMode();
+			}
+			break;
+
+		// ALT + q to turn mouse functions off
+		case GLFW_KEY_Q:
+			if (mods & GLFW_MOD_ALT)
+			{
+				mouseFunctionsOff();
+			}
+			break;
+
+		//view toggles -- follows numpad format and matches with GUI
+		//kp is numpad keys, so need 2 cases for each
+		
+		case GLFW_KEY_7: // PA View
+		case GLFW_KEY_KP_7:
+			setView(4); 
+			copyNodesToGPU(); 
+			drawPicture();
+			break;
+
+		case GLFW_KEY_8: // AP View
+		case GLFW_KEY_KP_8:
+			setView(2);
+			copyNodesToGPU();
+			drawPicture();
+			break;
+        
+		case GLFW_KEY_9: // Reference view (top-right)
+        case GLFW_KEY_KP_9: 
+            setView(6);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+           
+		case GLFW_KEY_4: // LAO view (middle-left)
+        case GLFW_KEY_KP_4: 
+            setView(1);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+        case GLFW_KEY_5: // RAO view (middle)
+        case GLFW_KEY_KP_5: 
+            setView(3);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+        
+		case GLFW_KEY_6: // LL view (middle-right)
+        case GLFW_KEY_KP_6: 
+            setView(7);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+        
+		case GLFW_KEY_1: // RL view (bottom-left)
+        case GLFW_KEY_KP_1:
+            setView(9);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+        
+		case GLFW_KEY_2: // Superior view (bottom-middle)
+        case GLFW_KEY_KP_2:
+            setView(8);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+        
+		case GLFW_KEY_3: // Inferior view (bottom-right)
+        case GLFW_KEY_KP_3:
+            setView(5);
+            copyNodesToGPU();
+            drawPicture();
+            break;
+		
+		/* Ortho/frustum needs to be fixed */
+		// case GLFW_KEY_0: // Toggle orthogonal/frustum view
+		// case GLFW_KEY_KP_0:
+		// 	if (Simulation.ViewFlag == 0)
+        //     {
+        //         Simulation.ViewFlag = 1;
+        //         frustumView();
+        //     }
+        //     else if (Simulation.ViewFlag == 1)
+        //     {
+        //         Simulation.ViewFlag = 0;
+        //         orthogonalView();
+        //     }
+
+		// Might make this a held key pending feedback
+		case GLFW_KEY_KP_SUBTRACT: //decrease selection radius
+		case GLFW_KEY_MINUS:
+		HitMultiplier -= 0.01;
+		if(HitMultiplier < 0.01) HitMultiplier = 0.01;
+		break;
+
+		case GLFW_KEY_KP_ADD: //increase selection radius
+		case GLFW_KEY_EQUAL:
+		HitMultiplier += 0.025;
+		if(HitMultiplier > 0.5) HitMultiplier = 0.5;
+		break;
+
+		case GLFW_KEY_LEFT_BRACKET: //decrease beat period
+			Node[PulsePointNode].beatPeriod -= 10;
+            if(Node[PulsePointNode].beatPeriod < 0) // Prevent negative beat period 
+			{
+                Node[PulsePointNode].beatPeriod = 0;
+            }
+			copyNodesToGPU();
+			break;
+
+		case GLFW_KEY_RIGHT_BRACKET: //increase beat period
+			Node[PulsePointNode].beatPeriod += 10;
+			if(Node[PulsePointNode].beatPeriod > 10000) // Prevent excessively large beat period
+			{
+				Node[PulsePointNode].beatPeriod = 10000;
+			}
+			copyNodesToGPU();
+			break;
+
+		case GLFW_KEY_F: //Alt + f to find nodes
+			if (mods & GLFW_MOD_ALT)
+			{
+				mouseIdentifyNodeMode();
+			}
+			break;
+
+		default: // For any other key, do nothing
+			break;
+
+	}
     
     
 }
