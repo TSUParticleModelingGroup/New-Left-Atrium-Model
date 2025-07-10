@@ -20,7 +20,9 @@
  void movieOff();
  void screenShot();
  void saveSettings();
+ void findNodes();
  void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void keyHeld(GLFWwindow* window);
  void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
  void myMouse(GLFWwindow* window, int button, int state, double x, double y);
  void scrollWheel(GLFWwindow*, double, double);
@@ -472,6 +474,89 @@ void saveSettings()
 	chdir("../");
 }
 
+void findNodes()
+{
+	copyNodesFromGPU();
+
+	//Reset previous nodes if they exist
+	if (Simulation.frontNodeIndex >= 0 && Simulation.topNodeIndex >= 0) //if the front and top node indices are valid
+	
+	{
+		// Reset front node based on ablation status
+		if (Node[Simulation.frontNodeIndex].isAblated) 
+		{
+			Node[Simulation.frontNodeIndex].isDrawNode = true; // Keep it visible, set to white
+			Node[Simulation.frontNodeIndex].color.x = 1.0f;
+			Node[Simulation.frontNodeIndex].color.y = 1.0f;
+			Node[Simulation.frontNodeIndex].color.z = 1.0f;
+		} 
+		else 
+		{
+			Node[Simulation.frontNodeIndex].isDrawNode = false; //back to default color
+			Node[Simulation.frontNodeIndex].color.x = 0.0f;
+			Node[Simulation.frontNodeIndex].color.y = 1.0f;
+			Node[Simulation.frontNodeIndex].color.z = 0.0f;
+		}
+
+		// Reset top node based on ablation status
+		if (Node[Simulation.topNodeIndex].isAblated) 
+		{
+			Node[Simulation.topNodeIndex].isDrawNode = true; // Keep it visible, set color to white
+			Node[Simulation.topNodeIndex].color.x = 1.0f;
+			Node[Simulation.topNodeIndex].color.y = 1.0f;
+			Node[Simulation.topNodeIndex].color.z = 1.0f;
+		} 
+		else 
+		{
+			Node[Simulation.topNodeIndex].isDrawNode = false; //back to default color
+			Node[Simulation.topNodeIndex].color.x = 0.0f;
+			Node[Simulation.topNodeIndex].color.y = 1.0f;
+			Node[Simulation.topNodeIndex].color.z = 0.0f;
+		}
+	}
+
+	//give bad values to the indices so we know they are not valid unless they are made valid again
+	float maxZ = -10000.0;
+	float maxY = -10000.0;
+	int indexZ = -1;
+	int indexY = -1;
+	
+	// Loop through all nodes, checking for the max Z and Y values
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(maxZ < Node[i].position.z) 
+		{
+			maxZ = Node[i].position.z;
+			indexZ = i;
+		}
+		
+		if(maxY < Node[i].position.y) 
+		{
+			maxY = Node[i].position.y;
+			indexY = i;
+		}
+	}
+	
+	//set the colors of the nodes to blue and purple, respectively
+	Node[indexZ].isDrawNode = true; // Set the front node to be drawn as blue
+	Node[indexZ].color.x = 0.0;
+	Node[indexZ].color.y = 0.0;
+	Node[indexZ].color.z = 1.0;
+	
+	Node[indexY].isDrawNode = true; // Set the top node to be drawn as purple
+	Node[indexY].color.x = 1.0;
+	Node[indexY].color.y = 0.0;
+	Node[indexY].color.z = 1.0;
+	
+	// Store indices for persistent display
+	Simulation.frontNodeIndex = indexZ;
+	Simulation.topNodeIndex = indexY;
+	Simulation.nodesFound = true;
+	
+	drawPicture(); // Redraw the picture to show the new colors
+	copyNodesToGPU(); // Copy the updated nodes back to GPU (since the color changed)
+}
+
 /*
  This function directs the action that needs to be taken if a user hits a key on the key board.
  The terminal screen lists out all the keys and what they will do.
@@ -741,7 +826,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_F: //Alt + f to find nodes
 			if (mods & GLFW_MOD_ALT)
 			{
-				mouseIdentifyNodeMode();
+				findNodes();
 			}
 			break;
 
@@ -770,7 +855,11 @@ void keyHeld(GLFWwindow* window)
         glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ||
         glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
         glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS;
+        glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
 
 	//early exit if no valid key is pressed
 	if (!validKey) return;
@@ -809,7 +898,7 @@ void keyHeld(GLFWwindow* window)
 	}
 
 	// WASD movement keys
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)   // Rotate counterclockwise on the x-axis
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   // Rotate counterclockwise on the x-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -827,7 +916,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.x += dAngle;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)   // Rotate clockwise on the y-axis
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)   // Rotate clockwise on the y-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -845,7 +934,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.y += dAngle;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)   // Rotate clockwise on the x-axis
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)   // Rotate clockwise on the x-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -863,7 +952,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.x -= dAngle;
 	}
 	
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)   // Rotate counterclockwise on the y-axis
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   // Rotate counterclockwise on the y-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -972,6 +1061,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 		if (io.WantCaptureMouse)
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			return; // If ImGui is capturing the mouse, do not process further
 		}
 		else
 		{
@@ -995,8 +1085,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
     ImGuiIO& io = ImGui::GetIO();
     
     // If ImGui is handling this mouse event, return
-    if (io.WantCaptureMouse)
-        return;
+    if (io.WantCaptureMouse) return;
 	
 	float d, dx, dy, dz;
 	float hit;
