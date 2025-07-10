@@ -898,7 +898,7 @@ void keyHeld(GLFWwindow* window)
 	}
 
 	// WASD movement keys
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   // Rotate counterclockwise on the x-axis
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && !shiftHeld))   // Rotate counterclockwise on the x-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -916,7 +916,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.x += dAngle;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)   // Rotate clockwise on the y-axis
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && !shiftHeld))   // Rotate clockwise on the y-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -934,7 +934,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.y += dAngle;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)   // Rotate clockwise on the x-axis
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && !shiftHeld))  // Rotate clockwise on the x-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -952,7 +952,7 @@ void keyHeld(GLFWwindow* window)
 		AngleOfSimulation.x -= dAngle;
 	}
 	
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS  || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   // Rotate counterclockwise on the y-axis
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && !shiftHeld))  // Rotate counterclockwise on the y-axis
 	{
 		centerOfMass = findCenterOfMass();
 		for(int i = 0; i < NumberOfNodes; i++)
@@ -1035,6 +1035,77 @@ void keyHeld(GLFWwindow* window)
 			CenterOfSimulation.x -= zoom*lookVector.x;
 			CenterOfSimulation.y -= zoom*lookVector.y;
 			CenterOfSimulation.z -= zoom*lookVector.z;
+		}
+	}
+
+	if (shiftHeld) 
+	{
+		// Shift + Left/Right for Z-axis rotation (same as z/Z)
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) 
+		{
+			// Rotate clockwise on the z-axis (same as uppercase Z)
+			centerOfMass = findCenterOfMass();
+			for(int i = 0; i < NumberOfNodes; i++) 
+			{
+				Node[i].position.x -= centerOfMass.x;
+				Node[i].position.y -= centerOfMass.y;
+				Node[i].position.z -= centerOfMass.z;
+				temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
+				Node[i].position.y = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
+				Node[i].position.x = temp;
+				Node[i].position.x += centerOfMass.x;
+				Node[i].position.y += centerOfMass.y;
+				Node[i].position.z += centerOfMass.z;
+			}
+			AngleOfSimulation.z -= dAngle;
+		}
+		
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) 
+		{
+			// Rotate counterclockwise on the z-axis (same as lowercase z)
+			centerOfMass = findCenterOfMass();
+			for(int i = 0; i < NumberOfNodes; i++) 
+			{
+				Node[i].position.x -= centerOfMass.x;
+				Node[i].position.y -= centerOfMass.y;
+				Node[i].position.z -= centerOfMass.z;
+				temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
+				Node[i].position.y = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
+				Node[i].position.x = temp;
+				Node[i].position.x += centerOfMass.x;
+				Node[i].position.y += centerOfMass.y;
+				Node[i].position.z += centerOfMass.z;
+			}
+			AngleOfSimulation.z += dAngle;
+		}
+		
+		// Shift + Up/Down for zooming (same as e/E)
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) 
+		{
+			// Zoom in (same as lowercase e)
+			for(int i = 0; i < NumberOfNodes; i++) 
+			{
+				Node[i].position.x -= zoom*lookVector.x;
+				Node[i].position.y -= zoom*lookVector.y;
+				Node[i].position.z -= zoom*lookVector.z;
+			}
+			CenterOfSimulation.x -= zoom*lookVector.x;
+			CenterOfSimulation.y -= zoom*lookVector.y;
+			CenterOfSimulation.z -= zoom*lookVector.z;
+		}
+		
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) 
+		{
+			// Zoom out (same as uppercase E)
+			for(int i = 0; i < NumberOfNodes; i++) 
+			{
+				Node[i].position.x += zoom*lookVector.x;
+				Node[i].position.y += zoom*lookVector.y;
+				Node[i].position.z += zoom*lookVector.z;
+			}
+			CenterOfSimulation.x += zoom*lookVector.x;
+			CenterOfSimulation.y += zoom*lookVector.y;
+			CenterOfSimulation.z += zoom*lookVector.z;
 		}
 	}
 

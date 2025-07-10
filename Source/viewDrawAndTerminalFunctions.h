@@ -1403,10 +1403,10 @@ void createGUI()
 
 		ImGui::Text("Quit: esc");
 		ImGui::NewLine(); //add a new line for spacing
-		ImGui::Text("Rotate X-axis: a/d");
-		ImGui::Text("Rotate Y-axis: w/s");
-		ImGui::Text("Rotate Z-axis: z/Z");
-		ImGui::Text("Zoom In/Out: e/E");
+		ImGui::Text("Rotate X-axis: a/d; Left/Right");
+		ImGui::Text("Rotate Y-axis: w/s; Up/Down");
+		ImGui::Text("Rotate Z-axis: z/Z; Shift + Left/Right");
+		ImGui::Text("Zoom In/Out: e/E; Shift + Up/Down");
 		
 	}
     
