@@ -1,3 +1,4 @@
+
 /*
  This file contains all the callBack functions and functions that it calls to do its work.
  This file contains all the ways a user can interact (Mouse and Terminal) with 
@@ -322,9 +323,8 @@ void screenShot()
     //             XWindowSize, YWindowSize);
 
 	//SC 25 submission
-	sprintf(cmd, "ffmpeg -loglevel quiet -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -vf vflip -frames:v 1 SC25Submission.png");
+	sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4");
 
-	
 	//const char* cmd = "ffmpeg -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
 	//              "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output1.mp4";
 	
@@ -353,7 +353,8 @@ void screenShot()
 	free(buffer);
 
 	string ts = getTimeStamp(); // Only storing in a separate variable for debugging purposes.
-	string s = "ffmpeg -loglevel quiet -i output1.mp4 -qscale:v 1 -qmin 1 -qmax 1 " + ts + ".jpeg";
+	string s = "ffmpeg -loglevel quiet -i output1.mp4 -qscale:v 1 -qmin 1 -qmax 1 " + ts + ".png && convert " + ts + ".png -density 72 " + ts + ".png";
+	//"ffmpeg -loglevel quiet -i output1.mp4 -qscale:v 1 -qmin 1 -qmax 1 " + ts + ".jpeg";
 	// Convert back to a C-style string.
 	const char *ccx = s.c_str();
 	system(ccx);
