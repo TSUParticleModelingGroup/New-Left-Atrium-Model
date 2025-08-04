@@ -317,9 +317,12 @@ void screenShot()
     char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
 
 	//commands for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
-    sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-                "-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4",
-                XWindowSize, YWindowSize);
+    // sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+    //             "-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4",
+    //             XWindowSize, YWindowSize);
+
+	//SC 25 submission
+	sprintf(cmd, "ffmpeg -loglevel quiet -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -vf vflip -frames:v 1 SC25Submission.png");
 
 	
 	//const char* cmd = "ffmpeg -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "

@@ -347,8 +347,8 @@ int main(int argc, char** argv)
 {
 	setup();
 	
-	XWindowSize = 1800;
-	YWindowSize = 1000; 
+	XWindowSize = 3840; //1800
+	YWindowSize = 2160; //1000
 
 	// Clip plains
 	Near = 0.2;
