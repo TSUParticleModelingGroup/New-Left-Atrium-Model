@@ -1105,7 +1105,7 @@ void createGUI()
 			ImGui::Text("Refractory Period Multiplier");
 			float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
 			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.1f, 5.0f, "%.2f")) 
+			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.001f, 5.0f, "%.3f")) 
 			{
 				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
 			}
@@ -1120,10 +1120,10 @@ void createGUI()
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(60); // Fixed width for input box
 			float originalRefMultiplier = refractoryMultiplier;
-			if (ImGui::InputFloat("##refractoryInput", &refractoryMultiplier, 0, 0, "%.2f"))
+			if (ImGui::InputFloat("##refractoryInput", &refractoryMultiplier, 0, 0, "%.3f"))
 			{
 				// Clamp to valid range
-				refractoryMultiplier = (refractoryMultiplier < 0.1f) ? 0.1f : (refractoryMultiplier > 5.0f ? 5.0f : refractoryMultiplier);
+				refractoryMultiplier = (refractoryMultiplier < 0.001f) ? 0.001f : (refractoryMultiplier > 5.0f ? 5.0f : refractoryMultiplier);
 				
 				// Update if changed
 				if (refractoryMultiplier != originalRefMultiplier)
@@ -1143,7 +1143,7 @@ void createGUI()
 			ImGui::Text("Conduction Velocity Multiplier");
 			float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
 			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.1f, 5.0f, "%.2f")) 
+			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.001f, 5.0f, "%.3f")) 
 			{
 				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
 			}
@@ -1159,10 +1159,10 @@ void createGUI()
 			// For the Conduction Velocity Multiplier input box:
 			ImGui::SetNextItemWidth(60); // Fixed width for input box
 			float originalConductionMultiplier = conductionMultiplier;
-			if (ImGui::InputFloat("##conductionInput", &conductionMultiplier, 0, 0, "%.2f"))
+			if (ImGui::InputFloat("##conductionInput", &conductionMultiplier, 0, 0, "%.3f"))
 			{
 				// Clamp to valid range
-				conductionMultiplier = (conductionMultiplier < 0.1f) ? 0.1f : (conductionMultiplier > 5.0f ? 5.0f : conductionMultiplier);
+				conductionMultiplier = (conductionMultiplier < 0.001f) ? 0.001f : (conductionMultiplier > 5.0f ? 5.0f : conductionMultiplier);
 				
 				// Update if changed
 				if (conductionMultiplier != originalConductionMultiplier)
