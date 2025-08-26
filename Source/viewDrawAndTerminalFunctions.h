@@ -665,11 +665,11 @@ void createGUI()
     {
 
         // Contraction toggle (do we need this?? added it anyways)
-        // bool contractionOn = Simulation.ContractionisOn;
-        // if (ImGui::Checkbox("Contraction", &contractionOn)) 
-        // {
-        //     Simulation.ContractionisOn = contractionOn;
-        // }
+        bool contractionOn = Simulation.ContractionisOn;
+        if (ImGui::Checkbox("Contraction", &contractionOn)) 
+        {
+            Simulation.ContractionisOn = contractionOn;
+        }
         
 
 
