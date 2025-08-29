@@ -664,7 +664,7 @@ void createGUI()
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
     {
 
-        // Contraction toggle (do we need this?? added it anyways)
+        // Contraction toggle
         bool contractionOn = Simulation.ContractionisOn;
         if (ImGui::Checkbox("Contraction", &contractionOn)) 
         {
@@ -1394,6 +1394,25 @@ void createGUI()
 			ImGui::Separator();
 			ImGui::Text("Front node (blue): %d", Simulation.frontNodeIndex);
 			ImGui::Text("Top node (purple): %d", Simulation.topNodeIndex);
+		}
+
+		if (ImGui::Button("Save State"))
+		{
+			saveState();
+		}
+		if (ImGui::IsItemHovered())
+		{
+			//tooltip here
+		}
+		
+		ImGui::SameLine();
+		if (ImGui::Button("Load State"))
+		{
+			loadState();
+		}
+		if (ImGui::IsItemHovered())
+		{
+			//tooltip here
 		}
     }
 

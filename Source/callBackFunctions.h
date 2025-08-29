@@ -21,6 +21,8 @@
  void movieOff();
  void screenShot();
  void saveSettings();
+ void saveState();
+ void loadState();
  void findNodes();
  void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
  void keyHeld(GLFWwindow* window);
@@ -479,6 +481,86 @@ void saveSettings()
 	chdir("../");
 }
 
+void saveState()
+{
+    // Copy latest data from GPU
+    cudaMemcpy(Node, NodeGPU, NumberOfNodes * sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
+    cudaMemcpy(Muscle, MuscleGPU, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
+
+    // Open file for writing
+	// we're using a binary file (.bin) because it is faster and smaller than a text file, we can read and write the entire structs at once
+	//rather than writing each variable one at a time, translating to and from text, and dealing with formatting
+	//its also worth noting that any variable can be easily saved, so we can easily add anything to this
+    FILE* file = fopen("simulation_state.bin", "wb");
+    if (!file) 
+	{
+        printf("Error: Could not open file for saving state.\n");
+        return;
+    }
+
+    // Save runtime value
+    fwrite(&RunTime, sizeof(double), 1, file);
+    
+    // Save simulation timers and relevant state variables
+	//this lets you save the mouse function you're in, I thought it might be useful for trigger placement, so I added it
+    fwrite(&Simulation, sizeof(Simulation), 1, file);
+
+    // Save node and muscle counts
+    fwrite(&NumberOfNodes, sizeof(int), 1, file);
+    fwrite(&NumberOfMuscles, sizeof(int), 1, file);
+
+    // Save all nodes and muscles
+    fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, file);
+    fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, file);
+
+    fclose(file);
+    //printf("Simulation state saved at runtime: %.2f ms\n", RunTime);
+}
+
+void loadState()
+{
+    // Open file for reading (binary mode)
+    FILE* file = fopen("simulation_state.bin", "rb");
+    if (!file) 
+	{
+        printf("Error: Could not open file for loading state.\n");
+        return;
+    }
+
+    // Load runtime value
+    fread(&RunTime, sizeof(double), 1, file);
+    
+    // Load simulation timers and relevant state variables
+    fread(&Simulation, sizeof(Simulation), 1, file);
+
+    // Load node and muscle counts
+    int nNodes, nMuscles;
+    fread(&nNodes, sizeof(int), 1, file);
+    fread(&nMuscles, sizeof(int), 1, file);
+
+    // Sanity check
+    if (nNodes != NumberOfNodes || nMuscles != NumberOfMuscles) 
+    {
+        printf("Error: Node/Muscle count mismatch. State not loaded.\n");
+        fclose(file);
+        return;
+    }
+
+    // Load all nodes and muscles
+    fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, file);
+    fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, file);
+
+    fclose(file);
+
+    // Copy loaded data back to GPU
+    cudaMemcpy(NodeGPU, Node, NumberOfNodes * sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+    cudaMemcpy(MuscleGPU, Muscle, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice);
+
+    drawPicture();
+	Simulation.isPaused = true; // Pause the simulation after loading state
+    //printf("Simulation state loaded at runtime: %.2f ms\n", RunTime);
+}
+
 void findNodes()
 {
 	copyNodesFromGPU();
@@ -832,6 +914,20 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			if (mods & GLFW_MOD_ALT)
 			{
 				findNodes();
+			}
+			break;
+
+		case GLFW_KEY_S: // Ctrl + s to save state
+			if (mods & GLFW_MOD_CONTROL)
+			{
+				saveState();
+			}
+			break;
+		
+		case GLFW_KEY_Z: // Ctrl + z to load state
+			if (mods & GLFW_MOD_CONTROL)
+			{
+				loadState();
 			}
 			break;
 

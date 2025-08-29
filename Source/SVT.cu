@@ -560,6 +560,9 @@ int main(int argc, char** argv)
 	cudaStreamDestroy(computeStream);
   	cudaStreamDestroy(memoryStream);
 
+	//delete the state file if it exists
+	remove("simulation_state.bin");
+
 	//free memory
 	cudaFreeHost(Node);
 	cudaFreeHost(Muscle);
