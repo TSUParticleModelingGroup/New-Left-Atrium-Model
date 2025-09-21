@@ -656,7 +656,7 @@ void createGUI()
 	if (ImGui::IsItemHovered())
 	{
 		ImGui::BeginTooltip();
-		ImGui::Text("(F1)");
+		ImGui::Text("(F1) or r/R");
 		ImGui::EndTooltip();
 	}
     
@@ -666,7 +666,7 @@ void createGUI()
 
         // Contraction toggle
         bool contractionOn = Simulation.ContractionisOn;
-        if (ImGui::Checkbox("Contraction", &contractionOn)) 
+        if (ImGui::Checkbox("Contraction Toggle", &contractionOn)) 
         {
             Simulation.ContractionisOn = contractionOn;
         }
@@ -755,6 +755,29 @@ void createGUI()
 			ImGui::Text("(F5)");
 			ImGui::EndTooltip();
 		}
+	}
+
+	//Draw Rate Slider
+	ImGui::Separator();
+	ImGui::Text("Simulation Speed");
+	if (ImGui::SliderInt("##DrawRateSlider", &DrawRate, 100, 5000, "%d")) //slider for setting the simulation rate
+	{
+		// Only update if the value changes
+		if (DrawRate < 1) DrawRate = 1;
+		if (DrawRate > 5000) DrawRate = 5000;
+	}
+	if(ImGui::IsItemHovered())
+	{
+		ImGui::BeginTooltip();
+		ImGui::Text("(;/')\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
+		ImGui::EndTooltip();
+
+	//Input box for simulation speed
+	if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
+	{
+		// Only update if the value changes
+		if (DrawRate < 100) DrawRate = 100;
+		if (DrawRate > 5000) DrawRate = 5000;
 	}
     
 	// View presets
@@ -899,33 +922,38 @@ void createGUI()
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
-			ImGui::Text("Click on nodes to ablate");
+			ImGui::Text("Alt + Q to exit mouse mode");
 			ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
 		}
 		else if (Simulation.isInEctopicBeatMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
+			ImGui::Text("Alt + Q to exit mouse mode");
 		} 
 		else if (Simulation.isInEctopicEventMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
+			ImGui::Text("Alt + Q to exit mouse mode");
 		} 
 		else if (Simulation.isInAdjustMuscleAreaMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
+			ImGui::Text("Alt + Q to exit mouse mode");
 		} 
 		else if (Simulation.isInAdjustMuscleLineMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
+			ImGui::Text("Alt + Q to exit mouse mode");
 		} 
 		else if (Simulation.isInFindNodeMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
+			ImGui::Text("Alt + Q to exit mouse mode");
 		}
 
 		// Mouse mode buttons
