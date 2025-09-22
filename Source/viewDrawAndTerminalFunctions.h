@@ -771,7 +771,7 @@ void createGUI()
 		ImGui::BeginTooltip();
 		ImGui::Text("(;/')\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
 		ImGui::EndTooltip();
-
+	}
 	//Input box for simulation speed
 	if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
 	{
