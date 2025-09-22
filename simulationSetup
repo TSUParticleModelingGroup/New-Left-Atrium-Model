@@ -31,7 +31,11 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
+<<<<<<< Updated upstream
 --InputFileName = test
+=======
+--InputFileName = LeftAtriumRealPartialAppendage
+>>>>>>> Stashed changes
 
 Name of previous run files that were stored in GitHub.
 Test
@@ -61,16 +65,16 @@ The following values will be used to generate a force to mass ratio that will sc
 Myocytes are approximately 80-100 micrometers (converting to our units 0.08-0.1 millimeters) in length [1].
 Myocytes are approximately 10-20 micrometers (converting to our units 0.01-0.02 millimeters) in width [2].
 The contraction force of a myocyte is about 10 micro-Newtons (converting to our 1e-5 g*mm/ms^2) [3].
-Myocardial tissue density is about 1.055 g/ml (converting to our units 0.001055 g/mm^3) [4].
+Myocardial tissue density is about 1.055 g/ml (converting to our units 0.001265 g/mm^3) [4].
 A multiplier is added in case the user wants to scale this value; a value of 1.0 keeps it unchanged.
 We also added a standard deviation in case the user wants to introduce some randomness to the muscle's 
 strength; a value of 0.0 adds no randomness.
 All five values should be floats.
 
---MyocyteLength = 0.09;
---MyocyteWidth = 0.015;
+--MyocyteLength = 0.1;
+--MyocyteWidth = 0.0115;
 --MyocyteContractionForce = 1.0e-5;
---MyocardialTissueDensity = 0.001055;
+--MyocardialTissueDensity = 0.001265;
 --MyocyteForcePerMassMultiplier = 1.0;
 --MyocyteForcePerMassSTD = 0.0;
 
