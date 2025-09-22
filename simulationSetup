@@ -15,6 +15,7 @@ Circle200
 CSphere340
 CSphere5680
 Plain200X200
+Rand100X100
 Rand200X200
 Rans300X300
 IdealLeftAtrium2.3K
@@ -30,7 +31,7 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = Rand200X200
+--InputFileName = test
 
 Name of previous run files that were stored in GitHub.
 Test
@@ -115,7 +116,7 @@ If you want to turn off muscle contractions and just observe the electrical proc
 This can also be toggled on and off in the running simulation.
 It should be a 0 or a 1.
 
---ContractionIsOn = 1;
+--ContractionIsOn = 0;
 
 The strength of a relaxed muscle is the opposite of the contraction force, helping return the muscle to its natural length.
 This should be a small fraction of the contraction force.

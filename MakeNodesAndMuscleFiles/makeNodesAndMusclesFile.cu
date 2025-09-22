@@ -3,24 +3,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <unistd.h>
-#include <stdbool.h>
 #define PI 3.14
 
-int Type = 2;
-// A normal left atrium holds around 23,640 cubic millimeters of blood.
-double Volume = 23640.0;
-double Radius;
+double Volume, Radius;
+double Width, Height, Depth;
+double WidthLayers, HeightLayers, DepthLayers;
 int NumberOfNodes;
 int NumberOfMuscles;
 float3* Node;
@@ -28,6 +18,28 @@ int2* Muscle;
 int PulsePointNode;
 int UpNode;
 int FrontNode;
+
+// Prototypes 
+void setup();
+double croppedRandomNumber(double, double, double);
+void setNodesAndMusclesSheet();
+void saveNodesAndMuscle();
+
+void setup()
+{
+	// A normal left atrium holds around 23,640 cubic millimeters of blood.
+	Volume = 23640.0;
+	Radius = pow((3.0*Volume)/(4.0*PI), 1.0/3.0);
+	
+	Width = Radius;
+	Height = Radius;
+	Depth = Radius/10.0;
+	
+	// How many cuts in each direction;
+	WidthLayers = 100;
+	HeightLayers = 100;
+	DepthLayers = 1;
+}
 
 /*
  This function: 
@@ -60,77 +72,52 @@ double croppedRandomNumber(double stddev, double left, double right)
 	return(randomNumber);	
 }
 
-void setNodesAndMusclesLine() 
-{
-	NumberOfNodes = 10;
-	NumberOfMuscles = NumberOfNodes - 1;
-	
-	PulsePointNode = 0;
-	UpNode = 0;
-	FrontNode = 0;
-	
-	float lengthOfLine = 2.0*PI*Radius;
-	
-	Node = (float3*)malloc(NumberOfNodes*sizeof(float3));
-	Muscle = (int2*)malloc(NumberOfMuscles*sizeof(int2));
-		
-	// Setting the positions on a line.
-	float start = -lengthOfLine/2.0;
-	float dx = lengthOfLine/(NumberOfNodes - 1.0);
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		Node[i].x = start + i*dx;
-		Node[i].y = 0.0;
-		Node[i].z = 0.0;
-	}
-	
-	// Setting the Muscles links to -1 so you can see if they are not used.
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		Muscle[i].x =  -1;
-		Muscle[i].y =  -1;	
-	}
-	
-	// Setting the Muscles.
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		Muscle[i].x =  i;
-		Muscle[i].y =  i + 1;	
-	}
-}
-
 void setNodesAndMusclesSheet() 
 {
-	int nodesX = 200;
-	int nodesY = 200;
-	NumberOfNodes = nodesX*nodesY;
-	NumberOfMuscles = (nodesX - 1)*nodesY + (nodesY - 1)*nodesX;
+	float dx, dy, dz;
 	
-	PulsePointNode = nodesX/2;
+	// This will be one more than the cuts because you will need a termination of the last cut.
+	int nodesX = WidthLayers + 1;
+	int nodesY = HeightLayers + 1;
+	int nodesZ = DepthLayers + 1;
+	
+	NumberOfNodes = nodesX*nodesY*nodesZ;
+	NumberOfMuscles = ((nodesX - 1)*nodesY + nodesX*(nodesY - 1))*nodesZ + nodesX*nodesY*(nodesZ - 1);
+	
+	// This is putting the pulse node in the middle of one side of the sheet. 
+	PulsePointNode = nodesX/2 + ((nodesZ -1)/2)*nodesX*nodesY;
 	UpNode = 0;
 	FrontNode = 0;
 	
-	float width = 2.0*PI*Radius;
-	float height = width*(float)nodesX/(float)nodesY;
-	float dx =  width/(float)(nodesX - 1);
-	float dy = height/(float)(nodesY - 1);
+	dx =  Width/(float)(nodesX - 1);
+	if(1 < nodesY) dy = Height/(float)(nodesY - 1);
+	else dy = 0.0;
+	if(1 < nodesZ) dz = Depth/(float)(nodesZ - 1);
+	else dz = 0.0;
+	
 	double stddev = 0.5;
 	
 	Node = (float3*)malloc(NumberOfNodes*sizeof(float3));
 	Muscle = (int2*)malloc(NumberOfMuscles*sizeof(int2));
-		
+	
 	// Setting the positions on a line.
-	float startX = -width/2.0;
-	float startY = -height/2.0;
+	float startX = -Width/2.0;
+	float startY = -Height/2.0;
+	float startZ = -Depth/2.0;
 	int k = 0;
-	for(int i = 0; i < nodesX; i++)
+	for(int l = 0; l < nodesZ; l++)
 	{
-		for(int j = 0; j < nodesX; j++)
+		for(int j = 0; j < nodesY; j++)
 		{
-			Node[k].x = startX + i*dx + croppedRandomNumber(stddev, -dx/2.2, dx/2.2);
-			Node[k].y = startY + j*dy + croppedRandomNumber(stddev, -dy/2.2, dy/2.2);;
-			Node[k].z = 0.0;
-			k++;
+			for(int i = 0; i < nodesX; i++)
+			{
+				Node[k].x = startX + i*dx + croppedRandomNumber(stddev, -dx/2.2, dx/2.2);
+				if(1 < nodesY) Node[k].y = startY + j*dy + croppedRandomNumber(stddev, -dy/2.2, dy/2.2);
+				else Node[k].y = 0.0;
+				if(1 < nodesZ) Node[k].z = startZ + l*dz + croppedRandomNumber(stddev, -dz/2.2, dz/2.2);
+				else Node[k].z = 0.0;
+				k++;
+			}
 		}
 	}
 	
@@ -142,22 +129,34 @@ void setNodesAndMusclesSheet()
 	}
 	
 	// Setting the Muscles.
+	int index;
 	k = 0;
-	for(int j = 0; j < nodesY; j++)
+	for(int l = 0; l < nodesZ; l++)
 	{
-		for(int i = j*nodesX; i < (j+1)*nodesX; i++)
+		for(int j = 0; j < nodesY; j++)
 		{
-			if(i < (j+1)*nodesX - 1)
+			for(int i = 0; i < nodesX; i++)
 			{
-				Muscle[k].x =  i;
-				Muscle[k].y =  i + 1;
-				k++;
-			}
-			if(j < (nodesY - 1))
-			{
-				Muscle[k].x =  i;
-				Muscle[k].y =  i + nodesX;
-				k++;
+				index = i + j*nodesX + l*nodesX*nodesY;
+				
+				if(i < (nodesX - 1))
+				{
+					Muscle[k].x =  index;
+					Muscle[k].y =  index + 1;
+					k++;
+				}
+				if(j < (nodesY - 1))
+				{
+					Muscle[k].x =  index;
+					Muscle[k].y =  index + nodesX;
+					k++;
+				}
+				if(l < (nodesZ - 1))
+				{
+					Muscle[k].x =  index;
+					Muscle[k].y =  index + nodesX*nodesY;
+					k++;
+				}
 			}
 		}
 	}
@@ -168,16 +167,12 @@ void saveNodesAndMuscle()
 	const char *folderName = "Name It";
 	
 	// Creating the diretory to hold the run settings.
-	if(mkdir(folderName, 0777) == 0)
+	if(mkdir(folderName, 0777) != 0)
 	{
-		printf("\n Directory '%s' created successfully.\n", folderName);
-	}
-	else
-	{
-		printf("\n Error creating directory '%s'.\n", folderName);
+		printf("\n Error creating Nodes and Muscles folder '%s'.\n", folderName);
 	}
 	
-	// Moving into the directory
+	// Moving into the folder
 	chdir(folderName);
 	
 	// Copying all the Nodes into this folder in the file named Nodes.
@@ -214,23 +209,27 @@ void saveNodesAndMuscle()
 	}
   	fclose(MusclesFile);
   	
+  	// Creating BachmannsBundle folder
+	FILE *BachmannsBundleFile;
+  	BachmannsBundleFile = fopen("BachmannsBundle", "wb");
+  	if (BachmannsBundleFile == NULL) 
+  	{
+		printf("Error opening BachmannsBundleFile!\n");
+		exit(0);
+    	}
+	fprintf(BachmannsBundleFile, "%d\n", 0);
+  	fclose(BachmannsBundleFile);
+  	
 	// Moving back to original directory.
 	chdir("../");
 
-	printf("\n Nodes and Muscles saved.\n");
+	printf("\n Nodes and Muscles have been created and saved.\n");
 }
 
 int main(int argc, char** argv)
 {
-	Radius = pow((3.0*Volume)/(4.0*PI), 1.0/3.0);
-	if(Type == 1)
-	{
-		setNodesAndMusclesLine();
-	}
-	if(Type == 2)
-	{
-		setNodesAndMusclesSheet();
-	}
+	setup();
+	setNodesAndMusclesSheet();
 	saveNodesAndMuscle();
 	return 0;
 }

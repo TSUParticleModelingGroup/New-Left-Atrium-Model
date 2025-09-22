@@ -464,12 +464,8 @@ void drawPicture()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
-	// Draw Nodes
-
-	// Drawing Pulse node
-	if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0);
-	else glColor3d(1.0,0.0,0.0);
-
+	if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0); // Green is running
+	else glColor3d(1.0,0.0,0.0); // Red is paused			
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
 	renderSphereVBO();
@@ -479,17 +475,17 @@ void drawPicture()
 	//This draws a center node at the center of the simulation for debugging purposes
 	if(true) // false turns it off, true turns it on.
 	{
-		glColor3d(1.0,1.0,1.0);
+		glColor3d(0.0,0.0,1.0);
 		glPushMatrix();
 		glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
 		renderSphereVBO();
 		glPopMatrix();
 	}
-
-	// Drawing other nodes
+	
+	// Drawing nodes
 	if(Simulation.DrawNodesFlag == 1 || Simulation.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
-		for(int i = 1; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
+		for(int i = 0; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
 			if(Simulation.DrawFrontHalfFlag == 1 || Simulation.DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
 			{
@@ -520,7 +516,7 @@ void drawPicture()
 	{
 		glPointSize(5.0);
 		glBegin(GL_POINTS);
-	 	for(int i = 1; i < NumberOfNodes; i++)
+	 	for(int i = 0; i < NumberOfNodes; i++)
 		{
 			if(Simulation.DrawFrontHalfFlag == 1)
 			{

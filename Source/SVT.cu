@@ -354,7 +354,7 @@ int main(int argc, char** argv)
 	Near = 0.2;
 	Far = 80.0*RadiusOfLeftAtrium;
 
-	//Direction here your eye is located location
+	//Where your eye is located
 	EyeX = 0.0*RadiusOfLeftAtrium;
 	EyeY = 0.0*RadiusOfLeftAtrium;
 	EyeZ = 2.0*RadiusOfLeftAtrium;
