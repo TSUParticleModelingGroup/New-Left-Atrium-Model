@@ -487,7 +487,7 @@ void saveState()
     cudaMemcpy(Node, NodeGPU, NumberOfNodes * sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
     cudaMemcpy(Muscle, MuscleGPU, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 
-    // Open file for writing
+    // Open file for writing (binary mode)
 	// we're using a binary file (.bin) because it is faster and smaller than a text file, we can read and write the entire structs at once
 	//rather than writing each variable one at a time, translating to and from text, and dealing with formatting
 	//its also worth noting that any variable can be easily saved, so we can easily add anything to this
@@ -669,6 +669,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 
 		case GLFW_KEY_F1: // F1 key to toggle run/pause
+		case GLFW_KEY_R: // r/R key to toggle run/pause
 			if(Simulation.isPaused)
 			{
 				Simulation.isPaused = false;
@@ -809,7 +810,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			copyNodesToGPU(); 
 			drawPicture();
 			break;
-
+			
 		case GLFW_KEY_8: // AP View
 		case GLFW_KEY_KP_8:
 			setView(2);
@@ -908,6 +909,16 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				Node[PulsePointNode].beatPeriod = 10000;
 			}
 			copyNodesToGPU();
+			break;
+
+		case GLFW_KEY_SEMICOLON: //decrease DrawRate
+			DrawRate -= 50;
+			if(DrawRate < 100) DrawRate = 100;
+			break;
+
+		case GLFW_KEY_APOSTROPHE: //increase DrawRate
+			DrawRate += 50;
+			if(DrawRate > 5000) DrawRate = 5000;
 			break;
 
 		case GLFW_KEY_F: //Alt + f to find nodes
@@ -1419,6 +1430,12 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							cudaErrorCheck(__FILE__, __LINE__);
 							
 							Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
+
+							//Create a pink point sprite at the node
+							Node[i].color.x = 0.996;
+							Node[i].color.y = 0.242;
+							Node[i].color.z = 0.637;
+							Node[i].isDrawNode = true;
 							
 							cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
 							cudaErrorCheck(__FILE__, __LINE__);
@@ -1571,6 +1588,14 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 								Node[i].color.y = 1.0;
 								Node[i].color.z = 0.0;
 							}
+						}
+
+						//Reset ectopic trigger colors
+						if(Simulation.isInEctopicEventMode)
+						{
+							Node[i].color.x = 0.0;
+							Node[i].color.y = 1.0;
+							Node[i].color.z = 0.0;
 						}
 					}
 				}
