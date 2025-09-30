@@ -22,7 +22,8 @@ int FrontNode;
 // Prototypes 
 void setup();
 double croppedRandomNumber(double, double, double);
-void setNodesAndMusclesSheet();
+void setNodesAndMusclesUniformSheet();
+void setNodesAndMusclesCrossSheet();
 void saveNodesAndMuscle();
 
 void setup()
@@ -36,8 +37,8 @@ void setup()
 	Depth = Radius/10.0;
 	
 	// How many cuts in each direction;
-	WidthLayers = 100;
-	HeightLayers = 100;
+	WidthLayers = 200;
+	HeightLayers = 200;
 	DepthLayers = 1;
 }
 
@@ -72,7 +73,7 @@ double croppedRandomNumber(double stddev, double left, double right)
 	return(randomNumber);	
 }
 
-void setNodesAndMusclesSheet() 
+void setNodesAndMusclesUniformSheet() 
 {
 	float dx, dy, dz;
 	
@@ -162,6 +163,104 @@ void setNodesAndMusclesSheet()
 	}
 }
 
+void setNodesAndMusclesCrossSheet() 
+{
+	float dx, dy, dz;
+	
+	// This will be one more than the cuts because you will need a termination of the last cut.
+	int nodesX = WidthLayers + 1;
+	int nodesY = HeightLayers + 1;
+	int nodesZ = 1;
+	
+	NumberOfNodes = nodesX*nodesY*nodesZ;
+	NumberOfMuscles = ((nodesX - 1)*nodesY + nodesX*(nodesY - 1) + (nodesX - 1)*(nodesY - 1)*2);
+	
+	// This is putting the pulse node in the middle of one side of the sheet. 
+	PulsePointNode = nodesX/2 + ((nodesZ -1)/2)*nodesX*nodesY;
+	UpNode = 0;
+	FrontNode = 0;
+	
+	dx =  Width/(float)(nodesX - 1);
+	if(1 < nodesY) dy = Height/(float)(nodesY - 1);
+	else dy = 0.0;
+	if(1 < nodesZ) dz = Depth/(float)(nodesZ - 1);
+	else dz = 0.0;
+	
+	double stddev = 0.5;
+	
+	Node = (float3*)malloc(NumberOfNodes*sizeof(float3));
+	Muscle = (int2*)malloc(NumberOfMuscles*sizeof(int2));
+	
+	// Setting the positions on a line.
+	float startX = -Width/2.0;
+	float startY = -Height/2.0;
+	float startZ = -Depth/2.0;
+	int k = 0;
+	for(int l = 0; l < nodesZ; l++)
+	{
+		for(int j = 0; j < nodesY; j++)
+		{
+			for(int i = 0; i < nodesX; i++)
+			{
+				Node[k].x = startX + i*dx + croppedRandomNumber(stddev, -dx/2.2, dx/2.2);
+				if(1 < nodesY) Node[k].y = startY + j*dy + croppedRandomNumber(stddev, -dy/2.2, dy/2.2);
+				else Node[k].y = 0.0;
+				if(1 < nodesZ) Node[k].z = startZ + l*dz + croppedRandomNumber(stddev, -dz/2.2, dz/2.2);
+				else Node[k].z = 0.0;
+				k++;
+			}
+		}
+	}
+	
+	// Setting the Muscles links to -1 so you can see if they are not used.
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		Muscle[i].x =  -1;
+		Muscle[i].y =  -1;	
+	}
+	
+	// Setting the Muscles.
+	int index;
+	k = 0;
+	for(int j = 0; j < nodesY; j++)
+	{
+		for(int i = 0; i < nodesX; i++)
+		{
+			index = i + j*nodesX;
+			
+			if(i < (nodesX - 1))
+			{
+				Muscle[k].x =  index;
+				Muscle[k].y =  index + 1;
+				k++;
+				if(j < (nodesY - 1))
+				{
+					Muscle[k].x =  index;
+					Muscle[k].y =  index + nodesX;
+					k++;
+					Muscle[k].x =  index;
+					Muscle[k].y =  index + nodesX + 1;
+					k++;
+				}
+				if(0 < j)
+				{
+					Muscle[k].x =  index;
+					Muscle[k].y =  index - nodesX + 1;
+					k++;
+				}
+				
+				
+			}
+			if(i == (nodesX - 1) && j < (nodesY - 1))
+			{
+				Muscle[k].x =  index;
+				Muscle[k].y =  index + nodesX;
+				k++;
+			}
+		}
+	}
+}
+
 void saveNodesAndMuscle()
 {
 	const char *folderName = "Name It";
@@ -228,8 +327,10 @@ void saveNodesAndMuscle()
 
 int main(int argc, char** argv)
 {
+	int type = 2;
 	setup();
-	setNodesAndMusclesSheet();
+	if(type == 1) setNodesAndMusclesUniformSheet();
+	if(type == 2) setNodesAndMusclesCrossSheet();
 	saveNodesAndMuscle();
 	return 0;
 }

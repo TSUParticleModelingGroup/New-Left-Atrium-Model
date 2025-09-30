@@ -16,7 +16,9 @@ CSphere340
 CSphere5680
 Plain200X200
 Rand200X200
-Rans300X300
+Rand300X300
+Rand100X100X10
+Cross200X200
 IdealLeftAtrium2.3K
 IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
@@ -30,7 +32,7 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = Rand200X200
+--InputFileName = Cross200X200
 
 Name of previous run files that were stored in GitHub.
 Test
