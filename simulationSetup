@@ -15,7 +15,6 @@ Circle200
 CSphere340
 CSphere5680
 Plain200X200
-Rand100X100
 Rand200X200
 Rans300X300
 IdealLeftAtrium2.3K
@@ -31,11 +30,7 @@ The code is not currently written for models with depth, but it does work with t
 
 Place the Nodes and Muscle file you would like to run here.
 
-<<<<<<< Updated upstream
---InputFileName = test
-=======
---InputFileName = LeftAtriumRealPartialAppendage
->>>>>>> Stashed changes
+--InputFileName = Rand200X200
 
 Name of previous run files that were stored in GitHub.
 Test
