@@ -115,7 +115,7 @@ void readSimulationParameters()
 	ifstream data;
 	string name;
 	
-	data.open("./simulationSetup");
+	data.open("./BasicSimulationSetup");
 	
 	if(data.is_open() == 1)
 	{
@@ -133,57 +133,9 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> NodeRadiusAdjustment;
-
-		getline(data,name,'=');
-		data >> MyocyteLength;
-		
-		getline(data,name,'=');
-		data >> MyocyteWidth;
-		
-		getline(data,name,'=');
-		data >> MyocyteContractionForce;
-		
-		getline(data,name,'=');
-		data >> MyocardialTissueDensity;
-		
-		getline(data,name,'=');
-		data >> MyocyteForcePerMassMultiplier;
-		
-		getline(data,name,'=');
-		data >> MyocyteForcePerMassSTD;
-		
-		getline(data,name,'=');
-		data >> DiastolicPressureLA;
-		
-		getline(data,name,'=');
-		data >> SystolicPressureLA;
-		
-		getline(data,name,'=');
-		data >> PressureMultiplier;
-		
-		getline(data,name,'=');
-		data >> MassOfLeftAtrium;
-		
-		getline(data,name,'=');
-		data >> VolumeOfLeftAtrium;
-		
-		getline(data,name,'=');
-		data >> KeepOriginalDimensions;
-		
-		getline(data,name,'=');
-		data >> Drag;
 		
 		getline(data,name,'=');
 		data >> Simulation.ContractionisOn;
-		
-		getline(data,name,'=');
-		data >> MuscleRelaxedStrengthFraction;
-		
-		getline(data,name,'=');
-		data >> MuscleCompressionStopFraction;
-		
-		getline(data,name,'=');
-		data >> MuscleCompressionStopFractionSTD;
 		
 		getline(data,name,'=');
 		data >> BaseMuscleRefractoryPeriod;
@@ -274,11 +226,70 @@ void readSimulationParameters()
 	}
 	else
 	{
-		printf("\nTSU Error could not open simulationSetup file\n");
+		printf("\nTSU Error could not open BasicSimulationSetup file\n");
 		exit(0);
 	}
-	
 	data.close();
+	
+	data.open("./AdvancedSimulationSetup");
+	
+	if(data.is_open() == 1)
+	{
+		getline(data,name,'=');
+		data >> MyocyteLength;
+		
+		getline(data,name,'=');
+		data >> MyocyteWidth;
+		
+		getline(data,name,'=');
+		data >> MyocyteContractionForce;
+		
+		getline(data,name,'=');
+		data >> MyocardialTissueDensity;
+		
+		getline(data,name,'=');
+		data >> MyocyteForcePerMassMultiplier;
+		
+		getline(data,name,'=');
+		data >> MyocyteForcePerMassSTD;
+		
+		getline(data,name,'=');
+		data >> DiastolicPressureLA;
+		
+		getline(data,name,'=');
+		data >> SystolicPressureLA;
+		
+		getline(data,name,'=');
+		data >> PressureMultiplier;
+		
+		getline(data,name,'=');
+		data >> MassOfLeftAtrium;
+		
+		getline(data,name,'=');
+		data >> VolumeOfLeftAtrium;
+		
+		getline(data,name,'=');
+		data >> KeepOriginalDimensions;
+		
+		getline(data,name,'=');
+		data >> Drag;
+		
+		getline(data,name,'=');
+		data >> MuscleRelaxedStrengthFraction;
+		
+		getline(data,name,'=');
+		data >> MuscleCompressionStopFraction;
+		
+		getline(data,name,'=');
+		data >> MuscleCompressionStopFractionSTD;
+	}
+	else
+	{
+		printf("\nTSU Error could not open AdvancedSimulationSetup file\n");
+		exit(0);
+	}
+	data.close();
+	
 	printf("\n Simulation Parameters have been read in.");
 }
 
