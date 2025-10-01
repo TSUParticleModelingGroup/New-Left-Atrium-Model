@@ -14,7 +14,7 @@ nvcc -c imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp
 nvcc SVT.cu glad.c\
      imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_impl_glfw.o imgui_impl_opengl3.o \
      -o svt \
-     -lglfw -lGL -lGLU -lm -lpthread -ldl -lX11 -lXrandr -lXinerama -lXcursor -lXi
+     -lglfw -lGL -lGLU -lm -lX11 -lXrandr -lXinerama -lXcursor -lXi
 
 #move svt and all .o files to ExecutableFiles
 mv svt ../ExecutableFiles
