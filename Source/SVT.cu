@@ -108,7 +108,7 @@ void setupCudaEnvironment()
 }
 
 /*
- This function reads in all the user defined parameters in the simulationSetup file.
+ This function reads in all the user defined parameters in the three SimulationSetup files.
 */
 void readSimulationParameters()
 {
@@ -116,7 +116,6 @@ void readSimulationParameters()
 	string name;
 	
 	data.open("./BasicSimulationSetup");
-	
 	if(data.is_open() == 1)
 	{
 		getline(data,name,'=');
@@ -136,39 +135,6 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> Simulation.ContractionisOn;
-		
-		getline(data,name,'=');
-		data >> BaseMuscleRefractoryPeriod;
-		
-		getline(data,name,'=');
-		data >> MuscleRefractoryPeriodSTD;
-		        
-		getline(data,name,'=');
-		data >> BaseAbsoluteRefractoryPeriodFraction;
-		
-		getline(data,name,'=');
-		data >> AbsoluteRefractoryPeriodFractionSTD;
-		
-		getline(data,name,'=');
-		data >> BaseMuscleConductionVelocity;
-		
-		getline(data,name,'=');
-		data >> MuscleConductionVelocitySTD; 
-		
-		getline(data,name,'=');
-		data >> BachmannsBundleMultiplier;
-		
-		getline(data,name,'=');
-		data >> BeatPeriod;
-		
-		getline(data,name,'=');
-		data >> PrintRate;
-		
-		getline(data,name,'=');
-		data >> DrawRate;
-		
-		getline(data,name,'=');
-		data >> Dt;
 		
 		getline(data,name,'=');
 		data >> ReadyColor.x;
@@ -231,10 +197,55 @@ void readSimulationParameters()
 	}
 	data.close();
 	
-	data.open("./AdvancedSimulationSetup");
-	
+	data.open("./IntermediateSimulationSetup");
 	if(data.is_open() == 1)
 	{
+		getline(data,name,'=');
+		data >> BaseMuscleRefractoryPeriod;
+		
+		getline(data,name,'=');
+		data >> MuscleRefractoryPeriodSTD;
+		        
+		getline(data,name,'=');
+		data >> BaseAbsoluteRefractoryPeriodFraction;
+		
+		getline(data,name,'=');
+		data >> AbsoluteRefractoryPeriodFractionSTD;
+		
+		getline(data,name,'=');
+		data >> BaseMuscleConductionVelocity;
+		
+		getline(data,name,'=');
+		data >> MuscleConductionVelocitySTD; 
+		
+		getline(data,name,'=');
+		data >> BachmannsBundleMultiplier;
+		
+		getline(data,name,'=');
+		data >> BeatPeriod;
+		
+		getline(data,name,'=');
+		data >> PrintRate;
+		
+		getline(data,name,'=');
+		data >> DrawRate;
+		
+		getline(data,name,'=');
+		data >> Dt;
+	}
+	else
+	{
+		printf("\nTSU Error could not open IntermediateSimulationSetup file\n");
+		exit(0);
+	}
+	data.close();
+	
+	data.open("./AdvancedSimulationSetup");
+	if(data.is_open() == 1)
+	{
+		getline(data,name,'=');
+		data >> WallThicknessFraction;
+		
 		getline(data,name,'=');
 		data >> MyocyteLength;
 		
@@ -263,15 +274,6 @@ void readSimulationParameters()
 		data >> PressureMultiplier;
 		
 		getline(data,name,'=');
-		data >> MassOfLeftAtrium;
-		
-		getline(data,name,'=');
-		data >> VolumeOfLeftAtrium;
-		
-		getline(data,name,'=');
-		data >> KeepOriginalDimensions;
-		
-		getline(data,name,'=');
 		data >> Drag;
 		
 		getline(data,name,'=');
@@ -290,7 +292,7 @@ void readSimulationParameters()
 	}
 	data.close();
 	
-	printf("\n Simulation Parameters have been read in.");
+	printf("\n Simulation Parameters have been read in from simulationSetup files.");
 }
 
 /*

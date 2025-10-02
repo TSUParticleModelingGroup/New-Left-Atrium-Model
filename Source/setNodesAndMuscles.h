@@ -21,6 +21,7 @@
  void checkMuscle(int);
 */
 
+
 /*
  This function 
  1. Opens the node file.
@@ -28,6 +29,11 @@
  3. Allocates memory to hold the nodes on the CPU and the GPU
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
+ 6. Finds the center of the LA
+ 7. Places the centers the LA at (0,0,0).
+ 8. Finds the average radius of the LA.
+ 9. Finds the mass of the LA.
+10. Sets the pulse node.
 */
 
 void setNodesFromBlenderFile()
@@ -44,7 +50,7 @@ void setNodesFromBlenderFile()
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/Nodes");
 	
-	// Opening the node file.
+	// 1. Opening the node file.
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
@@ -52,7 +58,7 @@ void setNodesFromBlenderFile()
 		exit(0);
 	}
 	
-	// Reading the header information.
+	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
 	fscanf(inFile, "%d", &PulsePointNode);
@@ -62,14 +68,14 @@ void setNodesFromBlenderFile()
 	fscanf(inFile, "%d", &FrontNode);
 	printf("\n FrontNode = %d", FrontNode);
 	
-	// Allocating memory for the CPU and GPU nodes. 
+	// 3. Allocating memory for the CPU and GPU nodes. 
 	cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 	
-	// Setting all nodes to zero or their default settings; 
+	// 4. Setting all nodes to zero or their default settings; 
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x = 0.0;
@@ -109,7 +115,7 @@ void setNodesFromBlenderFile()
 		}
 	}
 	
-	// Reading in the nodes positions.
+	// 5. Reading in the nodes positions.
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		fscanf(inFile, "%d %f %f %f", &id, &x, &y, &z);
@@ -119,7 +125,7 @@ void setNodesFromBlenderFile()
 		Node[id].position.z = z;
 	}
 	
-	// Finding center on LA
+	// 6. Finding center on LA
 	float4 centerOfObject;
 	centerOfObject.x = 0.0;
 	centerOfObject.y = 0.0;
@@ -135,7 +141,7 @@ void setNodesFromBlenderFile()
 	centerOfObject.y /= centerOfObject.w;
 	centerOfObject.z /= centerOfObject.w;
 	
-	// Centering the LA
+	// 7. Centering the LA
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		 centerOfObject.x -= centerOfObject.x;
@@ -143,14 +149,28 @@ void setNodesFromBlenderFile()
 		 centerOfObject.z -= centerOfObject.z;
 	}
 	
-	// Finding the average radius of the blender LA.
+	// 8. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
 	double averageRadius = 0.0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
 	}
 	averageRadius /= (double)NumberOfNodes;
+	RadiusOfLeftAtrium = averageRadius;
+	printf("\n RadiusOfLeftAtrium = %f millimeters", RadiusOfLeftAtrium);
 	
+	// 9. Setting the mass of the LA. 
+	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
+	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
+	//WallThicknessFraction = 0.2;
+	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
+	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
+	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
+	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
+	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
+	
+	//MassOfLeftAtrium = 25.0; // ???????????????????????????????????
+	/* ????????????????
 	if(KeepOriginalDimensions == 1)
 	{
 		// Here, we do not adjust the nodes and set the average radius to the value calculated from the node file.
@@ -170,8 +190,9 @@ void setNodesFromBlenderFile()
 			Node[i].position.z *= temp;
 		}
 	}
+	*/
 	
-	// This is the pulse node that generates the beat.
+	// 10. This is the pulse node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
@@ -305,7 +326,6 @@ void setBachmannBundleFromBlenderFile()
 	fclose(inFile);
 	printf("\n Bachmann's Bundle Node have been read in.");
 }
-
 
 /*
  This function 
@@ -484,6 +504,8 @@ double croppedRandomNumber(double stddev, double left, double right)
 void setRemainingNodeAndMuscleAttributes()
 {	
 	double stddev, left, right;
+	
+	//MassOfLeftAtrium = 25.0; // ???????????????????????????????????
 	
 	// 1:
 	double dx, dy, dz, d;

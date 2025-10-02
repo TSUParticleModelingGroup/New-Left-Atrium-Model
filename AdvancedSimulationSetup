@@ -3,6 +3,11 @@
 The units we use in the code are: length in millimeters (mm), mass in grams (g), and time in milliseconds (ms). 
 Any value read from this file that is not in these units will be converted to these units in the code.
 
+This value is how thick the wall of the LA is as a fraction of its radius. It will be used to find the tissue 
+mass of the LA [?].
+
+--WallThicknessFraction = 0.2;
+
 The following values will be used to generate a force to mass ratio that will scale a muscle's strength by its mass.
 Myocytes are approximately 80-100 micrometers (converting to our units 0.08-0.1 millimeters) in length [1].
 Myocytes are approximately 10-20 micrometers (converting to our units 0.01-0.02 millimeters) in width [2].
@@ -29,26 +34,6 @@ All three values should be floats.
 --DiastolicPressureLA = 2.0;
 --SystolicPressureLA = 12.0;
 --PressureMultiplier = 10.0;
-
-This is the mass of the left atrium that will be using.
-A good value for the left atrium is 25 grams [6].
-It should be a float.
- 
---MassOfLeftAtrium = 25.0;
-
-The volume of the left atrium will be used to calculate the average radius of the left atrium.
-The average radius will then be used to scale all length values. The nodes read from the nodes file will 
-be adjusted so that their average distance from the geometric center of the object corresponds to this value.
-This value will also be used to scale the visual representation of the left atrium on the screen so that it 
-fills the screen. However, in some situations, the user may not want the nodes from the node file adjusted 
-because they represent the actual dimensions desired. In this case, set the flag KeepOriginalDimensions to 1, 
-and the average radius will be calculated solely from the node positions read from the nodes file. A value of 
-0 will scale the simulation to have a radius calculated from VolumeOfLeftAtrium. 
-The left atrium holds around 23,640 cubic millimeters of blood [7].
-The first value should be a float and the second value should be a 0 or a 1.
-
---VolumeOfLeftAtrium = 50000.0;
---KeepOriginalDimensions = 1;
 
 To remove energy buildup in the system, we add a drag coefficient that works opposite to velocity.
 This helps prevent the system from quivering and wandering around. A value around 1.0 works well.

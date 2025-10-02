@@ -186,11 +186,9 @@ double MyocyteForcePerMassSTD;
 double DiastolicPressureLA;
 double SystolicPressureLA;
 double PressureMultiplier;
+double WallThicknessFraction;
 double MassOfLeftAtrium;
-double VolumeOfLeftAtrium;
-bool KeepOriginalDimensions;
 double Drag;
-// bool ContractionIsOn; // This is read in from the setup file but is defined in the simulationSwitchesStructure.
 double MuscleRelaxedStrengthFraction;
 double MuscleCompressionStopFraction;
 double MuscleCompressionStopFractionSTD;
@@ -236,7 +234,6 @@ int DrawTimer;
 int RecenterCount;
 int RecenterRate;
 double RunTime;
-
 
 // These keep track of where the view is as you zoom in and out and rotate.
 float4 CenterOfSimulation;

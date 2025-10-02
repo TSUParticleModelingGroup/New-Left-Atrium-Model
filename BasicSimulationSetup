@@ -14,21 +14,24 @@ Circle24
 Circle200
 CSphere340
 CSphere5680
+IdealLeftAtrium2.3K
+?IdealLeftAtrium2.3K_BB
+IdealLeftAtrium13.0KNotTriangle
+LeftAtriumRealBase *** Need to zoom way in. ??? radius is 241
+LeftAtriumRealPartialAppendage *** Need to zoom way in. ??? radius is 243
+LeftAtriumRealRemovedAppendage *** Need to zoom way in. ??? radius is 244
+TheRock
+The code is not currently written for models with depth, but it does work with them. Use the 3D models with this in mind.
+3DIdealLAtrium2.3K
+3DIdealLAtrium2.3K_BB
+3DIdealLAtrium13K
+These are not closed object, as long as you have muscle contractions turned off they can be used to study electrical activity.
+If you turn muscle contraction on it will run but there is no center to simulate pressure from.
 Plain200X200
 Rand200X200
 Rand300X300
 Rand100X100X10
 Cross200X200
-IdealLeftAtrium2.3K
-IdealLeftAtrium2.3K_BB
-IdealLeftAtrium13.0KNotTriangle
-LeftAtriumRealBase
-LeftAtriumRealRemovedAppendage
-LeftAtriumRealPartialAppendage
-TheRock
-The code is not currently written for models with depth, but it does work with them. Use the 3D models with this in mind.
-3DIdealLAtrium2.3K
-3DIdealLAtrium13K
 
 Place the Nodes and Muscle file you would like to run here.
 
@@ -65,62 +68,6 @@ This can also be toggled on and off in the running simulation.
 It should be a 0 or a 1.
 
 --ContractionIsOn = 0;
-
-The length of the left atrium's refractory period. 
-A standard value is around 300 milliseconds [9]. 
-We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
-We suggest a value in the range of [0.0, 100.0]. Both should be floats.
-
---BaseMusclerRefractoryPeriod = 300.0;
---MuscleRefractoryPeriodSTD = 0.0;
-
-This is the portion of the refractory period that is absolute. 
-A standard value is 0.9 [10]. 
-The relative refractory period will be what is left over and will be calculated in the code. 
-We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
-Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
-Both should be floats.
-
---AbsoluteRefractoryPeriodFraction = 0.9;
---AbsoluteRefractoryPeriodFractionSTD = 0.0;
-
-The speed of the conduction velocity across a muscle. 
-This will be scaled by the muscle length to get the time it takes an impulse to travel across the muscle. 
-This should be around 0.5 millimeters/millisecond [11]. 
-We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
-Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
-Both should be floats.
-
---BaseMuscleConductionVelocity = 0.5;
---MuscleConductionVelocitySTD = 0.0;
-
-This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle.
-I have no idea what this should be so at the moment we will set it to 2.0 (ie twice as fast).
-We need to look this up and site it [12]
-
--- BachmannsBundleMultiplier = 5.0; 
-
-The length of time between heart beats. 
-A 1000 milliseconds is 60 beats per minute.
-Should be a float.
-
---BeatPeriod = 600.0;
-
-How often you update the terminal, in milliseconds.
-Should be a float.
-
---PrintRate = 100.0;
-
-How often you update the picture of the simulation to the screen. This is in iterations not time.
-Should be an int.
-
---DrawRate = 250;
-
-Your time step, the fraction of the time unit for each iteration. 
-We suggest a value between 0.0001 and 0.001. 
-It should be a float.
-
--- Dt = 0.001;
 
 Ready color: red, green, blue.
 All three should be floats.
