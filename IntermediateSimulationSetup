@@ -59,6 +59,42 @@ It should be a float.
 
 -- Dt = 0.001;
 
+Ready color. Where the muscle is rested and ready to contract: red, green, blue.
+All three should be floats.
+
+--ReadyRed = 1.0;
+--ReadyGreen = 0.0;
+--ReadyBlue = 0.0;
+
+Depolarization color: red, green, blue.
+All three should be floats.
+
+--ContractingRed = 1.0;
+--ContractingGreen = 1.0;
+--ContractingBlue = 0.0;
+
+Repolarization color (second portion of the absolute refractory period 
+Depolarization color took up the first part) color: red, green, blue.
+All three should be floats.
+
+--RestingRed = 0.5451;
+--RestingGreen = 0.2706;
+--RestingBlue = 0.0745;
+
+Relative Refractory Period color (Where the muscle can depolarization but it usually does not): red, green, blue.
+All three should be floats.
+
+--RelativeRed = 1.0;
+--RelativeGreen = 0.0784;
+--RelativeBlue = 0.5765;
+
+Dead color (If a node is ablated or something went wrong in a muscle it is this color): red, green, blue.
+All three should be floats.
+
+--DeadRed = 1.0;
+--DeadGreen = 1.0;
+--DeadBlue = 1.0;
+
 References:
 1) LA myocyte length is ???. Or why we used ???
 	ref1: ??? 

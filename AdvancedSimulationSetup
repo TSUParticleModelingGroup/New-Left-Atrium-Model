@@ -9,8 +9,8 @@ mass of the LA [?].
 --WallThicknessFraction = 0.2;
 
 The following values will be used to generate a force to mass ratio that will scale a muscle's strength by its mass.
-Myocytes are approximately 80-100 micrometers (converting to our units 0.08-0.1 millimeters) in length [1].
-Myocytes are approximately 10-20 micrometers (converting to our units 0.01-0.02 millimeters) in width [2].
+Myocytes are approximately 120 micrometers (converting to our units 0.12 millimeters) in length [1].
+Myocytes are approximately 10-15 micrometers (converting to our units 0.01-0.015 millimeters) in diameter [1].
 The contraction force of a myocyte is about 10 micro-Newtons (converting to our 1e-5 g*mm/ms^2) [3].
 Myocardial tissue density is about 1.055 g/ml (converting to our units 0.001265 g/mm^3) [4].
 A multiplier is added in case the user wants to scale this value; a value of 1.0 keeps it unchanged.
@@ -18,8 +18,8 @@ We also added a standard deviation in case the user wants to introduce some rand
 strength; a value of 0.0 adds no randomness.
 All five values should be floats.
 
---MyocyteLength = 0.1;
---MyocyteWidth = 0.0115;
+--MyocyteLength = 0.12;
+--MyocyteDiameter = 0.0125;
 --MyocyteContractionForce = 1.0e-5;
 --MyocardialTissueDensity = 0.001265;
 --MyocyteForcePerMassMultiplier = 1.0;
@@ -58,12 +58,8 @@ Both should be floats
 --MuscleCompresionStopFractionSTD = 0.0;
 
 References:
-1) LA myocyte length is ???. Or why we used ???
-	ref1: ??? 
-	ref2: ???
-2) LA myocyte diameter is ???. Or why we used ???
-	ref1 maybe -> (Chapter 12 - Cardiovascular and Skeletal Muscle Systems Author links open overlay panelWanda M.HaschekColin G.RousseauxMatthew A.Wallig).
-	ref2: ???
+1) LA myocyte length and diameter were obtained here:
+	Concise Review: Criteria for Chamber-Specific Categorization of Human Cardiac Myocytes Derived from Pluripotent Stem Cells, https://doi.org/10.1002/stem.2649
 3) myocyte contraction force is ???. Or why we used ???  Avery got 10 micro-Newtons. I'm not sure where.
 	ref1: ??? 
 	ref2: ???
@@ -91,4 +87,8 @@ References:
 	ref2: ???
 11) Conduction Velocity is ???
 	ref1: ??? 
+	ref2: ???
+	
+2) LA myocyte diameter is ???. Or why we used ???
+	ref1 maybe -> (Chapter 12 - Cardiovascular and Skeletal Muscle Systems Author links open overlay panelWanda M.HaschekColin G.RousseauxMatthew A.Wallig).
 	ref2: ???

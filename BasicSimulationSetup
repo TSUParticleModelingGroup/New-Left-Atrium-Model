@@ -25,7 +25,7 @@ The code is not currently written for models with depth, but it does work with t
 3DIdealLAtrium2.3K
 3DIdealLAtrium2.3K_BB
 3DIdealLAtrium13K
-These are not closed object, as long as you have muscle contractions turned off they can be used to study electrical activity.
+These are not closed objects, as long as you have muscle contractions turned off they can be used to study electrical activity.
 If you turn muscle contraction on it will run but there is no center to simulate pressure from.
 Plain200X200
 Rand200X200
@@ -35,7 +35,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = Cross200X200
+--InputFileName = 3DIdealLAtrium2.3K
 
 Name of previous run files that were stored in GitHub.
 Test
@@ -69,81 +69,10 @@ It should be a 0 or a 1.
 
 --ContractionIsOn = 0;
 
-Ready color: red, green, blue.
-All three should be floats.
-
---ReadyRed = 1.0;
---ReadyGreen = 0.0;
---ReadyBlue = 0.0;
-
-Contracting color: red, green, blue.
-All three should be floats.
-
---ContractingRed = 1.0;
---ContractingGreen = 1.0;
---ContractingBlue = 0.0;
-
-Resting (second portion of the absolute refractory period 
-contracting color took up the first part) color: red, green, blue.
-All three should be floats.
-
---RestingRed = 0.5451;
---RestingGreen = 0.2706;
---RestingBlue = 0.0745;
-
-Relative Refractory Period color: red, green, blue.
-All three should be floats.
-
---RelativeRed = 1.0;
---RelativeGreen = 0.0784;
---RelativeBlue = 0.5765;
-
-Dead color: red, green, blue.
-All three should be floats.
-
---DeadRed = 1.0;
---DeadGreen = 1.0;
---DeadBlue = 1.0;
-
-Background color: red, green, blue.
+Background color (Background of the scene): red, green, blue.
 All three should be floats.
 
 --BackGroundRed = 0.0;
 --BackGroundGreen = 0.0;
 --BackGroundBlue = 0.0;
 
-References:
-1) LA myocyte length is ???. Or why we used ???
-	ref1: ??? 
-	ref2: ???
-2) LA myocyte diameter is ???. Or why we used ???
-	ref1 maybe -> (Chapter 12 - Cardiovascular and Skeletal Muscle Systems Author links open overlay panelWanda M.HaschekColin G.RousseauxMatthew A.Wallig).
-	ref2: ???
-3) myocyte contraction force is ???. Or why we used ???  Avery got 10 micro-Newtons. I'm not sure where.
-	ref1: ??? 
-	ref2: ???
-4) myocardial tissue density is ???
-	ref1: maybe (https://bmcmedimaging.biomedcentral.com/articles/10.1186/s12880-019-0326-4).
-	ref2: ???
-5) Pressure LA: is ???. Or why we used ???
-	https://www.msdmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
-	https://www.merckmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
-	???? Need to look into this as it lelates to the A-Wave and V-Wave ????
-6) Mass of LA is ???
-	ref1: ??? 
-	ref2: ???
-7) Volume LA is ???
-	ref1: ??? 
-	ref2: ???
-8) Muscle contrated length is ???
-	ref1: ??? 
-	ref2: ???
-9) LA refractory Period is ???
-	ref1: ??? 
-	ref2: ???
-10) LA absolute Refractory Period is ???
-	ref1: ??? 
-	ref2: ???
-11) Conduction Velocity is ???
-	ref1: ??? 
-	ref2: ???

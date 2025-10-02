@@ -178,7 +178,7 @@ char PreviousRunFileName[256];
 float LineWidth;
 float NodeRadiusAdjustment;
 double MyocyteLength; 
-double MyocyteWidth;
+double MyocyteDiameter;
 double MyocyteContractionForce;
 double MyocardialTissueDensity;
 double MyocyteForcePerMassMultiplier;

@@ -544,7 +544,7 @@ void setRemainingNodeAndMuscleAttributes()
 	}
 	
 	// 4:
- 	double radius = MyocyteWidth/2.0;
+ 	double radius = MyocyteDiameter/2.0;
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
  	MyocyteForcePerMassFraction = MyocyteContractionForce/myocyteMass;

@@ -137,51 +137,6 @@ void readSimulationParameters()
 		data >> Simulation.ContractionisOn;
 		
 		getline(data,name,'=');
-		data >> ReadyColor.x;
-		
-		getline(data,name,'=');
-		data >> ReadyColor.y;
-		
-		getline(data,name,'=');
-		data >> ReadyColor.z;
-		
-		getline(data,name,'=');
-		data >> ContractingColor.x;
-		
-		getline(data,name,'=');
-		data >> ContractingColor.y;
-		
-		getline(data,name,'=');
-		data >> ContractingColor.z;
-		
-		getline(data,name,'=');
-		data >> RestingColor.x;
-		
-		getline(data,name,'=');
-		data >> RestingColor.y;
-		
-		getline(data,name,'=');
-		data >> RestingColor.z;
-		
-		getline(data,name,'=');
-		data >> RelativeColor.x;
-		
-		getline(data,name,'=');
-		data >> RelativeColor.y;
-		
-		getline(data,name,'=');
-		data >> RelativeColor.z;
-		
-		getline(data,name,'=');
-		data >> DeadColor.x;
-		
-		getline(data,name,'=');
-		data >> DeadColor.y;
-		
-		getline(data,name,'=');
-		data >> DeadColor.z;
-		
-		getline(data,name,'=');
 		data >> BackGround.x;
 		
 		getline(data,name,'=');
@@ -232,6 +187,51 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> Dt;
+		
+		getline(data,name,'=');
+		data >> ReadyColor.x;
+		
+		getline(data,name,'=');
+		data >> ReadyColor.y;
+		
+		getline(data,name,'=');
+		data >> ReadyColor.z;
+		
+		getline(data,name,'=');
+		data >> ContractingColor.x;
+		
+		getline(data,name,'=');
+		data >> ContractingColor.y;
+		
+		getline(data,name,'=');
+		data >> ContractingColor.z;
+		
+		getline(data,name,'=');
+		data >> RestingColor.x;
+		
+		getline(data,name,'=');
+		data >> RestingColor.y;
+		
+		getline(data,name,'=');
+		data >> RestingColor.z;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.x;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.y;
+		
+		getline(data,name,'=');
+		data >> RelativeColor.z;
+		
+		getline(data,name,'=');
+		data >> DeadColor.x;
+		
+		getline(data,name,'=');
+		data >> DeadColor.y;
+		
+		getline(data,name,'=');
+		data >> DeadColor.z;
 	}
 	else
 	{
@@ -250,7 +250,7 @@ void readSimulationParameters()
 		data >> MyocyteLength;
 		
 		getline(data,name,'=');
-		data >> MyocyteWidth;
+		data >> MyocyteDiameter;
 		
 		getline(data,name,'=');
 		data >> MyocyteContractionForce;
