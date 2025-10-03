@@ -1239,17 +1239,23 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 
 	//Show cursor when highlighting over IMGUI elements
 
+	
 	if (Simulation.isInMouseFunctionMode)
 	{
-		if (io.WantCaptureMouse)
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			return; // If ImGui is capturing the mouse, do not process further
-		}
-		else
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		}
+		//Uncomment this to have the cursor show when it hovers the GUI in mouse function mode
+		// if (io.WantCaptureMouse)
+		// {
+		// 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		// 	return; // If ImGui is capturing the mouse, do not process further
+		// }
+		// else
+		// {
+		// 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		// }
+
+		io.WantCaptureMouse = false; // Prevent ImGui from capturing the mouse when in a mouse function mode
+		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX); //
+		
 	}
 	
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement

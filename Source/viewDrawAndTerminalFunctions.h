@@ -644,6 +644,7 @@ void createGUI()
     // Main Controls Window
     ImGui::Begin("Control Panel", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
     
+
     // Run/Pause button
     if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause")) //print whats happening
     {

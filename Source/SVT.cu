@@ -99,12 +99,12 @@ void setupCudaEnvironment()
 	// 3:
 	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
 	{
-        	printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
-        	printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
-        	printf("\nFix this number in the header.h file and try again.");
-        	printf("\nGood Bye.\n");
-        	exit(0);
-        }
+		printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
+		printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
+		printf("\nFix this number in the header.h file and try again.");
+		printf("\nGood Bye.\n");
+		exit(0);
+    }
 }
 
 /*
@@ -538,6 +538,17 @@ int main(int argc, char** argv)
 		// Start ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (Simulation.isInMouseFunctionMode)
+		{
+			io.WantCaptureMouse = false;
+			io.MouseHoveredViewport = 0;
+			io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+			io.MouseDown[0] = false;
+			io.MouseDown[1] = false;
+			io.MouseDown[2] = false;
+		}
 		ImGui::NewFrame();
 		
 		// Update physics --multiple steps per frame for performance
@@ -549,7 +560,8 @@ int main(int argc, char** argv)
 				nBody(Dt);
 				
 				// Check if we hit the 10ms mark and need to pause
-				if (Simulation.isPaused) {
+				if (Simulation.isPaused) 
+				{
 					break;  // Exit the loop if simulation gets paused
 				}
 			}
