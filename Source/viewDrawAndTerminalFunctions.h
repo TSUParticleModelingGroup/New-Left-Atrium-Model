@@ -641,9 +641,16 @@ void createGUI()
     ImGuiWindowFlags window_flags = 0; // Initialize window flags to 0, flags are used to set window properties, like size, position, etc. 0 means no flags are set
     window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
     
+
+	// Set the collapsed state if guiCollapsed is true (toggled by ctrl + h callback)
+    ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
+
+
     // Main Controls Window
     ImGui::Begin("Control Panel", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
     
+	//update bool to match current state (makes sure clicking also works in addition to ctrl + h)
+	Simulation.guiCollapsed = ImGui::IsWindowCollapsed();
 
     // Run/Pause button
     if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause")) //print whats happening
@@ -732,7 +739,6 @@ void createGUI()
 			{
 				movieOn();
 			}
-			Simulation.isRecording = !Simulation.isRecording;
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -1451,6 +1457,8 @@ void createGUI()
 		ImGui::Text("Rotate Y-axis: w/s; Up/Down");
 		ImGui::Text("Rotate Z-axis: z/Z; Shift + Left/Right");
 		ImGui::Text("Zoom In/Out: e/E; Shift + Up/Down");
+
+		ImGui::Text("Collapse/Expand GUI: Ctrl + h");
 		
 	}
     
@@ -1464,6 +1472,12 @@ void createGUI()
 
     ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
 	
+	//tell the user how to expand the GUI if it's collapsed
+	if(Simulation.guiCollapsed)
+	{
+		ImGui::Text("Ctrl + H to expand controls GUI");
+	}
+
 	//Shows run time of the simulation and beat rate of the pulse node
     ImGui::Text("Run time: %.2f ms", RunTime);
     ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);

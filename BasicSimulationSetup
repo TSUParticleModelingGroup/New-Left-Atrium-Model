@@ -35,7 +35,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = 3DIdealLAtrium2.3K
+--InputFileName = Rand200X200
 
 Name of previous run files that were stored in GitHub.
 Test

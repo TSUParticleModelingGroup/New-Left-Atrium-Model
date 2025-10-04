@@ -621,7 +621,7 @@ void setRemainingNodeAndMuscleAttributes()
 		}
 	}
 	
-	printf("\n All node and muscle attributes have been set.");
+	printf("\n All node and muscle attributes have been set.\n");
 }
 
 /*

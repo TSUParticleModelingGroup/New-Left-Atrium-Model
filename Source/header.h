@@ -118,6 +118,9 @@ struct simulationSwitchesStructure
 	bool nodesFound;       // Whether nodes have been identified
     int frontNodeIndex;    // Index of the frontmost node (max Z)
     int topNodeIndex;      // Index of the topmost node (max Y)
+
+	//GUI related
+	bool guiCollapsed; // for hotkey to collapse GUI
 };
 
 // Globals Start ******************************************

@@ -941,6 +941,13 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				loadState();
 			}
 			break;
+		
+		case GLFW_KEY_H: // Ctrl + h to collapse/expand GUI
+		if (mods & GLFW_MOD_CONTROL)
+		{
+			Simulation.guiCollapsed = !Simulation.guiCollapsed;
+		}
+		break;
 
 		default: // For any other key, do nothing
 			break;
@@ -1238,23 +1245,18 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
     ImGuiIO& io = ImGui::GetIO();
 
 	//Show cursor when highlighting over IMGUI elements
-
-	
 	if (Simulation.isInMouseFunctionMode)
 	{
 		//Uncomment this to have the cursor show when it hovers the GUI in mouse function mode
-		// if (io.WantCaptureMouse)
-		// {
-		// 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		// 	return; // If ImGui is capturing the mouse, do not process further
-		// }
-		// else
-		// {
-		// 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		// }
-
-		io.WantCaptureMouse = false; // Prevent ImGui from capturing the mouse when in a mouse function mode
-		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX); //
+		if (io.WantCaptureMouse)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			return; // If ImGui is capturing the mouse, do not process further
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
 		
 	}
 	
@@ -1424,8 +1426,8 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							Node[i].isDrawNode = true;
 							if(!Node[i].isAblated) // If it is not ablated color it.
 							{
-								Node[i].color.x = 0.0;
-								Node[i].color.y = 0.0;
+								Node[i].color.x = 0.8;
+								Node[i].color.y = 0.3;
 								Node[i].color.z = 1.0;
 							}
 						}

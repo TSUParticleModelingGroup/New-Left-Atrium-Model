@@ -539,16 +539,6 @@ int main(int argc, char** argv)
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 
-		ImGuiIO& io = ImGui::GetIO();
-		if (Simulation.isInMouseFunctionMode)
-		{
-			io.WantCaptureMouse = false;
-			io.MouseHoveredViewport = 0;
-			io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-			io.MouseDown[0] = false;
-			io.MouseDown[1] = false;
-			io.MouseDown[2] = false;
-		}
 		ImGui::NewFrame();
 		
 		// Update physics --multiple steps per frame for performance
