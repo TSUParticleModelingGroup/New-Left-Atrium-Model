@@ -27,6 +27,7 @@ The code is not currently written for models with depth, but it does work with t
 3DIdealLAtrium13K
 These are not closed objects, as long as you have muscle contractions turned off they can be used to study electrical activity.
 If you turn muscle contraction on it will run but there is no center to simulate pressure from.
+10X10
 Plain200X200
 Rand200X200
 Rand300X300
@@ -75,4 +76,5 @@ All three should be floats.
 --BackGroundRed = 0.0;
 --BackGroundGreen = 0.0;
 --BackGroundBlue = 0.0;
+
 
