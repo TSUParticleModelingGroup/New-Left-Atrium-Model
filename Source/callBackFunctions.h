@@ -452,11 +452,59 @@ void saveSettings()
 	long sizeOfFile;
   	char *buffer;
 
-	fileIn = fopen("../../simulationSetup", "rb");
+	//BASIC sim setup file
+	fileIn = fopen("../../BasicSimulationSetup", "rb");
 
 	if(fileIn == NULL)
 	{
-		printf("\n\n The simulationSetup file does not exist\n\n");
+		printf("\n\n The basic simulationSetup file does not exist\n\n");
+		exit(0);
+	}
+
+	// Finding the size of the simulationSetup file.
+	fseek (fileIn , 0 , SEEK_END);
+  	sizeOfFile = ftell(fileIn);
+  	rewind (fileIn);
+  	
+  	// Creating a buffer to hold the simulationSetup file.
+  	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
+  	fread (buffer, 1, sizeOfFile, fileIn);
+	fileOut = fopen("simulationSetup", "wb");
+	fwrite (buffer, 1, sizeOfFile, fileOut);
+	fclose(fileIn);
+	fclose(fileOut);
+	free(buffer);
+
+
+	//INTERMEDIATE sim setup file
+	fileIn = fopen("../../IntermediateSimulationSetup", "rb");
+
+	if(fileIn == NULL)
+	{
+		printf("\n\n The intermediate simulationSetup file does not exist\n\n");
+		exit(0);
+	}
+
+	// Finding the size of the simulationSetup file.
+	fseek (fileIn , 0 , SEEK_END);
+  	sizeOfFile = ftell(fileIn);
+  	rewind (fileIn);
+  	
+  	// Creating a buffer to hold the simulationSetup file.
+  	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
+  	fread (buffer, 1, sizeOfFile, fileIn);
+	fileOut = fopen("simulationSetup", "wb");
+	fwrite (buffer, 1, sizeOfFile, fileOut);
+	fclose(fileIn);
+	fclose(fileOut);
+	free(buffer);
+
+	//ADVANCED sim setup file
+	fileIn = fopen("../../AdvancedSimulationSetup", "rb");
+
+	if(fileIn == NULL)
+	{
+		printf("\n\n The advanced simulationSetup file does not exist\n\n");
 		exit(0);
 	}
 
