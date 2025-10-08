@@ -134,8 +134,7 @@ void mouseAdjustMusclesAreaMode()
 	//orthogonalView();
 	drawPicture();
 	
-	bool returnFlag = setMouseMuscleAttributes();
-	
+	//bool returnFlag = setMouseMuscleAttributes();
 }
 
 /*
@@ -152,7 +151,7 @@ void mouseAdjustMusclesLineMode()
 	//orthogonalView();
 	drawPicture();
 	
-	bool returnFlag = setMouseMuscleAttributes();
+	//bool returnFlag = setMouseMuscleAttributes();
 	
 }
 
@@ -175,13 +174,13 @@ void mouseIdentifyNodeMode()
 	Calls the functions that get user inputs for modifying the refractory periods 
 	and conduction velocities of the selected muscles
 */
-bool setMouseMuscleAttributes()
-{
-	// These functions now just set default values
-	RefractoryPeriodAdjustmentMultiplier = 1.0;
-	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-	return(true);
-}
+// bool setMouseMuscleAttributes()
+// {
+// 	// These functions now just set default values
+// 	//RefractoryPeriodAdjustmentMultiplier = 1.0;
+// 	//MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+// 	return(true);
+// }
 
 /*
  This function sets up a node (nodeId) to be an ectopic beat node.
