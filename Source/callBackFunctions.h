@@ -461,15 +461,15 @@ void saveSettings()
 		exit(0);
 	}
 
-	// Finding the size of the simulationSetup file.
+	// Finding the size of the BasicSimulationSetup file.
 	fseek (fileIn , 0 , SEEK_END);
   	sizeOfFile = ftell(fileIn);
   	rewind (fileIn);
   	
-  	// Creating a buffer to hold the simulationSetup file.
+  	// Creating a buffer to hold the BasicSimulationSetup file.
   	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
   	fread (buffer, 1, sizeOfFile, fileIn);
-	fileOut = fopen("simulationSetup", "wb");
+	fileOut = fopen("BasicSimulationSetup", "wb");
 	fwrite (buffer, 1, sizeOfFile, fileOut);
 	fclose(fileIn);
 	fclose(fileOut);
@@ -485,7 +485,7 @@ void saveSettings()
 		exit(0);
 	}
 
-	// Finding the size of the simulationSetup file.
+	// Finding the size of the IntermediateSimulationSetup file.
 	fseek (fileIn , 0 , SEEK_END);
   	sizeOfFile = ftell(fileIn);
   	rewind (fileIn);
@@ -493,7 +493,7 @@ void saveSettings()
   	// Creating a buffer to hold the simulationSetup file.
   	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
   	fread (buffer, 1, sizeOfFile, fileIn);
-	fileOut = fopen("simulationSetup", "wb");
+	fileOut = fopen("IntermediateSimulationSetup", "wb");
 	fwrite (buffer, 1, sizeOfFile, fileOut);
 	fclose(fileIn);
 	fclose(fileOut);
@@ -508,15 +508,15 @@ void saveSettings()
 		exit(0);
 	}
 
-	// Finding the size of the simulationSetup file.
+	// Finding the size of the AdvancedSimulationSetup file.
 	fseek (fileIn , 0 , SEEK_END);
   	sizeOfFile = ftell(fileIn);
   	rewind (fileIn);
   	
-  	// Creating a buffer to hold the simulationSetup file.
+  	// Creating a buffer to hold the AdvancedSimulationSetup file.
   	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
   	fread (buffer, 1, sizeOfFile, fileIn);
-	fileOut = fopen("simulationSetup", "wb");
+	fileOut = fopen("AdvancedSimulationSetup", "wb");
 	fwrite (buffer, 1, sizeOfFile, fileOut);
 	fclose(fileIn);
 	fclose(fileOut);
