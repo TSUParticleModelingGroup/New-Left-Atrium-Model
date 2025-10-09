@@ -514,7 +514,7 @@ void drawPicture()
 	// the .isDrawNode flag.
 	else 
 	{
-		glPointSize(5.0);
+		glPointSize(2.0);
 		glBegin(GL_POINTS);
 	 	for(int i = 0; i < NumberOfNodes; i++)
 		{
@@ -765,7 +765,7 @@ void createGUI()
 	ImGui::Text("Simulation Speed");
 	if (ImGui::SliderInt("##DrawRateSlider", &DrawRate, 100, 5000, "%d")) //slider for setting the simulation rate
 	{
-		// Only update if the value changes
+		//bound slider values
 		if (DrawRate < 1) DrawRate = 1;
 		if (DrawRate > 5000) DrawRate = 5000;
 	}
@@ -778,7 +778,7 @@ void createGUI()
 	//Input box for simulation speed
 	if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
 	{
-		// Only update if the value changes
+		//bound input values
 		if (DrawRate < 100) DrawRate = 100;
 		if (DrawRate > 5000) DrawRate = 5000;
 	}
@@ -1136,7 +1136,7 @@ void createGUI()
 			ImGui::Text("Refractory Period Multiplier");
 			float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
 			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.001f, 5.0f, "%.3f")) 
+			if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.001f, 20.0f, "%.3f")) 
 			{
 				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
 			}
@@ -1154,7 +1154,7 @@ void createGUI()
 			if (ImGui::InputFloat("##refractoryInput", &refractoryMultiplier, 0, 0, "%.3f"))
 			{
 				// Clamp to valid range
-				refractoryMultiplier = (refractoryMultiplier < 0.001f) ? 0.001f : (refractoryMultiplier > 5.0f ? 5.0f : refractoryMultiplier);
+				refractoryMultiplier = (refractoryMultiplier < 0.001f) ? 0.001f : (refractoryMultiplier > 20.0f ? 20.0f : refractoryMultiplier);
 				
 				// Update if changed
 				if (refractoryMultiplier != originalRefMultiplier)
@@ -1174,7 +1174,7 @@ void createGUI()
 			ImGui::Text("Conduction Velocity Multiplier");
 			float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
 			ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.001f, 5.0f, "%.3f")) 
+			if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.001f, 20.0f, "%.3f")) 
 			{
 				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
 			}
@@ -1193,7 +1193,7 @@ void createGUI()
 			if (ImGui::InputFloat("##conductionInput", &conductionMultiplier, 0, 0, "%.3f"))
 			{
 				// Clamp to valid range
-				conductionMultiplier = (conductionMultiplier < 0.001f) ? 0.001f : (conductionMultiplier > 5.0f ? 5.0f : conductionMultiplier);
+				conductionMultiplier = (conductionMultiplier < 0.001f) ? 0.001f : (conductionMultiplier > 20.0f ? 20.0f : conductionMultiplier);
 				
 				// Update if changed
 				if (conductionMultiplier != originalConductionMultiplier)
