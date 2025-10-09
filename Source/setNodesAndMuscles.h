@@ -548,6 +548,21 @@ void setRemainingNodeAndMuscleAttributes()
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
  	MyocyteForcePerMassFraction = MyocyteContractionForce/myocyteMass;
+ 	
+ 	printf(" \n MyocyteContractionForce = %lf\n", MyocyteContractionForce);
+ 	printf(" \n\n MyocyteForcePerMassFraction1 = %lf\n", MyocyteForcePerMassFraction);
+ 	
+ 	//???????????????????????
+ 	double myocyteCrossSectionalArea = PI*radius*radius;
+ 	printf(" \n myocyteCrossSectionalArea = %lf\n", myocyteCrossSectionalArea);
+ 	double myocyteForcePerCrossSectionalArea = (double)1.37*(double)0.00981;
+ 	printf(" \n myocyteForcePerCrossSectionalArea = %lf\n", myocyteForcePerCrossSectionalArea);
+ 	double myoctyeForce = myocyteForcePerCrossSectionalArea/myocyteCrossSectionalArea;
+ 	printf(" \n myoctyeForce = %lf\n", myoctyeForce);
+ 	double myocyteForcePerMassFraction = myoctyeForce/myocyteMass;
+ 	printf(" \n MyocyteForcePerMassFraction2 = %lf\n", myocyteForcePerMassFraction);
+ 	
+ 	//??????????????????????
 
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
