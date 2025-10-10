@@ -628,15 +628,15 @@ void setRemainingNodeAndMuscleAttributes()
 		  //printf("\n contractionStrength = %f\n\n", contractionStrength);
 		
 		//!!!!!!!!!!!!!!!!!!!!
-		Muscle[i].contractionStrength = 0.2*contractionStrength;
+		Muscle[i].contractionStrength = contractionStrength;
 		//Muscle[i].contractionStrength = 0.02;
-		
+		  
 		//????????????????
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
 		stddev = MuscleCompressionStopFractionSTD;
-		left = -MuscleCompressionStopFractionSTD;
-		right = MuscleCompressionStopFractionSTD;
+		left = -MuscleCompressionStopFractionSTD;     
+		right = MuscleCompressionStopFractionSTD;         
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
