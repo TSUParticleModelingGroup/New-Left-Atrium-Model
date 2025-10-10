@@ -549,8 +549,10 @@ void setRemainingNodeAndMuscleAttributes()
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
  	MyocyteForcePerMassFraction = MyocyteContractionForce/myocyteMass;
  	
+ 	/*
  	printf(" \n MyocyteContractionForce = %lf\n", MyocyteContractionForce);
- 	printf(" \n\n MyocyteForcePerMassFraction1 = %lf\n", MyocyteForcePerMassFraction);
+ 	printf(" \n\n MyocyteForcePerMassFraction = %lf\n", MyocyteForcePerMassFraction);
+ 	
  	
  	//???????????????????????
  	double myocyteCrossSectionalArea = PI*radius*radius;
@@ -561,9 +563,16 @@ void setRemainingNodeAndMuscleAttributes()
  	printf(" \n myoctyeForce = %lf\n", myoctyeForce);
  	double myocyteForcePerMassFraction = myoctyeForce/myocyteMass;
  	printf(" \n MyocyteForcePerMassFraction2 = %lf\n", myocyteForcePerMassFraction);
- 	
+ 	*/
  	//??????????????????????
-
+        double max1 = -1.0;
+        double max2 = -1.0;
+        double min1 = 10000.0;
+        double min2 = 10000.0;
+        int maxId1 =-1;
+        int maxId2 = -1;
+        int minId1 = -1;
+        int minId2 =-1;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
 		stddev = MuscleConductionVelocitySTD;
@@ -587,7 +596,42 @@ void setRemainingNodeAndMuscleAttributes()
 		left = -MyocyteForcePerMassSTD;
 		right = MyocyteForcePerMassSTD;
 		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMassFraction + croppedRandomNumber(stddev, left, right))*Muscle[i].mass;
+		//????????????????
+		// Cross sectional area is Mass/(Length*Density)
+		double CrossSectionalArea = (double)Muscle[i].mass/((double)Muscle[i].naturalLength*(double)MyocardialTissueDensity);
+		double MyocyteForcePerCrossSectionalArea = 0.35;
+		double contractionStrength = CrossSectionalArea*MyocyteForcePerCrossSectionalArea;
 		
+	      
+		if(max1 < Muscle[i].contractionStrength)
+		{
+		  max1 = Muscle[i].contractionStrength;
+		  maxId1 = i;
+		}
+		if(max2 < contractionStrength)
+		{
+		  max2 = contractionStrength;
+		  maxId2 = i;
+		}
+		if(Muscle[i].contractionStrength < min1)
+		{
+		  min1 = Muscle[i].contractionStrength;
+		  minId1 = i;
+		}
+		if(contractionStrength < min2)
+		{
+		  min2 = contractionStrength;
+		  minId2 = i;
+		}
+		
+		//printf("\n Muscle[%d].contractionStrength = %f\n", i, Muscle[i].contractionStrength);
+		  //printf("\n contractionStrength = %f\n\n", contractionStrength);
+		
+		//!!!!!!!!!!!!!!!!!!!!
+		Muscle[i].contractionStrength = 0.2*contractionStrength;
+		//Muscle[i].contractionStrength = 0.02;
+		
+		//????????????????
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
 		stddev = MuscleCompressionStopFractionSTD;
@@ -595,6 +639,13 @@ void setRemainingNodeAndMuscleAttributes()
 		right = MuscleCompressionStopFractionSTD;
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
+	
+	//???
+	printf("\n max1 = %f maxId1 = %d\n", max1, maxId1);
+	printf("\n max2 = %f maxId2 = %d\n", max2, maxId2);
+	printf("\n min1 = %f minId1 = %d\n", min1, minId1);
+	printf("\n min2 = %f minId2 = %d\n", min2, minId2);
+	//???
 	
 	// 5:
 	int id, id2;
