@@ -69,7 +69,7 @@ void setNodesFromBlenderFile()
 	printf("\n FrontNode = %d", FrontNode);
 	
 	// 3. Allocating memory for the CPU and GPU nodes. 
-	cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
@@ -168,29 +168,6 @@ void setNodesFromBlenderFile()
 	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
 	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
 	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
-	
-	//MassOfLeftAtrium = 25.0; // ???????????????????????????????????
-	/* ????????????????
-	if(KeepOriginalDimensions == 1)
-	{
-		// Here, we do not adjust the nodes and set the average radius to the value calculated from the node file.
-		RadiusOfLeftAtrium = averageRadius;
-	}
-	else
-	{
-		// Calculating the radius of the LA from the volume read in from the simulation setup file. 
-		RadiusOfLeftAtrium = pow(3.0*VolumeOfLeftAtrium/(4.0*PI), 1.0/3.0);
-		
-		// Making the blender LA have an average radius the same as the radius calculated from the volume read in from the simulation setup file.
-		double temp = RadiusOfLeftAtrium/averageRadius;
-		for(int i = 0; i < NumberOfNodes; i++)
-		{	
-			Node[i].position.x *= temp;
-			Node[i].position.y *= temp;
-			Node[i].position.z *= temp;
-		}
-	}
-	*/
 	
 	// 10. This is the pulse node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
@@ -505,11 +482,9 @@ void setRemainingNodeAndMuscleAttributes()
 {	
 	double stddev, left, right;
 	
-	//MassOfLeftAtrium = 25.0; // ???????????????????????????????????
-	
 	// 1:
 	double dx, dy, dz, d;
-	double totalLengthOfAllMuscles = 0.0;
+	TotalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
 		dx = Node[Muscle[i].nodeA].position.x - Node[Muscle[i].nodeB].position.x;
@@ -517,13 +492,14 @@ void setRemainingNodeAndMuscleAttributes()
 		dz = Node[Muscle[i].nodeA].position.z - Node[Muscle[i].nodeB].position.z;
 		d = sqrt(dx*dx + dy*dy + dz*dz);
 		Muscle[i].naturalLength = d;
-		totalLengthOfAllMuscles += d;
+		TotalLengthOfAllMuscles += d;
 	}
+	AverageLengthOfMuscles = TotalLengthOfAllMuscles/NumberOfMuscles;
 		
 	// 2:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
+		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/TotalLengthOfAllMuscles);
 	}
 
 	// 3:
@@ -548,31 +524,7 @@ void setRemainingNodeAndMuscleAttributes()
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
  	MyocyteForcePerMassFraction = MyocyteContractionForce/myocyteMass;
- 	
- 	/*
- 	printf(" \n MyocyteContractionForce = %lf\n", MyocyteContractionForce);
- 	printf(" \n\n MyocyteForcePerMassFraction = %lf\n", MyocyteForcePerMassFraction);
- 	
- 	
- 	//???????????????????????
- 	double myocyteCrossSectionalArea = PI*radius*radius;
- 	printf(" \n myocyteCrossSectionalArea = %lf\n", myocyteCrossSectionalArea);
- 	double myocyteForcePerCrossSectionalArea = (double)1.37*(double)0.00981;
- 	printf(" \n myocyteForcePerCrossSectionalArea = %lf\n", myocyteForcePerCrossSectionalArea);
- 	double myoctyeForce = myocyteForcePerCrossSectionalArea/myocyteCrossSectionalArea;
- 	printf(" \n myoctyeForce = %lf\n", myoctyeForce);
- 	double myocyteForcePerMassFraction = myoctyeForce/myocyteMass;
- 	printf(" \n MyocyteForcePerMassFraction2 = %lf\n", myocyteForcePerMassFraction);
- 	*/
- 	//??????????????????????
-        double max1 = -1.0;
-        double max2 = -1.0;
-        double min1 = 10000.0;
-        double min2 = 10000.0;
-        int maxId1 =-1;
-        int maxId2 = -1;
-        int minId1 = -1;
-        int minId2 =-1;
+        
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
 		stddev = MuscleConductionVelocitySTD;
@@ -596,42 +548,21 @@ void setRemainingNodeAndMuscleAttributes()
 		left = -MyocyteForcePerMassSTD;
 		right = MyocyteForcePerMassSTD;
 		Muscle[i].contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerMassFraction + croppedRandomNumber(stddev, left, right))*Muscle[i].mass;
-		//????????????????
-		// Cross sectional area is Mass/(Length*Density)
-		double CrossSectionalArea = (double)Muscle[i].mass/((double)Muscle[i].naturalLength*(double)MyocardialTissueDensity);
-		double MyocyteForcePerCrossSectionalArea = 0.35;
-		double contractionStrength = CrossSectionalArea*MyocyteForcePerCrossSectionalArea;
 		
-	      
-		if(max1 < Muscle[i].contractionStrength)
-		{
-		  max1 = Muscle[i].contractionStrength;
-		  maxId1 = i;
-		}
-		if(max2 < contractionStrength)
-		{
-		  max2 = contractionStrength;
-		  maxId2 = i;
-		}
-		if(Muscle[i].contractionStrength < min1)
-		{
-		  min1 = Muscle[i].contractionStrength;
-		  minId1 = i;
-		}
-		if(contractionStrength < min2)
-		{
-		  min2 = contractionStrength;
-		  minId2 = i;
-		}
+		/* ???
+		// If you want to use cross section for strength use this. But I had a lot of problems with it and had to move on to
+		// More important things. I may readdress this when I get time.
+		// Cross sectional area is Mass/(Length*Density) 
+		double MyocyteForcePerCrossSectionalAreaSTD
+		stddev = MyocyteForcePerCrossSectionalAreaSTD;
+		left = -MyocyteForcePerCrossSectionalAreaSTD;
+		right = MyocyteForcePerCrossSectionalAreaSTD;
+	        double CrossSectionalArea = (double)Muscle[i].mass/((double)Muscle[i].naturalLength*(double)MyocardialTissueDensity);
+	        double MyocyteForcePerCrossSectionalArea = 0.35; // Got this from a paper and it does make the values close to what we are getting with mass.
+	        double contractionStrength = MyocyteForcePerMassMultiplier*(MyocyteForcePerCrossSectionalArea + croppedRandomNumber(stddev, left, right))*CrossSectionalArea;
+	        Muscle[i].contractionStrength = contractionStrength;
+	        */
 		
-		//printf("\n Muscle[%d].contractionStrength = %f\n", i, Muscle[i].contractionStrength);
-		  //printf("\n contractionStrength = %f\n\n", contractionStrength);
-		
-		//!!!!!!!!!!!!!!!!!!!!
-		Muscle[i].contractionStrength = contractionStrength;
-		//Muscle[i].contractionStrength = 0.02;
-		  
-		//????????????????
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
 		stddev = MuscleCompressionStopFractionSTD;
@@ -639,13 +570,6 @@ void setRemainingNodeAndMuscleAttributes()
 		right = MuscleCompressionStopFractionSTD;         
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
-	
-	//???
-	printf("\n max1 = %f maxId1 = %d\n", max1, maxId1);
-	printf("\n max2 = %f maxId2 = %d\n", max2, maxId2);
-	printf("\n min1 = %f minId1 = %d\n", min1, minId1);
-	printf("\n min2 = %f minId2 = %d\n", min2, minId2);
-	//???
 	
 	// 5:
 	int id, id2;
@@ -675,9 +599,9 @@ void setRemainingNodeAndMuscleAttributes()
 					{
 						if(Node[BachmannsBundle[j]].muscle[l] == id2)
 						{
-							Muscle[id2].color.x = 1.0;
-							Muscle[id2].color.y = 1.0;
-							Muscle[id2].color.z = 1.0;
+							Muscle[id2].color.x = 0.6;
+							Muscle[id2].color.y = 0.3;
+							Muscle[id2].color.z = 0.1;
 							Muscle[id2].conductionDuration /= BachmannsBundleMultiplier;
 						}
 					}
@@ -736,7 +660,6 @@ void getNodesandMusclesFromPreviousRun()
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
-	
 	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
 	cudaErrorCheck(__FILE__, __LINE__);
 	
@@ -820,7 +743,7 @@ void hardCodedAblations()
 	// To ablate a selected node set your index and uncomment this line.
 	
 	/*
-	int index = ???;
+	int index = ***;
 	if(0 < index && index < NumberOfNodes)
 	{
 		Node[index].isAblated = true;
@@ -851,12 +774,12 @@ void hardCodedAblations()
 void hardCodedPeriodicEctopicEvents()
 {	
 	/*
-	int index = ???;
+	int index = ***;
 	if(0 < index && index < NumberOfNodes && index != PulsePointNode)
 	{
 		Node[index].isBeatNode = true;
-		Node[index].beatPeriod = ???;
-		Node[index].beatTimer = ???;
+		Node[index].beatPeriod = ***;
+		Node[index].beatTimer = ***;
 		Node[index].isDrawNode = true;
 		Node[index].color.x = 1.0;
 		Node[index].color.y = 0.0;

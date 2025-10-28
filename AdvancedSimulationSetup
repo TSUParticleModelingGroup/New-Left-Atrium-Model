@@ -39,7 +39,7 @@ To remove energy buildup in the system, we add a drag coefficient that works opp
 This helps prevent the system from quivering and wandering around. A value around 1.0 works well.
 It should be a float.
 
---Drag = 1.0;
+--Drag = 5.0;
 
 The strength of a relaxed muscle is the opposite of the contraction force, helping return the muscle to its natural length.
 This should be a small fraction of the contraction force.
@@ -63,6 +63,7 @@ References:
 	https://doi.org/10.1002/stem.2649
 2) myocyte contraction force is ???. Or why we used ???  Avery got 10 micro-Newtons. I'm not sure where.
 	I think we will need to switch to force per cross sectional area.
+	Try this paper: https://journals.physiology.org/doi/full/10.1152/ajpheart.1999.277.6.H2400
 3 myocardial tissue density was obtained here: This for the left ventricul but this is similar to the LA. 
 	Cardiac left ventricular myocardial tissue density, evaluated by computed tomography and autopsy (2019)
 	https://doi.org/10.1186/s12880-019-0326-4

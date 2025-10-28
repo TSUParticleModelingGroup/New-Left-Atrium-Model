@@ -37,10 +37,8 @@
  Note: If Pause is on it skips all this and if Contraction is not on it skips all of its moving calculations
  and only performs calculations that deal with electrical conduction and muscle timing. 
 */
-
 void nBody(double dt)
 {	
-
 	//no need to check if we're paused because we handle that in main
 
 	if(Simulation.ContractionisOn)
@@ -67,7 +65,6 @@ void nBody(double dt)
 	}
 	
 	RunTime += dt;
-	
 }
 
 /*
@@ -347,10 +344,8 @@ void setup()
 	// Setting up the CUDA parallel structure to be used.
 	setupCudaEnvironment();
 
-
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
 	copyNodesMusclesToGPU();
-	
 }
 
 /*
@@ -453,9 +448,6 @@ int main(int argc, char** argv)
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_DEPTH_TEST);
 
-
-
-	
 	//*****************************************Set up GUI********************************
 	// Initialize ImGui
 	IMGUI_CHECKVERSION();
@@ -518,7 +510,7 @@ int main(int argc, char** argv)
 		glFrustum(-aspect, aspect, -1.0, 1.0, 1.0, 100.0); // Perspective projection
 	}
     
-    // Reset modelview matrix
+    	// Reset modelview matrix
 	// MODELVIEW MATRIX - this controls camera position
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity(); //Necessary here
@@ -547,8 +539,9 @@ int main(int argc, char** argv)
 			// Execute nBody DrawRate times before we draw
 			for (int i = 0; i < DrawRate; i++) 
 			{
+				//if(RunTime < 25.0) nBody(Dt/10.0); // Ease into the simulation.
+				//else nBody(Dt);
 				nBody(Dt);
-				
 				// Check if we hit the 10ms mark and need to pause
 				if (Simulation.isPaused) 
 				{

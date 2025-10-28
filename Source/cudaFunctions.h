@@ -380,8 +380,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 				muscle[i].isOn = false;
 				muscle[i].timer = 0.0;
 				muscle[i].apNode = -1;
-			}
-				
+			}	
 		}
 	}	
 }

@@ -18,6 +18,9 @@
 #include <stdbool.h>
 #include <vector> //needed for VBOs
 
+// Needed to make 
+#include <cuda_runtime.h>
+
 // OpenGL headers - GLAD must come BEFORE GLFW
 #include "../include/glad/glad.h"
 #include <GL/glu.h>
@@ -262,6 +265,11 @@ double UpZ;
 int NumberOfNodes;
 int NumberOfMuscles;
 int NumberOfNodesInBachmannsBundle;
+
+// General information about muscles and nodes.
+double TotalLengthOfAllMuscles;
+double AverageLengthOfMuscles;
+double AverageMassOfMuscles;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.
