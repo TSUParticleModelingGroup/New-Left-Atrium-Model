@@ -9,10 +9,10 @@ mass of the LA [?].
 --WallThicknessFraction = 0.2;
 
 The following values will be used to generate a force to mass ratio that will scale a muscle's strength by its mass.
-Myocytes are approximately 120 micrometers (converting to our units 0.12 millimeters) in length [1].
-Myocytes are approximately 10-15 micrometers (converting to our units 0.01-0.015 millimeters) in diameter [1].
-The contraction force of a myocyte is about 10 micro-Newtons (converting to our 1e-5 g*mm/ms^2) [2].
-Myocardial tissue density is about 1.055 g/ml (converting to our units 0.001265 g/mm^3) [3].
+Myocytes are approximately 120 micrometers (converting to our units 0.12 millimeters) in length [A1].
+Myocytes are approximately 10-15 micrometers (converting to our units 0.01-0.015 millimeters) in diameter [A1].
+The contraction force of a myocyte is about 10 micro-Newtons (converting to our 1e-5 g*mm/ms^2) [A2].
+Myocardial tissue density is about 1.055 g/ml (converting to our units 0.001265 g/mm^3) [A3].
 A multiplier is added in case the user wants to scale this value; a value of 1.0 keeps it unchanged.
 We also added a standard deviation in case the user wants to introduce some randomness to the muscle's 
 strength; a value of 0.0 adds no randomness.
@@ -26,7 +26,7 @@ All five values should be floats.
 --MyocyteForcePerMassSTD = 0.0;
 
 Strength of the central push-back force, which is use to simulate blood pressure.
-Left Atrial values are 2.0 mmHg for diastolic and 12.0 mmHg for systolic pressures [4].
+Left Atrial values are 2.0 mmHg for diastolic and 12.0 mmHg for systolic pressures [A4].
 We will convert to our units in the code.
 We have added a multiplier so the user can scale the pressures as desired; a value of 1.0 keeps it unchanged.
 All three values should be floats.
@@ -49,26 +49,33 @@ It should be a float.
 --MuscleRelaxedStrengthFraction = 0.2;
 
 The fraction of a muscle's natural length after it contracts. 
-A muscle should lose 30% of its length during contraction, so this value should be 0.7 [5]. 
+A muscle should lose 30% of its length during contraction, so this value should be 0.7 [A5]. 
 We added a standard deviation in case the user would like to introduce some randomness into the simulation. 
 Keep this number small. We suggest a value in the range of [0.0, 0.2]. 
 Both should be floats
 
---MuscleCompresionStopFraction = 0.7;
+--MuscleCompresionStopFraction = 0.9;
 --MuscleCompresionStopFractionSTD = 0.0;
 
 References:
-1) LA myocyte length and diameter were obtained here:
+A1) LA myocyte length and diameter were obtained here:
 	Concise Review: Criteria for Chamber-Specific Categorization of Human Cardiac Myocytes Derived from Pluripotent Stem Cells (2017)
 	https://doi.org/10.1002/stem.2649
-2) myocyte contraction force is ???. Or why we used ???  Avery got 10 micro-Newtons. I'm not sure where.
-	I think we will need to switch to force per cross sectional area.
-	Try this paper: https://journals.physiology.org/doi/full/10.1152/ajpheart.1999.277.6.H2400
-3 myocardial tissue density was obtained here: This for the left ventricul but this is similar to the LA. 
+A2) myocyte contraction force for a rat is around 12 micr-Newtons from this paper:
+	A force transducer for measuring mechanicalproperties of single cardiac myocytes
+	https://journals.physiology.org/doi/full/10.1152/ajpheart.1999.277.6.H2400
+	We couldn’t find this value for humans, so at least this gives us something to work with.
+	In the future, we’ll switch to using force per cross-sectional area, which we can determine for humans,
+	but that will require some additional work on the model and a deeper understanding and development of the 
+	muscle structure in the model.
+A3) myocardial tissue density was obtained here: This for the left ventricul but this is similar to the LA. 
 	Cardiac left ventricular myocardial tissue density, evaluated by computed tomography and autopsy (2019)
 	https://doi.org/10.1186/s12880-019-0326-4
-4) Pressure LA we got from this article and this manual:
+A4) Pressure LA we got from this article and this manual:
 	Investigating the importance of left atrial compliance on fluid dynamics in a novel mock circulatory loop (2024)
 	https://doi.org/10.1038/s41598-024-52327-6
 	https://www.msdmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
-5) Need a paper!!!! But it looks like it is really only 10%.
+A5) It seems like it could be less than 10%. From the graph in this paper it looks like for humans it is 5%. Will will use 10% for effect.
+	When we add blood to the model we need to readdress this.
+	Assessment of sarcomere shortening and calcium transient in primary human and dog ventricular myocytes
+	https://www.sciencedirect.com/science/article/pii/S1056871923000291?via%3Dihub

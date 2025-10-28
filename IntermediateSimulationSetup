@@ -4,38 +4,36 @@ The units we use in the code are: length in millimeters (mm), mass in grams (g),
 Any value read from this file that is not in these units will be converted to these units in the code.
 
 The length of the left atrium's refractory period. 
-A standard value is around 300 milliseconds [9]. 
+A standard value is around 289 milliseconds [I1]. 
 We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
 We suggest a value in the range of [0.0, 100.0]. Both should be floats.
 
---BaseMusclerRefractoryPeriod = 300.0;
+--BaseMusclerRefractoryPeriod = 289.0;
 --MuscleRefractoryPeriodSTD = 0.0;
 
 This is the portion of the refractory period that is absolute. 
-A standard value is 0.9 [10]. 
+A standard value is 0.8 [I1]. 
 The relative refractory period will be what is left over and will be calculated in the code. 
 We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
 Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
 Both should be floats.
 
---AbsoluteRefractoryPeriodFraction = 0.9;
+--AbsoluteRefractoryPeriodFraction = 0.8;
 --AbsoluteRefractoryPeriodFractionSTD = 0.0;
 
 The speed of the conduction velocity across a muscle. 
 This will be scaled by the muscle length to get the time it takes an impulse to travel across the muscle. 
-This should be around 0.5 millimeters/millisecond [11]. 
+This should be around 0.3 millimeters/millisecond [I2]. 
 We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
 Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
 Both should be floats.
 
---BaseMuscleConductionVelocity = 0.5;
+--BaseMuscleConductionVelocity = 0.3;
 --MuscleConductionVelocitySTD = 0.0;
 
-This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle.
-I have no idea what this should be so at the moment we will set it to 2.0 (ie twice as fast).
-We need to look this up and site it [12]
+This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle. [I3]
 
--- BachmannsBundleMultiplier = 5.0; 
+-- BachmannsBundleMultiplier = 2.97; 
 
 The length of time between heart beats. 
 A 1000 milliseconds is 60 beats per minute.
@@ -96,37 +94,13 @@ All three should be floats.
 --DeadBlue = 1.0;
 
 References:
-1) LA myocyte length is ???. Or why we used ???
-	ref1: ??? 
-	ref2: ???
-2) LA myocyte diameter is ???. Or why we used ???
-	ref1 maybe -> (Chapter 12 - Cardiovascular and Skeletal Muscle Systems Author links open overlay panelWanda M.HaschekColin G.RousseauxMatthew A.Wallig).
-	ref2: ???
-3) myocyte contraction force is ???. Or why we used ???  Avery got 10 micro-Newtons. I'm not sure where.
-	ref1: ??? 
-	ref2: ???
-4) myocardial tissue density is ???
-	ref1: maybe (https://bmcmedimaging.biomedcentral.com/articles/10.1186/s12880-019-0326-4).
-	ref2: ???
-5) Pressure LA: is ???. Or why we used ???
-	https://www.msdmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
-	https://www.merckmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
-	???? Need to look into this as it lelates to the A-Wave and V-Wave ????
-6) Mass of LA is ???
-	ref1: ??? 
-	ref2: ???
-7) Volume LA is ???
-	ref1: ??? 
-	ref2: ???
-8) Muscle contrated length is ???
-	ref1: ??? 
-	ref2: ???
-9) LA refractory Period is ???
-	ref1: ??? 
-	ref2: ???
-10) LA absolute Refractory Period is ???
-	ref1: ??? 
-	ref2: ???
-11) Conduction Velocity is ???
-	ref1: ??? 
-	ref2: ???
+I1) LA refractory Period is around 289 ms from this paper.
+    LA absolute Refractory Period is around 229 ms from this paper making it about 80% of the totla refractory period.
+	Thresholds, refractory periods, and conduction times of the normal and diseased human atrium
+	https://doi.org/10.1016/0002-8703(88)90163-9
+I2) Velocity of conduction in most atrial muscle is about 0.3 mm/ms 
+	Guyton and Hall Textbook of Medical Physiology, 12th Ed, CHAPTER 10, Rhythmical Excitation of the Heart
+	https://doctorlib.org/physiology/textbook-medical-physiology/10.html?utm_source=chatgpt.com
+I3) Bachmann's Bundle velocity of conduction is 0.89 mm/ms so the multiplier should be about 2.97
+	Relevance of Conduction Disorders in Bachmann’s Bundle During Sinus Rhythm in Humans 
+	https://www.ahajournals.org/doi/10.1161/CIRCEP.115.003972
