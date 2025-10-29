@@ -552,6 +552,8 @@ void setRemainingNodeAndMuscleAttributes()
 		/* ???
 		// If you want to use cross section for strength use this. But I had a lot of problems with it and had to move on to
 		// More important things. I may readdress this when I get time.
+		// We will need to read in MyocyteForcePerCrossSectionalArea and MyocyteForcePerCrossSectionalAreaSTD from a setup file.
+		
 		// Cross sectional area is Mass/(Length*Density) 
 		double MyocyteForcePerCrossSectionalAreaSTD
 		stddev = MyocyteForcePerCrossSectionalAreaSTD;
