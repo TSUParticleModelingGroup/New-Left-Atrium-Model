@@ -86,7 +86,7 @@ A4) Pressure LA we got from this article and this manual:
 	https://doi.org/10.1038/s41598-024-52327-6
 	https://www.msdmanuals.com/professional/multimedia/table/normal-pressures-in-the-heart-and-great-vessels?utm_source=chatgpt.com
 A5) It seems like it could be less than 10%. From the graph in this paper it looks like for humans it is 5%. We will use 30% for effect.
-	If you use 10% you may need to reduce your dt to c=keep the simulation from getting numeric overflow.
+	If you use 10% you may need to reduce your dt to keep the simulation from getting numeric overflow.
 	When we add blood to the model we need to readdress this.
 	Assessment of sarcomere shortening and calcium transient in primary human and dog ventricular myocytes
 	https://www.sciencedirect.com/science/article/pii/S1056871923000291?via%3Dihub
