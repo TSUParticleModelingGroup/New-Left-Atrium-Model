@@ -173,7 +173,7 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 <a id="simulation-runtime-controls"></a>
 ## Simulation Runtime Controls
   Our model includes a Graphical User Interface (GUI) to allow the user to dynamically adjust various attributes for both the simulation and various characteristics of the left atrium.
-  <img src="ReadMeImages/GUI.png" width=80% height=80%>
+  <img src="ReadMeImages/GUI.png" width=50% height=50%>
 
 ### Simulation Controls
 *Primary controls for managing the simulation execution and visual output.*
