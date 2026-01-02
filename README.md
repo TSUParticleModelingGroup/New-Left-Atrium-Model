@@ -172,8 +172,51 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 
 <a id="simulation-runtime-controls"></a>
 ## Simulation Runtime Controls
-  
+  Our model includes a Graphical User Interface (GUI) to allow the user to dynamically adjust various attributes for both the simulation and various characteristics of the left atrium.
   <img src="ReadMeImages/commands.png" width=80% height=80%>
+
+## Simulation Controls
+*Primary controls for managing the simulation execution and visual output.*
+
+| Control | Description |
+| :--- | :--- |
+| **Contraction Toggle** | Enables/disables visual contraction of heart tissue |
+| **Draw Front Half Only** | Renders only the closest half of the model for clarity/performance |
+| **Show Nodes** | Toggle to draw front half/all/no nodes |
+| **Record Video** | Starts/stops recording simulation video |
+| **Screenshot** | Captures still image of current view |
+| **Simulation Speed** | Determines the amount of calculations in between render calls |
+
+## Mouse Functions
+*Interactive modes for mouse actions on 3D heart surface.*
+
+| Mode | Description |
+| :--- | :--- |
+| **Mouse Off** | Turns all mouse functions off |
+| **Ablate Mode** | Click to block (ablate) the signal from travelling to nodes (cardiac cells) |
+| **Ectopic Beat** | Click to trigger premature heartbeat |
+| **Ectopic Trigger** | Click to trigger a single pulse from a point |
+| **Adjust Area** | Select/modify muscle characteristics for a group of muscles |
+| **Adjust Line** | Select/modify muscle characteristics for a single muscle |
+| **Identify Node** | Identify the number that corresponds to a specific node |
+
+## Heartbeat Controls
+*Panel for management of cardiac rhythms*
+
+| Control | Description |
+| :--- | :--- |
+| **Beat Period (ms)** | Sets baseline interval between heartbeats |
+| **Ectopic Beats** | View/Adjust current ectopic beats |
+
+## Utilities
+*Tools for saving/loading simulation states.*
+
+| Utility | Description |
+| :--- | :--- |
+| **Save Settings** | Exports simulation parameters to a file for later use |
+| **Find Nodes** | Finds the ID of the top-most and front-most node |
+| **Save State** | Saves complete simulation state for short-term use |
+| **Load State** | Restores simulation from saved state |
 
 <a id="changelog"></a>
 ## Changelog
