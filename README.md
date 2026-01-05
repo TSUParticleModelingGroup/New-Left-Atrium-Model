@@ -196,7 +196,7 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 | **Mouse Off** | Turns all mouse functions off |
 | **Ablate Mode** | Block (ablate) the signal from traveling through selected nodes |
 | **Ectopic Beat** | Sets up a recurrent timed pulse (beat) from the selected node |
-| **Ectopic Trigger** | Initiates a single pulse from the selected node. |
+| **Ectopic Trigger** | Initiates a single pulse from the selected node |
 | **Adjust Area** | Select/modify muscle characteristics for a group of muscles |
 | **Adjust Line** | Select/modify muscle characteristics for a single muscle |
 | **Identify Node** | Identify the number that corresponds to a specific node |
