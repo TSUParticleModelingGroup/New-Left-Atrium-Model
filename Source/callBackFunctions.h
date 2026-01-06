@@ -414,7 +414,7 @@ void saveSettings()
 	}
 	else monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-" + stimeMin.str() + "-" + stimeSec.str();
 
-	string timeStamp = "Run-" + monthday;
+	string timeStamp = "Run_" + monthday;
 	const char *directoryName = timeStamp.c_str();
 	
 	// Creating the diretory to hold the run settings.
