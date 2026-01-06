@@ -409,12 +409,12 @@ void saveSettings()
 	// For example, 2 seconds would be displayed as 02 seconds.
 	if(curTimeMin <= 9)
 	{
-		if(curTimeSec <= 9) monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":0" + stimeMin.str() + ":0" + stimeSec.str();
-		else monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":0" + stimeMin.str() + ":" + stimeSec.str();
+		if(curTimeSec <= 9) monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-0" + stimeMin.str() + "-0" + stimeSec.str();
+		else monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-0" + stimeMin.str() + "-" + stimeSec.str();
 	}
-	else monthday = smonth.str() + "-" + sday.str() + "-" + stimeHour.str() + ":" + stimeMin.str() + ":" + stimeSec.str();
+	else monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-" + stimeMin.str() + "-" + stimeSec.str();
 
-	string timeStamp = "Run:" + monthday;
+	string timeStamp = "Run-" + monthday;
 	const char *directoryName = timeStamp.c_str();
 	
 	// Creating the diretory to hold the run settings.
