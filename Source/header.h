@@ -146,6 +146,7 @@ simulationSwitchesStructure Simulation;
 // For videos and screenshots variables
 FILE* MovieFile; // File that holds all the movie frames.
 unsigned char* Buffer; // Buffer where you create each frame for a movie or the one frame for a screen shot.
+int CaptureWidth, CaptureHeight; // Locked capture size (set when capture starts)
 
 // To setup your CUDA device
 dim3 BlockNodes, GridNodes;

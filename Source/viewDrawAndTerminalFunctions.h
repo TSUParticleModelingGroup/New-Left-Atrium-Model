@@ -600,8 +600,9 @@ void drawPicture()
 	// Saves the picture if a movie is being recorded.
 	if(Simulation.isRecording)
 	{
-		glReadPixels(0, 0, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
-		fwrite(Buffer, 4 * XWindowSize * YWindowSize, 1, MovieFile);
+		// Read pixels at the locked capture resolution so videos/screenshots stay consistent
+		glReadPixels(0, 0, CaptureWidth, CaptureHeight, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
+		fwrite(Buffer, 4 * CaptureWidth * CaptureHeight, 1, MovieFile);
 	}
 
 }

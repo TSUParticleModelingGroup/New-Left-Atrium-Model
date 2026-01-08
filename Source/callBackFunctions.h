@@ -35,6 +35,15 @@
 */
 void reshape(GLFWwindow* window, int width, int height)
 {
+	// Update the window size variables for capture and mouse math
+	XWindowSize = width;
+	YWindowSize = height;
+
+	// if we are recording we do not want to change the viewport or projection
+	//otherwise the movie will be messed up
+	if (Simulation.isRecording) return;
+
+	// if not recording, set the viewport to match the new window size
 	glViewport(0, 0, width, height); // Set the viewport size to match the window size
 
 	//calculate the image aspect ratio
@@ -263,6 +272,11 @@ string getTimeStamp()
 */
 void movieOn()
 {
+	// Lock the capture resolution at the time capture starts so window resizes
+	// do not affect the video dimensions.
+	CaptureWidth = XWindowSize;
+	CaptureHeight = YWindowSize;
+
 	string ts = getTimeStamp();
 	ts.append(".mp4");
 
@@ -281,15 +295,17 @@ void movieOn()
 	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
 	// 			"-c:v libx264 -threads 0 -preset medium -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
 
-	//Max Quality, Low Speed, Large Size (change crf to 0 range[0,51] for lossless compression, but I wanted to keep the file size down)
+
+
+	//Max Quality, Low Speed, Large Size
 	sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
+		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"", CaptureWidth, CaptureHeight, ts.c_str());
 
 	//use the command string to create the output file name
 	MovieFile = popen(baseCommand, "w");
 
 	//Buffer = new int[XWindowSize*YWindowSize];
-	Buffer = (unsigned char*)malloc(4* XWindowSize* YWindowSize);
+	Buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
 
 	Simulation.isRecording = true;
 }
@@ -308,7 +324,7 @@ void movieOff()
 }
 
 /*
- This function takes a screen shot of the simulation.
+ This function takes a screenshot of the simulation.
 */
 void screenShot()
 {	
@@ -318,10 +334,10 @@ void screenShot()
 
     char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
 
-	//commands for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
-    sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-                "-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4", 
-                XWindowSize, YWindowSize);
+	//commands for ffmpeg, use the locked capture size so screenshots match recorded frames
+	sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
+				"-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4", 
+				CaptureWidth, CaptureHeight);
 
 	//SC 25 submission
 	//sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4");
@@ -331,7 +347,7 @@ void screenShot()
 	
 	//open the pipe to ffmpeg and allocate the buffer for the screenshot with the size of 4*XWin* YWin to hold the RGBA data
 	ScreenShotFile = popen(cmd, "w");
-	buffer = (unsigned char*)malloc(4 * XWindowSize*YWindowSize*sizeof(int));
+	buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
 	
 	if(!Simulation.isPaused) //if the simulation is running
 	{
@@ -346,8 +362,8 @@ void screenShot()
 	for(int i =0; i < 1; i++)
 	{
 		drawPicture();
-		glReadPixels(0, 0, XWindowSize, YWindowSize, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		fwrite(buffer, 4*XWindowSize*YWindowSize, 1, ScreenShotFile);
+		glReadPixels(0, 0, CaptureWidth, CaptureHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		fwrite(buffer, 4 * CaptureWidth * CaptureHeight, 1, ScreenShotFile);
 	}
 	
 	pclose(ScreenShotFile);
