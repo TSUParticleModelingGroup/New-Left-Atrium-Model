@@ -455,6 +455,7 @@ void saveSettings()
   	fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
   	fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
   	fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, settingFile);
+	fwrite(&MassOfLeftAtrium, sizeof(double), 1, settingFile);
   	int linksPerNode = MUSCLES_PER_NODE;
   	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
   	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
@@ -563,6 +564,9 @@ void saveState()
 
     // Save runtime value
     fwrite(&RunTime, sizeof(double), 1, file);
+
+	// Save mass of left atrium so saved state can restore recenter correctly
+	fwrite(&MassOfLeftAtrium, sizeof(double), 1, file);
     
     // Save simulation timers and relevant state variables
 	//this lets you save the mouse function you're in, I thought it might be useful for trigger placement, so I added it
@@ -592,6 +596,9 @@ void loadState()
 
     // Load runtime value
     fread(&RunTime, sizeof(double), 1, file);
+	
+	// Load mass of left atrium
+	fread(&MassOfLeftAtrium, sizeof(double), 1, file);
     
     // Load simulation timers and relevant state variables
     fread(&Simulation, sizeof(Simulation), 1, file);

@@ -642,6 +642,7 @@ void getNodesandMusclesFromPreviousRun()
 	fread(&NumberOfNodes, sizeof(int), 1, inFile);
 	fread(&NumberOfMuscles, sizeof(int), 1, inFile);
 	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
+	fread(&MassOfLeftAtrium, sizeof(double), 1, inFile);
 	
 	int linksPerNode;
 	fread(&linksPerNode, sizeof(int), 1, inFile);
