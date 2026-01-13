@@ -6,7 +6,7 @@ Any value read from this file that is not in these units will be converted to th
 Read from NodesMuscles file (0) or read from a previous run file (1).
 Should be a 0 or a 1.
 
---NodesMusclesFileOrPreviousRunsFile = 1;
+--NodesMusclesFileOrPreviousRunsFile = 0;
 
 Name of the files that holds the nodes and muscles. 
 Line11
@@ -17,9 +17,9 @@ CSphere5680
 IdealLeftAtrium2.3K
 ?IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
-LeftAtriumRealBase *** Need to zoom way in. ??? radius is 241
-LeftAtriumRealPartialAppendage *** Need to zoom way in. ??? radius is 243
-LeftAtriumRealRemovedAppendage *** Need to zoom way in. ??? radius is 244
+LeftAtriumRealBase
+LeftAtriumRealPartialAppendage
+LeftAtriumRealRemovedAppendage
 TheRock
 The code is not currently written for models with depth, but it does work with them. Use the 3D models with this in mind.
 3DIdealLAtrium2.3K
@@ -36,7 +36,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium13.0KNotTriangle
+--InputFileName = LeftAtriumRealPartialAppendage
 
 Name of previous run files that were stored in GitHub.
 Test
