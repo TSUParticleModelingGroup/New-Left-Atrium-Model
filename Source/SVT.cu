@@ -490,15 +490,22 @@ int main(int argc, char** argv)
     int width, height;
     glfwGetFramebufferSize(Window, &width, &height);
     
-    // Reset viewport and matrices to ensure proper initial state
-    glViewport(0, 0, width, height);
-    
-    // Reset projection matrix
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+	// Update stored window size and set initial render size
+	XWindowSize = width;
+	YWindowSize = height;
+	// Initialize capture size to the current window size so screenshots work before any capture starts
+	CaptureWidth = XWindowSize;
+	CaptureHeight = YWindowSize;
 
-	// Calculate aspect ratio
-    float aspect = (float)width / (float)height;
+	// Reset viewport and matrices to ensure proper initial state
+	glViewport(0, 0, XWindowSize, YWindowSize);
+    
+	// Reset projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Calculate aspect ratio using the render size
+	float aspect = (float)XWindowSize / (float)YWindowSize;
 
 	// Set projection based on the view flag
 	if(Simulation.ViewFlag == 0) // Orthogonal view
@@ -510,7 +517,7 @@ int main(int argc, char** argv)
 		glFrustum(-aspect, aspect, -1.0, 1.0, 1.0, 100.0); // Perspective projection
 	}
     
-    	// Reset modelview matrix
+    // Reset modelview matrix
 	// MODELVIEW MATRIX - this controls camera position
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity(); //Necessary here

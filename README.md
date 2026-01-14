@@ -18,14 +18,12 @@
 
 <a id="selected-pics"></a>  
 ## Selected Pics
-### Front View ---- Back View ---- View Through the Mitral Valve
-<img src="ReadMeImages/LAFront.jpeg" width=30% height=30% class='center'></img>
-<img src="ReadMeImages/LABack.jpeg" width=30% height=30% class='center'></img>
-<img src="ReadMeImages/LAThroughMV.jpeg" width=30% height=30% class='center'></img>
-### Flutter Between Pulmonary Veins ---- Roof Flutter ---- Micro-reentry
-<img src="ReadMeImages/FlutterPV.jpeg" width=30% height=30% class='center'></img>
-<img src="ReadMeImages/RoofFlutter.jpeg" width=30% height=30% class='center'></img>
-<img src="ReadMeImages/Micro.jpeg" width=30% height=30% class='center'></img>
+### Micro Reentry ------------------------ Macro Reentry
+<img src="ReadMeImages/Micro.png" width=30% height=30% class='center'></img>
+<img src="ReadMeImages/Macro.png" width=30% height=30% class='center'></img>
+### Spiral Wave Reentry --------------- AFib Like Action
+<img src="ReadMeImages/SpiralWaves.png" width=30% height=30% class='center'></img>
+<img src="ReadMeImages/AF.png" width=30% height=30% class='center'></img>
 
 <a id="project-aims"></a>  
 ## Project Aims
@@ -89,11 +87,31 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 #### Linux (Ubuntu/Debian)
   Install Nvidia CUDA Toolkit:
 
+	sudo apt update
     sudo apt install nvidia-cuda-toolkit
 
   Install Mesa Utils:
 
+	sudo apt update
     sudo apt install mesa-utils
+
+  Install gcc and nvcc:
+
+    sudo apt update
+	sudo apt install build-essential
+
+  Install GLFW:
+
+    sudo apt update
+	sudo apt install libglfw3-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev
+	
+  Install X11-related libraries:
+
+    sudo apt update
+	sudo apt install libxinerama-dev libxcursor-dev libxi-dev
+
+
+
 
 <a id="building-and-running"></a>    
 ## Building and Running
@@ -104,76 +122,84 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 
     ./compile
 
+  If it says that you do not have permissions, run the following command and try again.
+
+  	chmod +x compile
+
 ### Running
   After compiling, run the simulation:
 
     ./run
 
 <a id="simulation-setup-file"></a>    
-## Simulation Setup File 
-
-### Units of Measurement
+## Simulation Setup Files 
+	There are three simulation setup files. 
+	These files can be adjusted by the user before running a simulation to set up the basic framework of the run.
+	All units used in the simulation are as follows:
    	Length is in millimeters (mm)
    	Time is in milliseconds (ms)
    	Mass is in grams (g)
    
-### New Run or Previous Run
-   	You can start a new run using the nodes and muscles files, or you can continue a previous run.
-   	NodesMusclesFileOrPreviousRunsFile = 0, run from the selected nodes and muscles file
-   	NodesMusclesFileOrPreviousRunsFile = 1, run from a previous run file
-   
-   	If you selected 0, then you must set 
-   	InputFileName = ***;
-   	to the name of the nodes and muscles file you want to run from the list below. 
-   	{Line11, Circle24, CSphere340, CSphere5680, IdealLeftAtrium13.0KNotTriangle, LeftAtriumRealRemovedAppendage}
-   
-   	If you selected 1, then you must set 
-   	PreviousRunFileName = ***;
-   	to the name of a previous run file you saved in the PreviousRunsFile folder. The three previous run files listed below
-   	are already placed in this folder to use as demos. 
-   	{PVFlutterDemo, MicroReentryDemo, RoofFlutterDemo}
-   
-### Nodes and Muscle View Size, and colors
-   	You can set the size of the nodes and muscles with the
-   	LineWidth = ***;
-   	NodeRadiusAdjustment = ***;
-   
-   	Colors to help distinguish between simulation events can all be customized at the end of the setup file. 
-   
-   	Note: This only affects the viewing of the simulation; no actual functionality is changed with these parameters.
+### BasicSimulationSetup
+   	This file is read at startup and tells the program to either resume the simulation from a previous run or create a new run from the 
+	frameworks in the nodes and muscles files. It also reads in some basic visualization parameters.
+	
+### IntermediateSimulationSetup
+   	This file is read at startup and sets base simulation settings, such as beat rate and node and muscle characteristics. 
+	It also reads in several visualization parameters.  
 
-### Simulation Constants
-
-   	Myocyte Force Per Mass strength = 596.0 mm/ms^2
-   	BloodPressure = 80.0; millimeters of mercury converted to g/(mm*ms*ms) in the program.
-   	MassOfAtria = 25; g
-   	RadiusOfAtria = 17.8; mm
-   	BaseMuscleRelaxedStrength = 2.0; This is just a force that helps the model keep its shape.
-   	BaseMuscleCompresionStopFraction = 0.7 This only lets a muscle fiber reduce its length by 30%
-   	BeatPeriod = 1000.0; (ms)
-   	MaxNumberOfperiodicEctopicEvents = 50; This just sets an upper limit to the number of ectopic beats a simulation can have.
-   	Note: ectopic beats are extra pulse nodes that the user sets in an active simulation. Ectopic triggers are single events
-   	stimulated by mouse clicks.
-   
-   	The above are typical values and are all changeable in the setup file. These values are read in at the start of a simulation. 
-   	They are not changeable once the simulation starts. 
-   
-### Simulation Variables
-   	BaseMuscleContractionDuration = 200.0; (ms)
-   	BaseMuscleRechargeDuration = 200.0; (ms)
-   	BaseMuscleConductionVelocity = 0.5; (mm/ms)
-   
-   	The above are typical values read in from the setup file at the start of a simulation. These values are all changeable in an active simulation.
-   
-### Timing constants
-   	PrintRate = 100.0; How often the program prints new information to the terminal screen. 
-   	DrawRate = 1000; How often the program draws a new simulation picture. 
-   	Dt = 0.001; How many Leap-Frog iterations are done for each ms of simulation time.
+### AdvancedSimulationSetup
+   	This file is read at startup and sets the basic physics of the simulation.
 
 <a id="simulation-runtime-controls"></a>
 ## Simulation Runtime Controls
-  
-  <img src="ReadMeImages/commands.png" width=80% height=80%>
+
+  Our model includes a Graphical User Interface (GUI) to allow the user to dynamically adjust various attributes for both the simulation and various characteristics of the left atrium.
+
+  <img src="ReadMeImages/GUI.png" width=30% height=30%>
+
+### Simulation Controls
+*Primary controls for managing the simulation execution and visual output.*
+
+| Control | Description |
+| :--- | :--- |
+| **Contraction Toggle** | Enables/disables visual contraction of heart tissue |
+| **Draw Front Half Only** | Renders only the closest half of the model for clarity/performance |
+| **Show Nodes** | Toggle to draw front half/all/no nodes |
+| **Record Video** | Starts/stops recording simulation video |
+| **Screenshot** | Captures still image of current view |
+| **Simulation Speed** | Determines the amount of calculations in between render calls |
+
+### Mouse Functions
+*Interactive modes for mouse actions on 3D heart surface.*
+
+| Mode | Description |
+| :--- | :--- |
+| **Mouse Off** | Turns all mouse functions off |
+| **Ablate Mode** | Block (ablate) the signal from traveling through selected nodes |
+| **Ectopic Beat** | Sets up a recurrent timed pulse (beat) from the selected node |
+| **Ectopic Trigger** | Initiates a single pulse from the selected node |
+| **Adjust Area** | Select/modify muscle characteristics for a group of muscles |
+| **Adjust Line** | Select/modify muscle characteristics for a single muscle |
+| **Identify Node** | Identify the number that corresponds to a specific node |
+
+### Heartbeat Controls
+*Panel for management of cardiac rhythms*
+
+| Control | Description |
+| :--- | :--- |
+| **Beat Period (ms)** | Sets baseline interval between heartbeats |
+| **Ectopic Beats** | View/Adjust current ectopic beats |
+
+### Utilities
+*Tools for saving/loading simulation states.*
+
+| Utility | Description |
+| :--- | :--- |
+| **Save Settings** | Exports simulation parameters to a file for later use |
+| **Find Nodes** | Finds the ID of the top-most and front-most node |
+| **Save State** | Saves complete simulation state for short-term use |
+| **Load State** | Restores simulation from saved state |
 
 <a id="changelog"></a>
 ## Changelog
@@ -186,13 +212,16 @@ Refer to the changelog for details.
 
 <a id="contributing-authors"></a>
 ## Contributing Authors
-  - Bryant Wyatt (PI)
+  - Leah Rogers
+  - Mason Bane
+  - Kyla Moore
   - Gavin McIntosh
   - Avery Campbell
   - Melanie Little
-  - Leah Rogers
   - Derek Hopkins
   - Brandon Wyatt
+  - Charles Puelz (CoPI)
+  - Bryant Wyatt (PI)
 
 <a id="funding-sources"></a>  
 ## Funding Sources
@@ -228,33 +257,5 @@ their High-Performance Computing lab for the duration of this project.
 	[18] Wyndham CRC. Atrial Fibrillation: The Most Common Arrhythmia. Texas Heart Institute Journal. 2000;27(3):257–257.
 	[19] Cheniti G, Vlachos K, Pambrun T, Hooks D, Frontera A, Takigawa M, Bourier F, Kitamura T, Lam A, Martin C, Dumas-Pommier C, Puyo S, Pillois X, Duchateau J, Klotz N, et al. Atrial Fibrillation Mechanisms and Implications for Catheter Ablation. Frontiers in Physiology. 2018;9.
 	[20] Gussak G, Pfenniger A, Wren L, Gilani M, Zhang W, Yoo S, Johnson DA, Burrell A, Benefield B, Knight G, Knight BP, Passman R, Goldberger JJ, Aistrup G, Wasserstrom JA, Shiferaw Y, Arora R. Region-specific parasympathetic nerve remodeling in the left atrium contributes to creation of a vulnerable substrate for atrial fibrillation. JCI Insight. 2019 Oct 17;4(20):e130532. doi: 10.1172/jci.insight.130532. PMID: 31503549; PMCID: PMC6824299.
-	[21] Niederer SA, Lumens J, Trayanova NA. Computational models in cardiology. Nature Reviews Cardiology. 2019;16(2):100–111.
-	[22] Potse M. Scalable and Accurate ECG Simulation for Reaction-Diffusion Models of the Human Heart. Front Physiol. 2018 Apr 20;9:370. doi: 10.3389/fphys.2018.00370. PMID: 29731720; PMCID: PMC5920200.
-	[23] Sellami H, Cazenille L, Fujii T, Hagiya M, Aubert-Kato N, Genot AJ. Accelerating the Finite-Element Method for Reaction-Diffusion Simulations on GPUs with CUDA. Micromachines (Basel). 2020 Sep 22;11(9):881. doi: 10.3390/mi11090881. PMID: 32971889; PMCID: PMC7569852.
-	[24] Trayanova NA. Whole-heart modeling: applications to cardiac electrophysiology and electromechanics. Circulation research. 2011;108(1):113–128.
-	[25] Cristian Barrios Espinosa, Jorge Sanchez, Olaf Dossel, Axel Loewe. Diffusion Reaction Eikonal Alternant Model: Towards Fast Simulations of Complex Cardiac Arrhythmias. Computing in Cardiology 2022; Vol 49
-	[26] Makowiec D, Wdowczyk J, Struzik ZR. Heart Rhythm Insights Into Structural Remodeling in Atrial Tissue: Timed Automata Approach. Front Physiol. 2019 Jan 14;9:1859. doi: 10.3389/fphys.2018.01859. PMID: 30692928; PMCID: PMC6340163.
-	[27] Cox BN, Snead ML. Cells as strain-cued automata. J Mech Phys Solids. 2016 Feb;87:177-226. doi: 10.1016/j.jmps.2015.11.002. Epub 2015 Dec 2. PMID: 31178602; PMCID: PMC6550492.
-	[28] Billy J. Fournier, Bryant M. Wyatt. (2016). Matter and GPUs: Should the Focus of Our Modeling Classes be Adjusted?. Pearson Publishing, Boston, Ma: International Conference on Technology in Collegiate Mathematics.
-	[29] Conway, J. H. (1970). The game of life. Scientific American, 223(4), 4-23.
-	[30] Helbing, D. (2012). Agent-Based Modeling. In: Helbing, D. (eds) Social Self- Organization. Understanding Complex Systems. Springer, Berlin, Heidelberg. https://doi.org/10.1007/978-3-642-24004-1_2
-	[31] T. J. Sego ,James P. Sluka,Herbert M. Sauro,James A. Glazier. Tissue Forge: Interactive biological and biophysics simulation environment. PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1010768 October 23, 2023
-	[32] Greenspan D. N-body Problems and Models. World Scientific; 2004.
-	[33] Greenspan D. Molecular and Particle Modeling of Laminar and Turbulent Flows. World Scientific; 2005.
-	[34] Bryant M. Wyatt, Jonathan M. Petz, William J. Sumpter, Ty R. Turner, Edward L. Smith, Baylor G. Fain, Taylor J. Hutyra, Scott A. Cook, John H. Gresham, Michael F. Hibbs, Shaukat N. Goderya (2018). Creating an Isotopically Similar Earth-Moon System with Correct Angular Momentum from a Giant Impact. Journal of Astrophysics and Astronomy, 39(2) 26:1-6.
-	[35] Justin C. Eiland, Travis C. Salzillo, Brett H. Hokr, Justin L. Highland, William D. Mayfield, Bryant M. Wyatt. (2014). Lunar-forming Giant Impact Model Utilizing Modern Graphics Processing Units. Journal of Astrophysics and Astronomy, 35(4), 607-618.
-	[36] Greenspan D. Quasimolecular Modelling. World Scientific; 1991.
-	[37] Bryant M. Wyatt. (1994). Collisions of Microdrops of Water. Computers & Mathematics with Applications, 28 (10-12), 175-208.
-	[38] Jaryd Domine, Hakiem Grant, Wyatt Young, Rajesh Vuddandam, Bryant Wyatt. N-body Adaptive Optimization of Lattice Towers. GPU Technology Conference. San Jose, CA,(2020).https://www.nvidia.com/content/dam/en-zz/Solutions/gtc/conference- posters/gtc2020-posters/Design_Engineering_01_P21881_Jaryd_Domine_Web.pdf
-	[39] Greenspan D. Arithmetic Applied Mathematics. PERGAMON PRESS; 1980.
-	[40] Greenspan D. Numerical Solution of Ordinary Differential Equations for Classical, Relativistic and Nano Systems. WILEY-VCH Verlag GmbH & Co. KGaA; 2006..
-	[41] Edward Angel. OpenGL: A Primer. 2002. Addison-Wesley
-	[42] Yu-ki Iwasaki, Kunihiro Nishida, Takeshi Kato and Stanley Nattel. Atrial Fibrillation Pathophysiology. Circulation. 2011 | Volume 124, Issue 20: 2264–2274
-	[43] Printables. left atrium of the heart: print for occluder implantation feasibility. https://www.printables.com/model/16719-left-atrium-of-the-heart-print-for-occluder-implan
-	[44] Farber R. CUDA Application Design and Development. CUDA Application Design and Development. 2011.
-	[45] Jason Sands, J., and Kandrot,E. (2010). CUDA by Example: An Introduction to General-Purpose GPUProgramming, Pearson Education, Inc..
-	[46] Hwu, W. (2011). GPU Computing Gems (Emerald Ed.)Elsevier Inc., Boston, MA.
-	[47] Sellers, G. W. R. H. N. (2014). OpenGL SuperBible.Addison Wesley, Boston, MA.
-      
 
 The Particle Modeling Group reserves the right to change this policy at any time.

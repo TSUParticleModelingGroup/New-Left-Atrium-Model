@@ -144,9 +144,9 @@ void setNodesFromBlenderFile()
 	// 7. Centering the LA
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		 centerOfObject.x -= centerOfObject.x;
-		 centerOfObject.y -= centerOfObject.y;
-		 centerOfObject.z -= centerOfObject.z;
+		Node[i].position.x -= centerOfObject.x;
+		Node[i].position.y -= centerOfObject.y;
+		Node[i].position.z -= centerOfObject.z;
 	}
 	
 	// 8. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
@@ -642,6 +642,7 @@ void getNodesandMusclesFromPreviousRun()
 	fread(&NumberOfNodes, sizeof(int), 1, inFile);
 	fread(&NumberOfMuscles, sizeof(int), 1, inFile);
 	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
+	fread(&MassOfLeftAtrium, sizeof(double), 1, inFile);
 	
 	int linksPerNode;
 	fread(&linksPerNode, sizeof(int), 1, inFile);
