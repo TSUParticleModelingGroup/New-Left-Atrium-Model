@@ -17,6 +17,9 @@ CSphere5680
 IdealLeftAtrium2.3K
 ?IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
+LeftAtriumRealBase
+LeftAtriumRealPartialAppendage
+LeftAtriumRealRemovedAppendage
 TheRock
 The code is not currently written for models with depth, but it does work with them. Use the 3D models with this in mind.
 3DIdealLAtrium2.3K
@@ -33,7 +36,11 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
+<<<<<<< HEAD
 --InputFileName = 10X10
+=======
+--InputFileName = LeftAtriumRealPartialAppendage
+>>>>>>> e8b2fb006964f4a998f324d43d75a61f29051dec
 
 Name of previous run files that were stored in GitHub.
 Test
@@ -44,6 +51,7 @@ run that you want to share on GitHub for everyone to use, you will need to manua
  
 Place the name of the previous run file you would like to execute here.
 
+--PreviousRunFileName = Run_1-12_20-51-2
 
 Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
 
@@ -64,6 +72,7 @@ If you want to turn off muscle contractions and just observe the electrical proc
 This can also be toggled on and off in the running simulation.
 It should be a 0 or a 1.
 
+--ContractionIsOn = 1;
 
 Background color (Background of the scene): red, green, blue.
 All three should be floats.
