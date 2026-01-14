@@ -67,6 +67,7 @@ void setNodesFromBlenderFile()
 	printf("\n UpNode = %d", UpNode);
 	fscanf(inFile, "%d", &FrontNode);
 	printf("\n FrontNode = %d", FrontNode);
+	printf("\n");
 	
 	// 3. Allocating memory for the CPU and GPU nodes. 
 	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
@@ -175,7 +176,7 @@ void setNodesFromBlenderFile()
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
 	
 	fclose(inFile);
-	printf("\n Blender generated nodes have been created.");
+	printf("\n Blender generated nodes have been created.\n");
 }
 
 /* This function checks to see if two nodes are too close relative to all the other nodes 
@@ -248,7 +249,7 @@ void checkNodes()
 		printf("\n The cutoff separation was %f.\n\n", averageMinSeparation/10.0);
 		exit(0);
 	}
-	printf("\n Nodes have been checked for minimal separation.");
+	printf("\n Nodes have been checked for minimal separation.\n");
 }
 
 /*
@@ -301,7 +302,7 @@ void setBachmannBundleFromBlenderFile()
 	}
 	
 	fclose(inFile);
-	printf("\n Bachmann's Bundle Node have been read in.");
+	printf("\n Bachmann's Bundle Node have been read in.\n");
 }
 
 /*
@@ -421,7 +422,7 @@ void linkNodesToMuscles()
 			}
 		}
 	}
-	printf("\n Nodes have been linked to muscles");
+	printf("\n Nodes have been linked to muscles. \n");
 }
 
 /*
@@ -673,7 +674,7 @@ void getNodesandMusclesFromPreviousRun()
   	fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
 	fclose(inFile);
 	
-	printf("\n Nodes and Muscles have been read in from %s.", fileName);	
+	printf("\n Nodes and Muscles have been read in from %s.\n", fileName);	
 }
 
 /*

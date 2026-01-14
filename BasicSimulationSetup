@@ -6,7 +6,7 @@ Any value read from this file that is not in these units will be converted to th
 Read from NodesMuscles file (0) or read from a previous run file (1).
 Should be a 0 or a 1.
 
---NodesMusclesFileOrPreviousRunsFile = 0;
+--NodesMusclesFileOrPreviousRunsFile = 1;
 
 Name of the files that holds the nodes and muscles. 
 Line11
@@ -36,14 +36,10 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
-<<<<<<< HEAD
---InputFileName = 10X10
-=======
---InputFileName = LeftAtriumRealPartialAppendage
->>>>>>> e8b2fb006964f4a998f324d43d75a61f29051dec
+--InputFileName = IdealLeftAtrium2.3K
 
 Name of previous run files that were stored in GitHub.
-Test
+???, ???
 
 If you have made a previous run file and would like to run it, just place its name below. Also, this file will not 
 be copied to GitHub, so you can build as many as you want without cluttering up the GitHub folder. If you have a good 
@@ -51,7 +47,7 @@ run that you want to share on GitHub for everyone to use, you will need to manua
  
 Place the name of the previous run file you would like to execute here.
 
---PreviousRunFileName = Run_1-12_20-51-2
+--PreviousRunFileName = test
 
 Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
 
