@@ -672,6 +672,10 @@ void getNodesandMusclesFromPreviousRun()
 	
 	fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
   	fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
+
+	fread(&Simulation, sizeof(Simulation), 1, inFile);
+
+	fread(&RunTime, sizeof(double), 1, inFile);
 	fclose(inFile);
 	
 	printf("\n Nodes and Muscles have been read in from %s.\n", fileName);	
@@ -702,8 +706,11 @@ void setRemainingParameters()
 	AngleOfSimulation.y = 1.0;
 	AngleOfSimulation.z = 0.0;
 
+	//restore view and runtime if loading from previous run
+	if (NodesMusclesFileOrPreviousRunsFile == 0) RunTime = 0.0;
+
+
 	DrawTimer = 0; 
-	RunTime = 0.0;
 	Simulation.isPaused = true;
 	
 	Simulation.DrawNodesFlag = 0;
@@ -729,7 +736,7 @@ void setRemainingParameters()
 	
 	RecenterCount = 0;
 	RecenterRate = 10;
-	setView(6);
+	if (NodesMusclesFileOrPreviousRunsFile == 0)setView(6);//set deafult view only if not loading from previous run
 	
 	Simulation.ViewFlag = 1;
 }

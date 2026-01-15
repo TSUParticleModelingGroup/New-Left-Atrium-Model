@@ -404,6 +404,7 @@ void saveSettings()
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 	
+	
 	// Moving into the file that contains previuos run files.
 	chdir("./PreviousRunsFile");
 	   	
@@ -460,6 +461,8 @@ void saveSettings()
   	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
   	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
   	fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
+	fwrite(&Simulation, sizeof(Simulation), 1, settingFile);
+    fwrite(&RunTime, sizeof(double), 1, settingFile);
 	fclose(settingFile);
 	
 	//Copying the simulationSetup file into this directory so you will know how it was initally setup.
@@ -1050,8 +1053,8 @@ void keyHeld(GLFWwindow* window)
 		glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ||
 		glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
 
-	//early exit if no valid key is pressed
-	if (!validKey) return;
+	//early exit if no valid key is pressed or if control is held down (to avoid conflict with ctrl+key shortcuts)
+	if (!validKey || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) return;
 
 	bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || 
 						glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
