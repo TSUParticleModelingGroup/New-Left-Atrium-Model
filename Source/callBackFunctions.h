@@ -297,10 +297,16 @@ void movieOn()
 
 
 
-	//Max Quality, Low Speed, Large Size
-	sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-		"-c:v libx264 -threads 0 -preset veryslow -y -crf 16 -tune film -vf vflip \"%s\"", CaptureWidth, CaptureHeight, ts.c_str());
-
+	// General: High quality, compatible, Medium Size
+	// H.264 (yuv420p) needs even width/height; encoders may fail on odd sizes.
+	// Pad by up to 1 pixel (minimal impact) so ffmpeg/libx264 accepts the frames.
+	int outW = CaptureWidth + (CaptureWidth % 2); // round up to even
+	int outH = CaptureHeight + (CaptureHeight % 2);
+	int padX = (outW - CaptureWidth) / 2;
+	int padY = (outH - CaptureHeight) / 2;
+	sprintf(baseCommand, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -r 60 -i - "
+		"-c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -crf 14 -preset slow -tune film -threads 0 -movflags +faststart -y -vf \"vflip,pad=%d:%d:%d:%d\" \"%s\"", 
+		CaptureWidth, CaptureHeight, outW, outH, padX, padY, ts.c_str());
 	//use the command string to create the output file name
 	MovieFile = popen(baseCommand, "w");
 
@@ -332,12 +338,18 @@ void screenShot()
 	FILE* ScreenShotFile;
 	unsigned char* buffer; //unsigned char because we are using RGBA data, which is 4 bytes per pixel, 1 char = 1 byte
 
-    char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
+	char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
 
 	//commands for ffmpeg, use the locked capture size so screenshots match recorded frames
 	sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
 				"-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4", 
 				CaptureWidth, CaptureHeight);
+
+	// Capture a single frame and write a lossless PNG directly to preserve colors.
+	// We generate a timestamped filename up-front and write one frame (-frames:v 1).
+	string ts = getTimeStamp();
+	sprintf(cmd, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -i - -frames:v 1 -vf vflip -c:v png \"%s.png\"", 
+				CaptureWidth, CaptureHeight, ts.c_str());
 
 	//SC 25 submission
 	//sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4");
@@ -369,16 +381,8 @@ void screenShot()
 	pclose(ScreenShotFile);
 	free(buffer);
 
-	string ts = getTimeStamp(); // Only storing in a separate variable for debugging purposes.
-	string s = "ffmpeg -loglevel quiet -i output1.mp4 -qscale:v 1 -qmin 1 -qmax 1 " + ts + ".jpeg";
-	//Below is for SC25 submission
-	//"ffmpeg -loglevel quiet -i output1.mp4 -qscale:v 1 -qmin 1 -qmax 1 " + ts + ".png && convert " + ts + ".png -density 72 " + ts + ".png";
-	// Convert back to a C-style string.
-	const char *ccx = s.c_str();
-	system(ccx);
-	system("rm output1.mp4");
 	printf("\nScreenshot Captured: \n");
-	cout << "Saved as " << ts << ".jpeg" << endl;
+	cout << "Saved as " << ts << ".png" << endl;
 
 	
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
