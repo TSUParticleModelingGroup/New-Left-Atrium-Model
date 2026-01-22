@@ -52,7 +52,8 @@ void setNodesFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf("\n\n Can't open Nodes file %s.\n\n", fileName);
+		printf("\n\n Can't open Nodes file %s.", fileName);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	
@@ -243,7 +244,8 @@ void checkNodes()
 	if(flag == true)
 	{
 		printf("\n\n The average nearest separation for all the nodes is %f.", averageMinSeparation);
-		printf("\n The cutoff separation was %f.\n\n", cutoff);
+		printf("\n The cutoff separation was %f.", cutoff);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	
@@ -274,7 +276,8 @@ void setBachmannBundleFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf("\n\n Can't open Bachmann's Bundle file.\n\n");
+		printf("\n\n Can't open Bachmann's Bundle file.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	
@@ -325,7 +328,8 @@ void setMusclesFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if (inFile == NULL)
 	{
-		printf("\n\n Can't open Muscles file %s.\n\n", fileName);
+		printf("\n\n Can't open Muscles file %s.", fileName);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	
@@ -375,12 +379,14 @@ void setMusclesFromBlenderFile()
 		
 		if(NumberOfMuscles <= id)
 		{
-			printf("\n\n You are trying to create a muscle that is out of bounds.\n\n");
+			printf("\n\n You are trying to create a muscle that is out of bounds.");
+			printf("\n The simulation has been terminated.\n\n");
 			exit(0);
 		}
 		if(NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
 		{
-			printf("\n\n You are trying to connect to a node that is out of bounds.\n\n");
+			printf("\n\n You are trying to connect to a node that is out of bounds.");
+			printf("\n The simulation has been terminated.\n\n");
 			exit(0);
 		}
 		Muscle[id].nodeA = idNode1;
@@ -409,7 +415,8 @@ void linkNodesToMuscles()
 				{
 					printf("\n\n Number of muscles connected to node %d is larger than the allowed number of", i);
 					printf("\n muscles connected to a single node.");
-					printf("\n If this is not a mistake increase MUSCLES_PER_NODE in the header.h file.\n\n");
+					printf("\n If this is not a mistake increase MUSCLES_PER_NODE in the header.h file.");
+					printf("\n The simulation has been terminated.\n\n");
 					exit(0);
 				}
 				Node[i].muscle[k] = j;
@@ -628,7 +635,8 @@ void getNodesandMusclesFromPreviousRun()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf("\n\n Can't open PreviousRunsFile %s.\n\n", fileName);
+		printf("\n\n Can't open PreviousRunsFile %s.", fileName);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	
@@ -646,7 +654,8 @@ void getNodesandMusclesFromPreviousRun()
 	{
 		printf("\n\n The number Of muscle per node do not match.");
 		printf("\n You will have to set the #define MUSCLES_PER_NODE");
-		printf("\n to %d in header.h then recompile the code.\n\n", linksPerNode);
+		printf("\n to %d in header.h then recompile the code.", linksPerNode);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	

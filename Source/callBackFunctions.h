@@ -480,7 +480,8 @@ void saveSettings()
 
 	if(fileIn == NULL)
 	{
-		printf("\n\n The basic simulationSetup file does not exist\n\n");
+		printf("\n\n The basic simulationSetup file does not exist.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 
@@ -504,7 +505,8 @@ void saveSettings()
 
 	if(fileIn == NULL)
 	{
-		printf("\n\n The intermediate simulationSetup file does not exist\n\n");
+		printf("\n\n The intermediate simulationSetup file does not exist.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 
@@ -527,7 +529,8 @@ void saveSettings()
 
 	if(fileIn == NULL)
 	{
-		printf("\n\n The advanced simulationSetup file does not exist\n\n");
+		printf("\n\n The advanced simulationSetup file does not exist.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 
@@ -1082,8 +1085,8 @@ void keyHeld(GLFWwindow* window)
 	
 	if(d < 0.00001)
 	{
-		printf("\n lookVector is too small\n");
-		printf("\n Good Bye\n");
+		printf("\n The lookVector is too small.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	else

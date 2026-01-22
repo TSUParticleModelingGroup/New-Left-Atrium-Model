@@ -474,6 +474,7 @@ void cudaErrorCheck(const char *file, int line)
 	if(error != cudaSuccess)
 	{
 		printf("\n CUDA ERROR: message = %s, File = %s, Line = %d\n", cudaGetErrorString(error), file, line);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 }

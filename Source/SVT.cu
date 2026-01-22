@@ -96,10 +96,10 @@ void setupCudaEnvironment()
 	// 3:
 	if((BLOCKCENTEROFMASS > 0) && (BLOCKCENTEROFMASS & (BLOCKCENTEROFMASS - 1)) != 0) 
 	{
-		printf("\nBLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
-		printf("\nBLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
-		printf("\nFix this number in the header.h file and try again.");
-		printf("\nGood Bye.\n");
+		printf("\n\n BLOCKCENTEROFMASS = %d. This is not a power of 2.", BLOCKCENTEROFMASS);
+		printf("\n BLOCKCENTEROFMASS must be a power of 2 for the center of mass reduction to work.");
+		printf("\n Fix this number in the header.h file and try again.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
     }
 }
@@ -144,7 +144,8 @@ void readSimulationParameters()
 	}
 	else
 	{
-		printf("\nTSU Error could not open BasicSimulationSetup file\n");
+		printf("\n\n Could not open BasicSimulationSetup file.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	data.close();
@@ -232,7 +233,8 @@ void readSimulationParameters()
 	}
 	else
 	{
-		printf("\nTSU Error could not open IntermediateSimulationSetup file\n");
+		printf("\n\n Could not open IntermediateSimulationSetup file.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	data.close();
@@ -284,7 +286,8 @@ void readSimulationParameters()
 	}
 	else
 	{
-		printf("\nTSU Error could not open AdvancedSimulationSetup file\n");
+		printf("\n\n Could not open AdvancedSimulationSetup file.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	data.close();
@@ -333,8 +336,8 @@ void setup()
 	}
 	else
 	{
-		printf("\n Bad NodesMusclesFileOrPreviousRunsFile type.");
-		printf("\n Good Bye.");
+		printf("\n\n Bad NodesMusclesFileOrPreviousRunsFile type %d.", NodesMusclesFileOrPreviousRunsFile);
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	

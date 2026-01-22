@@ -235,8 +235,8 @@ float4 findCenterOfMass()
 	}
 	if(centerOfMass.w < 0.00001) // .w holds the mass.
 	{
-		printf("\n Mass is too small\n");
-		printf("\nw Good Bye\n");
+		printf("\n The mass is too small.");
+		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
 	else

@@ -6,7 +6,7 @@ Any value read from this file that is not in these units will be converted to th
 Read from NodesMuscles file (0) or read from a previous run file (1).
 Should be a 0 or a 1.
 
---NodesMusclesFileOrPreviousRunsFile = 1;
+--NodesMusclesFileOrPreviousRunsFile = 0;
 
 Name of the files that holds the nodes and muscles. 
 Line11
@@ -36,7 +36,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium2.3K
+--InputFileName = Circle24
 
 Name of previous run files that were stored in GitHub.
 ???, ???
