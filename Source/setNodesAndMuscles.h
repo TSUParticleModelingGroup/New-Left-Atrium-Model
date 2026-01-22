@@ -21,7 +21,6 @@
  void checkMuscle(int);
 */
 
-
 /*
  This function 
  1. Opens the node file.
@@ -30,12 +29,11 @@
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
  6. Finds the center of the LA
- 7. Places the centers the LA at (0,0,0).
+ 7. Places the center of the LA at (0,0,0).
  8. Finds the average radius of the LA.
  9. Finds the mass of the LA.
 10. Sets the pulse node.
 */
-
 void setNodesFromBlenderFile()
 {	
 	FILE *inFile;
@@ -54,7 +52,7 @@ void setNodesFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf("\n Can't open Nodes file.\n");
+		printf("\n\n Can't open Nodes file %s.\n\n", fileName);
 		exit(0);
 	}
 	
@@ -142,7 +140,7 @@ void setNodesFromBlenderFile()
 	centerOfObject.y /= centerOfObject.w;
 	centerOfObject.z /= centerOfObject.w;
 	
-	// 7. Centering the LA
+	// 7. Centering the LA at (0,0,0)
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x -= centerOfObject.x;
@@ -163,7 +161,6 @@ void setNodesFromBlenderFile()
 	// 9. Setting the mass of the LA. 
 	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
 	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
-	//WallThicknessFraction = 0.2;
 	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
 	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
 	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
@@ -245,10 +242,11 @@ void checkNodes()
 	// 3: Terminating the simulation if nodes were flagged.
 	if(flag == true)
 	{
-		printf("\n The average nearest separation for all the nodes is %f.", averageMinSeparation);
-		printf("\n The cutoff separation was %f.\n\n", averageMinSeparation/10.0);
+		printf("\n\n The average nearest separation for all the nodes is %f.", averageMinSeparation);
+		printf("\n The cutoff separation was %f.\n\n", cutoff);
 		exit(0);
 	}
+	
 	printf("\n Nodes have been checked for minimal separation.\n");
 }
 
@@ -258,7 +256,6 @@ void checkNodes()
  2. Reads the number of nodes in the BB.
  3. Reads the BB nodes
  */
-
 void setBachmannBundleFromBlenderFile()
 {	
 	FILE *inFile;
@@ -277,12 +274,11 @@ void setBachmannBundleFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf("\n Can't open Bachmann's Bundle file.\n");
+		printf("\n\n Can't open Bachmann's Bundle file.\n\n");
 		exit(0);
 	}
 	
 	// Reading the header information.
-	
 	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
 	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
 	
@@ -297,7 +293,6 @@ void setBachmannBundleFromBlenderFile()
 	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
 	{
 		fscanf(inFile, "%d ", &id);
-		
 		BachmannsBundle[i] = id;
 	}
 	
@@ -330,7 +325,7 @@ void setMusclesFromBlenderFile()
 	inFile = fopen(fileName,"rb");
 	if (inFile == NULL)
 	{
-		printf("\n Can't open Muscles file.\n");
+		printf("\n\n Can't open Muscles file %s.\n\n", fileName);
 		exit(0);
 	}
 	
@@ -380,12 +375,12 @@ void setMusclesFromBlenderFile()
 		
 		if(NumberOfMuscles <= id)
 		{
-			printf("\n You are trying to create a muscle that is out of bounds.\n");
+			printf("\n\n You are trying to create a muscle that is out of bounds.\n\n");
 			exit(0);
 		}
 		if(NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
 		{
-			printf("\n You are trying to connect to a node that is out of bounds.\n");
+			printf("\n\n You are trying to connect to a node that is out of bounds.\n\n");
 			exit(0);
 		}
 		Muscle[id].nodeA = idNode1;
@@ -393,7 +388,7 @@ void setMusclesFromBlenderFile()
 	}
 	
 	fclose(inFile);
-	printf("\n Blender generated muscles have been created.");
+	printf("\n Blender generated muscles have been created.\n");
 }
 
 /*
@@ -402,7 +397,7 @@ void setMusclesFromBlenderFile()
 void linkNodesToMuscles()
 {	
 	int k;
-	// Each node will have a list of muscles they are attached to.
+	// Each node will have a list of the muscles it is attached to.
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		k = 0;
@@ -412,9 +407,9 @@ void linkNodesToMuscles()
 			{
 				if(MUSCLES_PER_NODE < k) // Making sure we do not go out of bounds.
 				{
-					printf("\n Number of muscles connected to node %d is larger than the allowed number of", i);
+					printf("\n\n Number of muscles connected to node %d is larger than the allowed number of", i);
 					printf("\n muscles connected to a single node.");
-					printf("\n If this is not a mistake increase MUSCLES_PER_NODE in the header.h file.");
+					printf("\n If this is not a mistake increase MUSCLES_PER_NODE in the header.h file.\n\n");
 					exit(0);
 				}
 				Node[i].muscle[k] = j;
@@ -459,13 +454,13 @@ double croppedRandomNumber(double stddev, double left, double right)
 /*
  In this function, we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
  the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
- 1: Then,we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ 1: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
  2: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
     fraction by the mass of the left atrium to get the mass on an individual muscle. 
  3: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
-    muscles connected to it. We can then use the ratio of node masses like we used the ratio of muscle length like we did in 2 to 
-    find the area of each node.
+    muscles connected to it. We can then use the ratio of node masses (like we used the ratio of muscle length in 2) to 
+    find the area of each node. Area is used to get a force on the node from the LA pressure.
  4: Here we set the muscle contraction strength attributes. 
     The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
     In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
@@ -476,9 +471,9 @@ double croppedRandomNumber(double stddev, double left, double right)
     
  Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
- future update to the program.
-    
+ future updates to the program. 
 */
+/*BMW*/
 void setRemainingNodeAndMuscleAttributes()
 {	
 	double stddev, left, right;
@@ -633,7 +628,7 @@ void getNodesandMusclesFromPreviousRun()
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
-		printf(" Can't open %s file.\n", fileName);
+		printf("\n\n Can't open PreviousRunsFile %s.\n\n", fileName);
 		exit(0);
 	}
 	
@@ -649,10 +644,9 @@ void getNodesandMusclesFromPreviousRun()
 	fread(&linksPerNode, sizeof(int), 1, inFile);
 	if(linksPerNode != MUSCLES_PER_NODE)
 	{
-		printf("\n The number Of muscle per node do not match");
+		printf("\n\n The number Of muscle per node do not match.");
 		printf("\n You will have to set the #define MUSCLES_PER_NODE");
-		printf("\n to %d in header.h then recompile the code", linksPerNode);
-		printf("\n Good Bye\n");
+		printf("\n to %d in header.h then recompile the code.\n\n", linksPerNode);
 		exit(0);
 	}
 	
