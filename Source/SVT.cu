@@ -289,7 +289,7 @@ void readSimulationParameters()
 	}
 	data.close();
 	
-	printf("\n Simulation Parameters have been read in from simulationSetup files.");
+	printf("\n Simulation Parameters have been read in from simulationSetup files.\n");
 }
 
 /*
@@ -346,6 +346,8 @@ void setup()
 
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
 	copyNodesMusclesToGPU();
+	
+	printf("\n\n Have a good simulation.\n\n");
 }
 
 /*
