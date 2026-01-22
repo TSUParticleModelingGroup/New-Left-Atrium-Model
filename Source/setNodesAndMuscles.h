@@ -254,14 +254,14 @@ void checkNodes()
 
 /*
  This function 
- 1. Opens the Bachmann's Bundle file.
+ 1. Opens the Bachmann's Bundle (BB) file.
  2. Reads the number of nodes in the BB.
- 3. Reads the BB nodes
+ 3. Allocating memory on both CPU and GPU to hold BB.
+ 4. Reads the BB nodes.
  */
 void setBachmannBundleFromBlenderFile()
 {	
 	FILE *inFile;
-	//float x, y, z;
 	int id;
 	char fileName[256];
 	
@@ -272,7 +272,7 @@ void setBachmannBundleFromBlenderFile()
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/BachmannsBundle");
 	
-	// Opening the node file.
+	// Opening the file.
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
@@ -480,10 +480,10 @@ double croppedRandomNumber(double stddev, double left, double right)
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
  future updates to the program. 
 */
-/*BMW*/
 void setRemainingNodeAndMuscleAttributes()
 {	
 	double stddev, left, right;
+	int id, id2, test;
 	
 	// 1:
 	double dx, dy, dz, d;
@@ -554,7 +554,7 @@ void setRemainingNodeAndMuscleAttributes()
 		
 		/* ???
 		// If you want to use cross section for strength use this. But I had a lot of problems with it and had to move on to
-		// More important things. I may readdress this when I get time.
+		// more important things. I may readdress this when I get time.
 		// We will need to read in MyocyteForcePerCrossSectionalArea and MyocyteForcePerCrossSectionalAreaSTD from a setup file.
 		
 		// Cross sectional area is Mass/(Length*Density) 
@@ -577,7 +577,38 @@ void setRemainingNodeAndMuscleAttributes()
 	}
 	
 	// 5:
-	int id, id2;
+	
+	/*
+	printf("\n A.\n");
+	// Checking to see if BB is sequentially connect tree of muscles. ???
+	for(int i = -1; i < NumberOfNodesInBachmannsBundle -1; i++)
+	{	
+		if(i == -1) id = PulsePointNode;
+		else id = BachmannsBundle[i];
+		id2 = BachmannsBundle[i+1];
+		
+		test = 0;
+		for(int k = 0; k < MUSCLES_PER_NODE; k++)
+		{
+		        if(Node[id].muscle[k] != -1)
+		        {
+		              if(Muscle[Node[id].muscle[k]].nodeA == id2 || Muscle[Node[id].muscle[k]].nodeB == id2)
+		              {
+		                    test = 1;
+		                    break;
+		              }
+		        }
+		}
+		if(test == 0)
+		{
+		      printf("\n\n Bachmann’s Bundle is not a sequentially connected tree.");
+		      printf("\n Nodes %d and %d are listed as sequentially in the chain but are not connected", id, id2);
+		      printf("\n The simulation has been terminated.\n\n");
+		      exit(0);
+		}
+	}
+    printf("\n B.\n");
+    */
 	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
 	{	
 		if(i == -1)

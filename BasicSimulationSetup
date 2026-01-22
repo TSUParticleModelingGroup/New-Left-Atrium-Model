@@ -15,7 +15,7 @@ Circle200
 CSphere340
 CSphere5680
 IdealLeftAtrium2.3K
-?IdealLeftAtrium2.3K_BB
+??IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
 LeftAtriumRealBase
 LeftAtriumRealPartialAppendage
@@ -36,7 +36,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = Circle24
+--InputFileName = 3DIdealLAtrium2.3K_BB
 
 Name of previous run files that were stored in GitHub.
 ???, ???
