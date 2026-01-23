@@ -119,8 +119,8 @@ struct simulationSwitchesStructure
 	// For Find Nodes functionality
 	//These need to be globals or they get wiped when the GUI redraws
 	bool nodesFound;       // Whether nodes have been identified
-    int frontNodeIndex;    // Index of the frontmost node (max Z)
-    int topNodeIndex;      // Index of the topmost node (max Y)
+        int frontNodeIndex;    // Index of the frontmost node (max Z)
+        int topNodeIndex;      // Index of the topmost node (max Y)
 
 	//GUI related
 	bool guiCollapsed; // for hotkey to collapse GUI
@@ -177,28 +177,16 @@ char ViewName[256] = "no view set";
 float RefractoryPeriodAdjustmentMultiplier;
 float MuscleConductionVelocityAdjustmentMultiplier;
 
-// These are all the globals that are read in from the simulationSetup file and are explained in detail there.
-// simulationSetup globals start ************************************************
+// These are all the globals that are read in from the BasicSimulationSetup file and are explained in detail there.
 int NodesMusclesFileOrPreviousRunsFile;
 char NodesMusclesFileName[256];
 char PreviousRunFileName[256];
 float LineWidth;
 float NodeRadiusAdjustment;
-double MyocyteLength; 
-double MyocyteDiameter;
-double MyocyteContractionForce;
-double MyocardialTissueDensity;
-double MyocyteForcePerMassMultiplier;
-double MyocyteForcePerMassSTD;
-double DiastolicPressureLA;
-double SystolicPressureLA;
-double PressureMultiplier;
-double WallThicknessFraction;
-double MassOfLeftAtrium;
-double Drag;
-double MuscleRelaxedStrengthFraction;
-double MuscleCompressionStopFraction;
-double MuscleCompressionStopFractionSTD;
+// Simulation.ContractionisOn -- is read in here but this global is defined above.
+float4 BackGround;
+
+// These are all the globals that are read in from the IntermediateSimulationSetup file and are explained in detail there.
 double BaseMuscleRefractoryPeriod;
 double MuscleRefractoryPeriodSTD;
 double BaseAbsoluteRefractoryPeriodFraction;
@@ -215,16 +203,44 @@ float4 ContractingColor;
 float4 RestingColor;
 float4 RelativeColor;
 float4 DeadColor;
-float4 BackGround;
-// simulationSetup globals end ************************************************
+
+// These are all the globals that are read in from the AdvancedSimulationSetup file and are explained in detail there.
+double WallThicknessFraction;		
+double MyocyteLength; 
+double MyocyteDiameter;
+double MyocyteContractionForce;
+double MyocardialTissueDensity;
+double MyocyteForcePerMassMultiplier;
+double MyocyteForcePerMassSTD;
+double DiastolicPressureLA;
+double SystolicPressureLA;
+double PressureMultiplier;
+double Drag;
+double MuscleRelaxedStrengthFraction;
+double MuscleCompressionStopFraction;
+double MuscleCompressionStopFractionSTD;
+
+// How many nodes and muscle the simulation contains.
+int NumberOfNodes;
+int NumberOfMuscles;
+int NumberOfNodesInBachmannsBundle;
+
+// General information about muscles and nodes.
+double TotalLengthOfAllMuscles;
+double AverageLengthOfMuscles;
+double AverageMassOfMuscles;
 
 // This will hold the radius of the left atrium which we will use to scale the size of everything in
 // the simulation.
 double RadiusOfLeftAtrium;
 
+// This will hold the mass of the left atrium.
+double MassOfLeftAtrium;
+
 // This will hold the force per mass fraction of a myocte which we will use to scale a a muscles strength
 // by its mass.
 double MyocyteForcePerMassFraction;
+double MyocyteContractionForce;
 
 // Variable that holds mouse locations to be translated into positions in the simulation.
 double MouseX, MouseY, MouseZ;
@@ -234,7 +250,7 @@ int ScrollSpeedToggle; // Sets slow or fast scroll speed.
 double ScrollSpeed; // How fast your scroll moves.
 
 // Times to keep track of what to do in the nBody() function and your progress through the simulation.
-// Some of the variables that accompany this variable are read in from the simulationSetup file.
+// Some of the variables that accompany this variable are read in from the simulationSetup files.
 // The timers tell what the time is from the last action and the rates tell how often to perform the action.
 double PrintTimer;
 int DrawTimer; 
@@ -261,16 +277,6 @@ double CenterZ;
 double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
-
-// How many nodes and muscle the simulation contains.
-int NumberOfNodes;
-int NumberOfMuscles;
-int NumberOfNodesInBachmannsBundle;
-
-// General information about muscles and nodes.
-double TotalLengthOfAllMuscles;
-double AverageLengthOfMuscles;
-double AverageMassOfMuscles;
 	
 // Prototyping functions start *****************************************************
 // Functions in the SVT.h file.

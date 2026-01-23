@@ -483,7 +483,7 @@ double croppedRandomNumber(double stddev, double left, double right)
 void setRemainingNodeAndMuscleAttributes()
 {	
 	double stddev, left, right;
-	int id, id2, test;
+	int id, id2;
 	
 	// 1:
 	double dx, dy, dz, d;
@@ -507,18 +507,18 @@ void setRemainingNodeAndMuscleAttributes()
 
 	// 3:
 	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
-	double ConnectedMuscleMass;
+	double connectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		ConnectedMuscleMass = 0.0;
+		connectedMuscleMass = 0.0;
 		for(int j = 0; j < MUSCLES_PER_NODE; j++)
 		{
 			if(Node[i].muscle[j] != -1)
 			{
-				ConnectedMuscleMass += Muscle[Node[i].muscle[j]].mass;
+				connectedMuscleMass += Muscle[Node[i].muscle[j]].mass;
 			}
 		}
-		Node[i].mass = ConnectedMuscleMass/2.0;
+		Node[i].mass = connectedMuscleMass/2.0;
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
@@ -577,38 +577,6 @@ void setRemainingNodeAndMuscleAttributes()
 	}
 	
 	// 5:
-	
-	/*
-	printf("\n A.\n");
-	// Checking to see if BB is sequentially connect tree of muscles. ???
-	for(int i = -1; i < NumberOfNodesInBachmannsBundle -1; i++)
-	{	
-		if(i == -1) id = PulsePointNode;
-		else id = BachmannsBundle[i];
-		id2 = BachmannsBundle[i+1];
-		
-		test = 0;
-		for(int k = 0; k < MUSCLES_PER_NODE; k++)
-		{
-		        if(Node[id].muscle[k] != -1)
-		        {
-		              if(Muscle[Node[id].muscle[k]].nodeA == id2 || Muscle[Node[id].muscle[k]].nodeB == id2)
-		              {
-		                    test = 1;
-		                    break;
-		              }
-		        }
-		}
-		if(test == 0)
-		{
-		      printf("\n\n Bachmann’s Bundle is not a sequentially connected tree.");
-		      printf("\n Nodes %d and %d are listed as sequentially in the chain but are not connected", id, id2);
-		      printf("\n The simulation has been terminated.\n\n");
-		      exit(0);
-		}
-	}
-    printf("\n B.\n");
-    */
 	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
 	{	
 		if(i == -1)
@@ -742,7 +710,6 @@ void setRemainingParameters()
 
 	//restore view and runtime if loading from previous run
 	if (NodesMusclesFileOrPreviousRunsFile == 0) RunTime = 0.0;
-
 
 	DrawTimer = 0; 
 	Simulation.isPaused = true;
