@@ -50,7 +50,7 @@ It should be a float.
 
 The fraction of a muscle's natural length after it contracts. 
 A cardiac muscle should lose 10% of its length during contraction, so this value should be 0.9 [A5].
-A skelital muscle should lose 30% of its length during contraction.
+A skeletal muscle should lose 30% of its length during contraction.
 0.9 is kind of too small to see and you need to us a dt of less than 0.001 or it blows up. Need to look into this. ???
 We added a standard deviation in case the user would like to introduce some randomness into the simulation. 
 Keep this number small. We suggest a value in the range of [0.0, 0.2]. 

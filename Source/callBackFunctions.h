@@ -274,8 +274,8 @@ void movieOn()
 {
 	// Lock the capture resolution at the time capture starts so window resizes
 	// do not affect the video dimensions.
-	CaptureWidth = XWindowSize;
-	CaptureHeight = YWindowSize;
+	//CaptureWidth = XWindowSize;
+	//CaptureHeight = YWindowSize;
 
 	string ts = getTimeStamp();
 	ts.append(".mp4");
@@ -408,34 +408,12 @@ void saveSettings()
 	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
 	cudaErrorCheck(__FILE__, __LINE__);
 	
-	
 	// Moving into the file that contains previuos run files.
 	chdir("./PreviousRunsFile");
-	   	
-	// Creating an output file name to store run settings infomation in. It is unique down to the second to keep the user from 
-	// overwriting files (You just cannot save more than one file a second).
-	time_t t = time(0); 
-	struct tm * now = localtime( & t );
-	int month = now->tm_mon + 1, day = now->tm_mday, curTimeHour = now->tm_hour, curTimeMin = now->tm_min, curTimeSec = now->tm_sec;
-	stringstream smonth, sday, stimeHour, stimeMin, stimeSec;
-
-	smonth << month;
-	sday << day;
-	stimeHour << curTimeHour;
-	stimeMin << curTimeMin;
-	stimeSec << curTimeSec;
-	string monthday;
 	
-	// We are using <=9 below to keep the minutes and seconds in a two-digit format. 
-	// For example, 2 seconds would be displayed as 02 seconds.
-	if(curTimeMin <= 9)
-	{
-		if(curTimeSec <= 9) monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-0" + stimeMin.str() + "-0" + stimeSec.str();
-		else monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-0" + stimeMin.str() + "-" + stimeSec.str();
-	}
-	else monthday = smonth.str() + "-" + sday.str() + "_" + stimeHour.str() + "-" + stimeMin.str() + "-" + stimeSec.str();
-
-	string timeStamp = "Run_" + monthday;
+	// Creating an output directory name to store run settings infomation in. It is unique down to the second to keep the user from 
+	// overwriting files (You just cannot save more than one file a second).
+	string timeStamp = "Run_" + getTimeStamp();
 	const char *directoryName = timeStamp.c_str();
 	
 	// Creating the diretory to hold the run settings.
@@ -453,20 +431,41 @@ void saveSettings()
 	
 	// Copying all the nodes and muscle (with their properties) into this folder in the file named run.
 	FILE *settingFile;
+	
   	settingFile = fopen("run", "wb");
-  	fwrite(&PulsePointNode, sizeof(int), 1, settingFile);
-  	fwrite(&UpNode, sizeof(int), 1, settingFile);
-  	fwrite(&FrontNode, sizeof(int), 1, settingFile);
-  	fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
-  	fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
-  	fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, settingFile);
-	fwrite(&MassOfLeftAtrium, sizeof(double), 1, settingFile);
-  	int linksPerNode = MUSCLES_PER_NODE;
-  	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
-  	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
-  	fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
-	fwrite(&Simulation, sizeof(Simulation), 1, settingFile);
-    fwrite(&RunTime, sizeof(double), 1, settingFile);
+  	
+              fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
+              fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
+        	
+              int linksPerNode = MUSCLES_PER_NODE;
+              fwrite(&linksPerNode, sizeof(int), 1, settingFile);
+        	
+              fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
+              fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
+        	
+              fwrite(&NumberOfNodesInBachmannsBundle, sizeof(int), 1, settingFile);
+              fwrite(BachmannsBundle, sizeof(int), NumberOfNodesInBachmannsBundle, settingFile);
+        	
+              fwrite(&Simulation, sizeof(Simulation), 1, settingFile);
+        	
+              fwrite(&PulsePointNode, sizeof(int), 1, settingFile);
+              fwrite(&UpNode, sizeof(int), 1, settingFile);
+              fwrite(&FrontNode, sizeof(int), 1, settingFile);
+        	
+              fwrite(&ViewName, sizeof(char), 256, settingFile);
+        	
+              fwrite(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, settingFile);
+              fwrite(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, settingFile);
+              
+              fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, settingFile);
+	      fwrite(&MassOfLeftAtrium, sizeof(double), 1, settingFile);
+              fwrite(&MyocyteForcePerMassFraction, sizeof(double), 1, settingFile);
+        	
+              fwrite(&CenterOfSimulation, sizeof(float4), 1, settingFile);
+              fwrite(&AngleOfSimulation, sizeof(float4), 1, settingFile);
+              
+              fwrite(&RunTime, sizeof(double), 1, settingFile);
+        
 	fclose(settingFile);
 	
 	//Copying the simulationSetup file into this directory so you will know how it was initally setup.
@@ -498,7 +497,6 @@ void saveSettings()
 	fclose(fileIn);
 	fclose(fileOut);
 	free(buffer);
-
 
 	//INTERMEDIATE sim setup file
 	fileIn = fopen("../../IntermediateSimulationSetup", "rb");
@@ -1168,8 +1166,6 @@ void keyHeld(GLFWwindow* window)
 		}
 		AngleOfSimulation.y -= dAngle;
 	}
-	
-
 	
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) 
 	{

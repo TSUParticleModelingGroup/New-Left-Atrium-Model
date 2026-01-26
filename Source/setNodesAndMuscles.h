@@ -285,12 +285,16 @@ void setBachmannBundleFromBlenderFile()
 	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
 	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
 	
-	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
-	cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	cudaErrorCheck(__FILE__, __LINE__);
+	// Allocating memory for the Bachmann's Bundle nodes.
+	BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
 	
-	cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
-	cudaErrorCheck(__FILE__, __LINE__);
+	// If we want to use BB on the GPU use the following and define BachmannsBundleGPU in header.h.
+	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
+	//cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	//cudaErrorCheck(__FILE__, __LINE__);
+	
+	//cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
+	//cudaErrorCheck(__FILE__, __LINE__);
 	
 	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
 	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
@@ -487,7 +491,7 @@ void setRemainingNodeAndMuscleAttributes()
 	
 	// 1:
 	double dx, dy, dz, d;
-	TotalLengthOfAllMuscles = 0.0;
+	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
 		dx = Node[Muscle[i].nodeA].position.x - Node[Muscle[i].nodeB].position.x;
@@ -495,14 +499,13 @@ void setRemainingNodeAndMuscleAttributes()
 		dz = Node[Muscle[i].nodeA].position.z - Node[Muscle[i].nodeB].position.z;
 		d = sqrt(dx*dx + dy*dy + dz*dz);
 		Muscle[i].naturalLength = d;
-		TotalLengthOfAllMuscles += d;
+		totalLengthOfAllMuscles += d;
 	}
-	AverageLengthOfMuscles = TotalLengthOfAllMuscles/NumberOfMuscles;
 		
 	// 2:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/TotalLengthOfAllMuscles);
+		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
 	// 3:
@@ -582,13 +585,17 @@ void setRemainingNodeAndMuscleAttributes()
 		if(i == -1)
 		{
 			id = PulsePointNode;
+			Node[id].color.x = BachmannColor.x;
+			Node[id].color.y = BachmannColor.y;
+			Node[id].color.z = BachmannColor.z;
+			Node[id].isDrawNode = true;
 		}
 		else
 		{
 			id = BachmannsBundle[i];
-			Node[id].color.x = 0.1;
-			Node[id].color.y = 0.2;
-			Node[id].color.z = 1.0;
+			Node[id].color.x = BachmannColor.x;
+			Node[id].color.y = BachmannColor.y;
+			Node[id].color.z = BachmannColor.z;
 			Node[id].isDrawNode = true;
 		}
 		
@@ -603,9 +610,9 @@ void setRemainingNodeAndMuscleAttributes()
 					{
 						if(Node[BachmannsBundle[j]].muscle[l] == id2)
 						{
-							Muscle[id2].color.x = 0.6;
-							Muscle[id2].color.y = 0.3;
-							Muscle[id2].color.z = 0.1;
+							Muscle[id2].color.x = BachmannColor.x;
+							Muscle[id2].color.y = BachmannColor.y;
+							Muscle[id2].color.z = BachmannColor.z;
 							Muscle[id2].conductionDuration /= BachmannsBundleMultiplier;
 						}
 					}
@@ -638,46 +645,63 @@ void getNodesandMusclesFromPreviousRun()
 		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
-	
-	fread(&PulsePointNode, sizeof(int), 1, inFile);
-	fread(&UpNode, sizeof(int), 1, inFile);
-	fread(&FrontNode, sizeof(int), 1, inFile);
-	fread(&NumberOfNodes, sizeof(int), 1, inFile);
-	fread(&NumberOfMuscles, sizeof(int), 1, inFile);
-	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
-	fread(&MassOfLeftAtrium, sizeof(double), 1, inFile);
-	
-	int linksPerNode;
-	fread(&linksPerNode, sizeof(int), 1, inFile);
-	if(linksPerNode != MUSCLES_PER_NODE)
-	{
-		printf("\n\n The number Of muscle per node do not match.");
-		printf("\n You will have to set the #define MUSCLES_PER_NODE");
-		printf("\n to %d in header.h then recompile the code.", linksPerNode);
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	
-	//Node = (nodeAttributesStructure*)malloc(NumberOfNodes*sizeof(nodeAttributesStructure));
-	cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
-	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
-  	fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
 
-	fread(&Simulation, sizeof(Simulation), 1, inFile);
-
-	fread(&RunTime, sizeof(double), 1, inFile);
+	//settingFile = fopen("run", "wb");
+  	
+        fread(&NumberOfNodes, sizeof(int), 1, inFile);
+        // Creating memory space for the nodes on the CPU and GPU
+        cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+        cudaErrorCheck(__FILE__, __LINE__);
+        cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
+        cudaErrorCheck(__FILE__, __LINE__);
+        fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
+  	
+        int linksPerNode = MUSCLES_PER_NODE;
+        fread(&linksPerNode, sizeof(int), 1, inFile);
+        if(linksPerNode != MUSCLES_PER_NODE)
+        {
+              printf("\n\n The number Of muscle per node do not match.");
+              printf("\n You will have to set the #define MUSCLES_PER_NODE");
+              printf("\n to %d in header.h then recompile the code.", linksPerNode);
+              printf("\n The simulation has been terminated.\n\n");
+              exit(0);
+        }
+  	
+        fread(&NumberOfMuscles, sizeof(int), 1, inFile);
+        // Creating memory space for the muscles on the CPU and GPU
+        cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+        cudaErrorCheck(__FILE__, __LINE__);
+        cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
+        cudaErrorCheck(__FILE__, __LINE__);
+        fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
+  	
+        fread(&NumberOfNodesInBachmannsBundle, sizeof(int), 1, inFile);
+        // Allocating memory for the Bachmann's Bundle nodes.
+        BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
+        fread(BachmannsBundle, sizeof(int), NumberOfNodesInBachmannsBundle, inFile);
+  	
+  	// To keep the contraction state what was readin from the BasicSimulationSetup file not what the state was
+  	// when the simulation was saved we save it in a temp, overwrite it then restore it.
+        fread(&Simulation, sizeof(Simulation), 1, inFile);
+  	
+        fread(&PulsePointNode, sizeof(int), 1, inFile);
+        fread(&UpNode, sizeof(int), 1, inFile);
+        fread(&FrontNode, sizeof(int), 1, inFile);
+  	
+        fread(&ViewName, sizeof(char), 256, inFile);
+  	
+        fread(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, inFile);
+        fread(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, inFile);
+        
+        fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
+        fread(&MassOfLeftAtrium, sizeof(double), 1, inFile);
+        fread(&MyocyteForcePerMassFraction, sizeof(double), 1, inFile);
+  	
+        fread(&CenterOfSimulation, sizeof(float4), 1, inFile);
+        fread(&AngleOfSimulation, sizeof(float4), 1, inFile);
+        
+        fread(&RunTime, sizeof(double), 1, inFile);
+        
 	fclose(inFile);
 	
 	printf("\n Nodes and Muscles have been read in from %s.\n", fileName);	
@@ -689,57 +713,54 @@ void getNodesandMusclesFromPreviousRun()
 */
 void setRemainingParameters()
 {	
-	RefractoryPeriodAdjustmentMultiplier = 1.0;
-	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-	
-	// Adjusting blood pressure from millimeters of Mercury to our units.
-	// We simulate blood pressure as a central push-back force.
-	// 1 millimeter of mercury is 133.322387415 Pascals or kg/(meters*seconds*seconds).
-	// Converting this into our units of grams, milliseconds, and millimeters gives 0.000133322387415.
-	// Therefore, 1 millimeter of mercury is equivalent to 0.000133322387415 in our units of g/(mm*ms*ms).
-	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
-	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
-	
-	CenterOfSimulation.x = 0.0;
-	CenterOfSimulation.y = 0.0;
-	CenterOfSimulation.z = 0.0;
-	
-	AngleOfSimulation.x = 0.0;
-	AngleOfSimulation.y = 1.0;
-	AngleOfSimulation.z = 0.0;
+	// If this is a new run these values are set hre. If it is a previous run these values will aready be read in.
+	if (NodesMusclesFileOrPreviousRunsFile == 0) 
+	{
+	      RunTime = 0.0;
+	      
+	      RefractoryPeriodAdjustmentMultiplier = 1.0;
+	      MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+	      
+	      CenterOfSimulation.x = 0.0;
+	      CenterOfSimulation.y = 0.0;
+	      CenterOfSimulation.z = 0.0;
+	      CenterOfSimulation.w = 0.0;
+	      
+	      AngleOfSimulation.x = 0.0;
+	      AngleOfSimulation.y = 1.0;
+	      AngleOfSimulation.z = 0.0;
+	      AngleOfSimulation.w = 0.0;
 
-	//restore view and runtime if loading from previous run
-	if (NodesMusclesFileOrPreviousRunsFile == 0) RunTime = 0.0;
-
-	DrawTimer = 0; 
-	Simulation.isPaused = true;
-	
-	Simulation.DrawNodesFlag = 0;
-	Simulation.DrawFrontHalfFlag = 0;
-	
-	Simulation.isRecording = false;
-	Simulation.isInAblateMode = false;
-	Simulation.isInEctopicBeatMode = false;
-	Simulation.isInAdjustMuscleAreaMode = false;
-	Simulation.isInAdjustMuscleLineMode = false;
-	Simulation.isInFindNodeMode = false;
-	Simulation.isInEctopicEventMode = false;
-	Simulation.isInMouseFunctionMode = false;
-	Simulation.nodesFound = false;
-	Simulation.frontNodeIndex = -1;
-	Simulation.topNodeIndex = -1;
+              Simulation.isPaused = true;
+              Simulation.isInAblateMode = false;
+              Simulation.isInEctopicBeatMode = false;
+              Simulation.isInEctopicEventMode = false;
+              Simulation.isInAdjustMuscleAreaMode = false;
+              Simulation.isInAdjustMuscleLineMode = false;
+              Simulation.isInFindNodeMode = false;
+              Simulation.isInMouseFunctionMode = false;
+              Simulation.isRecording = false;
+              //Simulation.ContractionisOn = false; //This is set in the BasicSimulationSetup file.
+              Simulation.ViewFlag = 1;
+              Simulation.DrawNodesFlag = 0;
+              Simulation.DrawFrontHalfFlag = 0;
+              Simulation.nodesFound = false;
+              Simulation.frontNodeIndex = -1;
+              Simulation.topNodeIndex = -1;
+              // Simulation.guiCollapsed = false; //This is set in viewDrawAndTerminalFuctions.h/createGUI().
+              
+              setView(6); //Set deafult view only if not loading from previous run.
+	}
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;
+	MouseX = 0.0;
+	MouseY = 0.0;
 	ScrollSpeedToggle = 1;
 	ScrollSpeed = 1.0;
 	MouseWheelPos = 0;
-	
 	RecenterCount = 0;
 	RecenterRate = 10;
-	if (NodesMusclesFileOrPreviousRunsFile == 0)setView(6);//set deafult view only if not loading from previous run
-	
-	Simulation.ViewFlag = 1;
 }
 
 /*
@@ -826,7 +847,7 @@ void hardCodedIndividualMuscleAttributes()
     wrong in the setup file. Here we kill the muscle and move on but we might need to kill the simulation.
  3: If the muscle can contract past half its natural length or cannot contract down to its natural length
     something is wrong in the setup simulation file. Here we kill the muscle and move on.
- 4: If the muscle should be greater than half the refractory period and less than the refractory period. 
+ 4: The muscle's absolute refoctory period should be greater than half the refractory period and less than the refractory period. 
     If not something is wrong. Here we kill the muscle and move on.
  5: If the muscle's contraction strength is negative something is wrong. Here we kill the muscle and move on.
     

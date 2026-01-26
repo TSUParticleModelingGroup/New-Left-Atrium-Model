@@ -43,14 +43,14 @@ void nBody(double dt)
 
 	if(Simulation.ContractionisOn)
 	{
-		getForces<<<GridNodes, BlockNodes, 0, computeStream>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
+		getForces<<<GridNodes, BlockNodes, 0, ComputeStream>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
 		cudaErrorCheck(__FILE__, __LINE__);
 	}
 
-	updateNodes<<<GridNodes, BlockNodes, 0, computeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
+	updateNodes<<<GridNodes, BlockNodes, 0, ComputeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
 	cudaErrorCheck(__FILE__, __LINE__);
 
-	updateMuscles<<<GridMuscles, BlockMuscles, 0, computeStream>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, ContractingColor, RestingColor, RelativeColor);
+	updateMuscles<<<GridMuscles, BlockMuscles, 0, ComputeStream>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, DepolarizingColor, RepolarizingColor, RelativeRepolarizingColor);
 	cudaErrorCheck(__FILE__, __LINE__);
 	
 	if(Simulation.ContractionisOn)
@@ -58,7 +58,7 @@ void nBody(double dt)
 		RecenterCount++;
 		if(RecenterCount == RecenterRate) 
 		{
-			recenter<<<1, BLOCKCENTEROFMASS, 0, computeStream>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
+			recenter<<<1, BLOCKCENTEROFMASS, 0, ComputeStream>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
 			cudaErrorCheck(__FILE__, __LINE__);
 			RecenterCount = 0;
 		}
@@ -131,6 +131,9 @@ void readSimulationParameters()
 		data >> NodeRadiusAdjustment;
 		
 		getline(data,name,'=');
+		data >> NodePointSize;
+		
+		getline(data,name,'=');
 		data >> Simulation.ContractionisOn;
 		
 		getline(data,name,'=');
@@ -196,31 +199,31 @@ void readSimulationParameters()
 		data >> ReadyColor.z;
 		
 		getline(data,name,'=');
-		data >> ContractingColor.x;
+		data >> DepolarizingColor.x;
 		
 		getline(data,name,'=');
-		data >> ContractingColor.y;
+		data >> DepolarizingColor.y;
 		
 		getline(data,name,'=');
-		data >> ContractingColor.z;
+		data >> DepolarizingColor.z;
 		
 		getline(data,name,'=');
-		data >> RestingColor.x;
+		data >> RepolarizingColor.x;
 		
 		getline(data,name,'=');
-		data >> RestingColor.y;
+		data >> RepolarizingColor.y;
 		
 		getline(data,name,'=');
-		data >> RestingColor.z;
+		data >> RepolarizingColor.z;
 		
 		getline(data,name,'=');
-		data >> RelativeColor.x;
+		data >> RelativeRepolarizingColor.x;
 		
 		getline(data,name,'=');
-		data >> RelativeColor.y;
+		data >> RelativeRepolarizingColor.y;
 		
 		getline(data,name,'=');
-		data >> RelativeColor.z;
+		data >> RelativeRepolarizingColor.z;
 		
 		getline(data,name,'=');
 		data >> DeadColor.x;
@@ -230,6 +233,15 @@ void readSimulationParameters()
 		
 		getline(data,name,'=');
 		data >> DeadColor.z;
+		
+		getline(data,name,'=');
+		data >> BachmannColor.x;
+		
+		getline(data,name,'=');
+		data >> BachmannColor.y;
+		
+		getline(data,name,'=');
+		data >> BachmannColor.z;
 	}
 	else
 	{
@@ -292,6 +304,14 @@ void readSimulationParameters()
 	}
 	data.close();
 	
+	// Adjusting blood pressure from millimeters of Mercury to our units.
+	// We simulate blood pressure as a central push-back force.
+	// 1 millimeter of mercury is 133.322387415 Pascals or kg/(meters*seconds*seconds).
+	// Converting this into our units of grams, milliseconds, and millimeters gives 0.000133322387415.
+	// Therefore, 1 millimeter of mercury is equivalent to 0.000133322387415 in our units of g/(mm*ms*ms).
+	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
+	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
+	
 	printf("\n Simulation Parameters have been read in from simulationSetup files.\n");
 }
 
@@ -307,8 +327,8 @@ void setup()
 	srand((unsigned) time(&t));
 
 	//create CUDA streams for async memory copy and compute
-	cudaStreamCreate(&computeStream);
-	cudaStreamCreate(&memoryStream);
+	cudaStreamCreate(&ComputeStream);
+	cudaStreamCreate(&MemoryStream);
 		
 	// Getting user inputs.
 	readSimulationParameters();
@@ -415,7 +435,7 @@ int main(int argc, char** argv)
 	glfwSetInputMode(Window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwSetInputMode(Window, GLFW_REPEAT, GLFW_TRUE);  // Explicitly enable key repeat
 
-	//create a sphere VBO for drawing the nodes (since allnodes are the same we create pne VBO and use it for all nodes)
+	//create a sphere VBO for drawing the nodes (since allnodes are the same we create one VBO and use it for all nodes)
 	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
 
 	//these set up our callbacks, most have been changed to adapters until GUI is implemented
@@ -428,7 +448,6 @@ int main(int argc, char** argv)
 	// Set the clear color to the background color
 	glClearColor(BackGround.x, BackGround.y, BackGround.z, 1.0f);
 
-	
 	//Lighting and material properties
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -563,7 +582,7 @@ int main(int argc, char** argv)
 		}
 		
 		// Always draw every frame - this is critical for GLFW performance
-		cudaStreamSynchronize(computeStream); 
+		cudaStreamSynchronize(ComputeStream); 
 		copyNodesMusclesFromGPU();
 		drawPicture();
 		
@@ -577,8 +596,8 @@ int main(int argc, char** argv)
 	}
 		
 	//Destroy streams
-	cudaStreamDestroy(computeStream);
-  	cudaStreamDestroy(memoryStream);
+	cudaStreamDestroy(ComputeStream);
+  	cudaStreamDestroy(MemoryStream);
 
 	//delete the state file if it exists
 	remove("simulation_state.bin");

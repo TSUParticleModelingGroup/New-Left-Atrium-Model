@@ -141,7 +141,7 @@ __global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStruc
 		dy = node[i].position.y - centerOfSimulation.y;
 		dz = node[i].position.z - centerOfSimulation.z;
 		d  = sqrt(dx*dx + dy*dy + dz*dz);
-		if(0.00001 < d) // To keep from getting numeric overflow just jump over this if d is too small.
+		if(ASUMEZERO < d) // To keep from getting numeric overflow just jump over this if d is too small.
 		{
 			float r2 = muscleCompressionStopFraction*radiusOfLeftAtrium;
 			m = (systolicPressureLA - diastolicPressureLA)/(r2 - radiusOfLeftAtrium);
@@ -183,7 +183,7 @@ __global__ void getForces(muscleAttributesStructure *muscle, nodeAttributesStruc
 				dy = node[opposingNodeNumber].position.y - node[i].position.y;
 				dz = node[opposingNodeNumber].position.z - node[i].position.z;
 				d  = sqrt(dx*dx + dy*dy + dz*dz);
-				if(d < 0.0001) // Grabbing numeric overflow before it happens.
+				if(d < ASUMEZERO) // Grabbing numeric overflow before it happens.
 				{
 					printf("\n TSU Error: In generalMuscleForces d is very small between opposingNodeNumbers %d and %d the separation is %f. Take a look at this!\n", i, opposingNodeNumber, d);
 				}
@@ -304,7 +304,7 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
  If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
  and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? Second this -Mason)
 */
-__global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 contractingColor, float4 restingColor, float4 relativeColor)
+__global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 depolarizingColor, float4 repolarizingColor, float4 relativeRepolarizingColor)
 {
 	int i = threadIdx.x + blockDim.x*blockIdx.x;
 	int nodeId;
@@ -347,26 +347,26 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 			if(muscle[i].timer < 0.5*refractoryPeriod)
 			{
 				// Set color and update time.
-				muscle[i].color.x = contractingColor.x; 
-				muscle[i].color.y = contractingColor.y;
-				muscle[i].color.z = contractingColor.z;
+				muscle[i].color.x = depolarizingColor.x; 
+				muscle[i].color.y = depolarizingColor.y;
+				muscle[i].color.z = depolarizingColor.z;
 				muscle[i].timer += dt;
 			}
 			else if(muscle[i].timer < absoluteRefractoryPeriod)
 			{ 
 				// Set color and update time.
-				muscle[i].color.x = restingColor.x;
-				muscle[i].color.y = restingColor.y;
-				muscle[i].color.z = restingColor.z;
+				muscle[i].color.x = repolarizingColor.x;
+				muscle[i].color.y = repolarizingColor.y;
+				muscle[i].color.z = repolarizingColor.z;
 				muscle[i].timer += dt;
 			}
 			else if(muscle[i].timer < refractoryPeriod)
 			{ 
 				// If you want to do something different in the relative refractory period do it here.
 				// Set color and update time.
-				muscle[i].color.x = relativeColor.x;
-				muscle[i].color.y = relativeColor.y;
-				muscle[i].color.z = relativeColor.z;
+				muscle[i].color.x = relativeRepolarizingColor.x;
+				muscle[i].color.y = relativeRepolarizingColor.y;
+				muscle[i].color.z = relativeRepolarizingColor.z;
 				muscle[i].timer += dt;
 			}
 			else
@@ -484,14 +484,14 @@ void cudaErrorCheck(const char *file, int line)
 */
 void copyNodesMusclesToGPU()
 {
-    cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
     
-    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
     
     // Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(memoryStream);
+    cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -499,14 +499,14 @@ void copyNodesMusclesToGPU()
  */
 void copyNodesMusclesFromGPU()
 {
-    cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
     
-    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
     
     // Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(memoryStream);
+    cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -514,11 +514,11 @@ void copyNodesMusclesFromGPU()
  */
 void copyNodesFromGPU()
 {
-    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, memoryStream);
+    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
 
 	// Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(memoryStream);
+    cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -526,11 +526,11 @@ void copyNodesFromGPU()
  */
 void copyNodesToGPU()
 {
-    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, memoryStream);
+    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
     cudaErrorCheck(__FILE__, __LINE__);
 
 	// Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(memoryStream);
+    cudaStreamSynchronize(MemoryStream);
 }
 
 

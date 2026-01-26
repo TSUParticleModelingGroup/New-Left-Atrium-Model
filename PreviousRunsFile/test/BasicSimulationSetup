@@ -15,7 +15,7 @@ Circle200
 CSphere340
 CSphere5680
 IdealLeftAtrium2.3K
-?IdealLeftAtrium2.3K_BB
+??IdealLeftAtrium2.3K_BB
 IdealLeftAtrium13.0KNotTriangle
 LeftAtriumRealBase
 LeftAtriumRealPartialAppendage
@@ -36,10 +36,10 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium2.3K
+--InputFileName = 3DIdealLAtrium2.3K_BB
 
 Name of previous run files that were stored in GitHub.
-???, ???
+test
 
 If you have made a previous run file and would like to run it, just place its name below. Also, this file will not 
 be copied to GitHub, so you can build as many as you want without cluttering up the GitHub folder. If you have a good 
@@ -47,7 +47,7 @@ run that you want to share on GitHub for everyone to use, you will need to manua
  
 Place the name of the previous run file you would like to execute here.
 
---PreviousRunFileName = reentry1
+--PreviousRunFileName = test
 
 Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
 
@@ -60,7 +60,12 @@ It should be a float.
 Set the size of the node spheres here. It is scaled by the RadiusOfLeftAtrium. A good value is 0.01.
 It should be a float.
 
---NodeRadiusAdjustment = 0.01;
+--NodeRadiusAdjustment = 0.005;
+
+Set the size of a point drawn if shperes are turned off but you still want to see the node. A good value is 5.0 to 10.0.
+It should be a float.
+
+--NodePointSize = 10.0;
 
 If you want to turn off muscle contractions and just observe the electrical process, you can do so by setting this flag to 0.
 1 (true) turns the muscle contraction on.
@@ -68,7 +73,7 @@ If you want to turn off muscle contractions and just observe the electrical proc
 This can also be toggled on and off in the running simulation.
 It should be a 0 or a 1.
 
---ContractionIsOn = 1;
+--ContractionIsOn = 0;
 
 Background color (Background of the scene): red, green, blue.
 All three should be floats.

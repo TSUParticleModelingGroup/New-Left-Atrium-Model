@@ -46,6 +46,7 @@ using namespace std;
 
 // Math defines.
 #define PI 3.141592654
+#define ASUMEZERO 0.0000001f
 
 // Structure defines. 
 // This sets how many muscle can be connected to a node.
@@ -92,6 +93,7 @@ struct muscleAttributesStructure
 };
 
 // This structure will contain all the switches that control the actions in the code.
+// 
 struct simulationSwitchesStructure
 {
 	bool isPaused;
@@ -114,66 +116,92 @@ struct simulationSwitchesStructure
 	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
 	// orient yourself.
 	int DrawFrontHalfFlag;
-
-
 	// For Find Nodes functionality
 	//These need to be globals or they get wiped when the GUI redraws
 	bool nodesFound;       // Whether nodes have been identified
         int frontNodeIndex;    // Index of the frontmost node (max Z)
         int topNodeIndex;      // Index of the topmost node (max Y)
-
 	//GUI related
 	bool guiCollapsed; // for hotkey to collapse GUI
 };
 
 // Globals Start ******************************************
+// Make sure any globals that are not initialived in one of the simulation setup files
+// (AdvancedSimulationSetup, IntermediateSimulationSetup, BasicSimulationSetup) are save
+// when a simulation is saved in the previuos runs file.
+
+// How many nodes and muscle the simulation contains.
+// They are initially read in form files in the NodesMuscles folder.
+// *** Should be stored if a runfile is saved.
+int NumberOfNodes;
+int NumberOfMuscles;
+int NumberOfNodesInBachmannsBundle;
 
 // This will hold all the nodes.
+// It is initially read in form files in the NodesMuscles folder.
+// *** The Nodes (CPU values) should be stored if a runfile is saved.
 nodeAttributesStructure *Node;
 nodeAttributesStructure *NodeGPU;
 
 // This will hold all the muscles.
+// It is initially read in form files in the NodesMuscles folder.
+// *** The Muscles (CPU values) should be stored if a runfile is saved.
 muscleAttributesStructure *Muscle;
 muscleAttributesStructure *MuscleGPU;
 
 // This will hold all the nodes that extend from the beat node to create Bachmann's Bundle.
+// It is initially read in form files in the NodesMuscles folder.
+// *** This should be stored if a runfile is saved.
 int *BachmannsBundle;
-int *BachmannsBundleGPU;
 
 // This will hold all the simulation switches.
+// It is initialized in setNodesAndMuscles.h/setRemainingParameters().
+// *** Should be stored if a runfile is saved.
 simulationSwitchesStructure Simulation;
 
-// For videos and screenshots variables
+// Used for videos and screenshots variables
+// CaptureWidth and CaptureHeight they are intially in Main().
+// MovieFile and Buffer are opened/allocated in callBackFunctions.h/movieOn()
+// and closed/freed in callBackFunctions.h/movieOff().
 FILE* MovieFile; // File that holds all the movie frames.
 unsigned char* Buffer; // Buffer where you create each frame for a movie or the one frame for a screen shot.
 int CaptureWidth, CaptureHeight; // Locked capture size (set when capture starts)
 
-// To setup your CUDA device
+// Used to setup your CUDA device
+// These are initialized in SVT.cu/setupCudaEnvironment().
 dim3 BlockNodes, GridNodes;
 dim3 BlockMuscles, GridMuscles;
 
-//CUDA streams for overlapping memory and kernel operations
-cudaStream_t computeStream, memoryStream;
+// CUDA streams for overlapping memory and kernel operations.
+// They are created in SVT.cu/setup(), and destroyed in SVT.cu/Main().
+cudaStream_t ComputeStream, MemoryStream;
 
-//To use VBOs for sphere rendering
-GLuint sphereVBO, sphereIBO; // Vertex Buffer Object and Index Buffer Object for sphere rendering, Vertex is the sphere's vertices and Index is the order in which to draw them
-GLuint numSphereVertices, numSphereIndices; // Number of vertices and indices in the sphere geometry
-
+// To use VBOs for sphere rendering
+GLuint SphereVBO, SphereIBO; // Vertex Buffer Object and Index Buffer Object for sphere rendering, Vertex is the sphere's vertices and Index is the order in which to draw them.
+GLuint NumSphereVertices, NumSphereIndices; // Number of vertices and indices in the sphere geometry
 
 // This is the node that the beat initiates from.
+// It is initially read in form files in the NodesMuscles folder.
+// *** Should be stored if a runfile is saved.
 int PulsePointNode;
 
 // Nodes that orient the simulation. 
 // If the node's center of mass is at <0,0,0> and the UpNode is up and FrontNode is in the front looking at you, you should be in the standard view.
+// They are initially read in form files in the NodesMuscles folder.
+// *** Should be stored if a runfile is saved.
 int UpNode;
 int FrontNode;
 
-// Holds the name of view you are in for displaying in the terminal print.
+// Holds the name of the medical view you are in for displaying in the terminal print.
+// It is initialized here.
+// *** Should be stored if a runfile is saved.
 char ViewName[256] = "no view set"; 
 
 // These two variable get user input to adjust muscle refractory periods and conduction velocities when you are
 // in AdjustMuscleAreaMode or AdjustMuscleLineMode modes. Once they are read in, they are multiplied by the muscles 
-// refractory period and conduction velocity respectively.  
+// refractory period and conduction velocity respectively. 
+// They are initialized in setNodesAndMuscles.h/setRemainingParameters().
+// *** Should be stored if a runfile is saved.
 float RefractoryPeriodAdjustmentMultiplier;
 float MuscleConductionVelocityAdjustmentMultiplier;
 
@@ -183,7 +211,8 @@ char NodesMusclesFileName[256];
 char PreviousRunFileName[256];
 float LineWidth;
 float NodeRadiusAdjustment;
-// Simulation.ContractionisOn -- is read in here but this global is defined above.
+float NodePointSize;
+// Simulation.ContractionisOn -- Value initialized here but this global is defined above.
 float4 BackGround;
 
 // These are all the globals that are read in from the IntermediateSimulationSetup file and are explained in detail there.
@@ -199,10 +228,11 @@ double PrintRate;
 int DrawRate;
 double Dt;
 float4 ReadyColor;
-float4 ContractingColor;
-float4 RestingColor;
-float4 RelativeColor;
+float4 DepolarizingColor;
+float4 RepolarizingColor;
+float4 RelativeRepolarizingColor;
 float4 DeadColor;
+float4 BachmannColor;
 
 // These are all the globals that are read in from the AdvancedSimulationSetup file and are explained in detail there.
 double WallThicknessFraction;		
@@ -220,49 +250,49 @@ double MuscleRelaxedStrengthFraction;
 double MuscleCompressionStopFraction;
 double MuscleCompressionStopFractionSTD;
 
-// How many nodes and muscle the simulation contains.
-int NumberOfNodes;
-int NumberOfMuscles;
-int NumberOfNodesInBachmannsBundle;
-
-// General information about muscles and nodes.
-double TotalLengthOfAllMuscles;
-double AverageLengthOfMuscles;
-double AverageMassOfMuscles;
-
-// This will hold the radius of the left atrium which we will use to scale the size of everything in
-// the simulation.
+// This will hold the radius of the left atrium which we will use to scale the size of everything in the simulation.
+// It is calculated in setNodesAndMuscles.h/setNodesFromBlenderFile().
+// *** Should be stored if a runfile is saved.
 double RadiusOfLeftAtrium;
 
 // This will hold the mass of the left atrium.
+// It is calculated in setNodesAndMuscles.h/setNodesFromBlenderFile().
+// *** Should be stored if a runfile is saved.
 double MassOfLeftAtrium;
 
 // This will hold the force per mass fraction of a myocte which we will use to scale a a muscles strength
 // by its mass.
+// It is calculated in setNodesAndMuscles.h/setRemainingNodeAndMuscleAttributes().
+// *** Should be stored if a runfile is saved.
 double MyocyteForcePerMassFraction;
-double MyocyteContractionForce;
 
-// Variable that holds mouse locations to be translated into positions in the simulation.
+// Variable that holds mouse locations to be translated into positions in the simulation and mouse other functionality.
+// They are initialized in setNodesAndMuscles.h/setRemainingParameters().
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
 float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
 int ScrollSpeedToggle; // Sets slow or fast scroll speed.
 double ScrollSpeed; // How fast your scroll moves.
 
-// Times to keep track of what to do in the nBody() function and your progress through the simulation.
-// Some of the variables that accompany this variable are read in from the simulationSetup files.
-// The timers tell what the time is from the last action and the rates tell how often to perform the action.
-double PrintTimer;
-int DrawTimer; 
+// These set how often you recenter the nodes. The nodes will drift off because of roundoff and other things
+// and need to be recentered periodically.
+// They are initialized in setNodesAndMuscles.h/setRemainingParameters().
 int RecenterCount;
 int RecenterRate;
+
+// Keeps track of the time into the simulation.
+// It is initialized in setNodesAndMuscles.h/setRemainingParameters().
+// *** Should be stored if a runfile is saved.
 double RunTime;
 
 // These keep track of where the view is as you zoom in and out and rotate.
+// These are initialized in setNodesAndMuscles.h/setRemainingParameters().
+// *** Should be stored if a runfile is saved.
 float4 CenterOfSimulation;
 float4 AngleOfSimulation;
 
-// Window globals
+// Window globals 
+// They are all initialized in main().
 GLFWwindow* Window; // Window pointer
 int XWindowSize;
 int YWindowSize; 

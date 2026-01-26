@@ -1,7 +1,7 @@
 /*
  This file contains:
  1: All the functions that determine how to orient and view the simulation.
- 2: all the functions that draw the actual simulation. 
+ 2: All the functions that draw the actual simulation. 
  3: The functions that print to the linux terminal all the setting of the simulation.
  In short this file holds the functions that present information to the user.
  
@@ -22,11 +22,6 @@
  void setView(int);
  void drawPicture();
  void createGUI();
-*/
-
-/*
- This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.
- This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
 */
 
 // Add this to a utility file, only used for the mouse selection since it's just 1 object
@@ -62,6 +57,7 @@ void renderSphere(float radius, int slices, int stacks)
         glEnd();
     }
 }
+
 /*
 	Function to render a sphere using a VBO
 	This function creates a VBO for a sphere and binds it for rendering.
@@ -69,7 +65,6 @@ void renderSphere(float radius, int slices, int stacks)
 	This code creates vertices and indices to make a sphere using triangle strips.
 	It uses OpenGL functions to create and bind the VBO and IBO (what makes up the sphere).
 	The sphere stays in the GPU memory and is faster to render and puts less load on the CPU.
-
 */
 void createSphereVBO(float radius, int slices, int stacks)
 {
@@ -142,20 +137,20 @@ void createSphereVBO(float radius, int slices, int stacks)
 	}
 
 	// Store the total counts for rendering
-	numSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
-	numSphereIndices = indices.size();
+	NumSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
+	NumSphereIndices = indices.size();
 
 	// Create and setup OpenGL buffers on the GPU
 	// - Generate unique buffer IDs
 	// - Bind buffers to set them as active
 	// - Copy data from CPU arrays to GPU memory
-	glGenBuffers(1, &sphereVBO);  // Generate Vertex Buffer Object for storing positions and normals
-	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glGenBuffers(1, &SphereVBO);  // Generate Vertex Buffer Object for storing positions and normals
+	glBindBuffer(GL_ARRAY_BUFFER, SphereVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	// Same process for the index buffer
-	glGenBuffers(1, &sphereIBO);  // Generate Index Buffer Object for storing triangle connections
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+	glGenBuffers(1, &SphereIBO);  // Generate Index Buffer Object for storing triangle connections
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, SphereIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
 	// Unbind buffers to prevent accidental modification
@@ -166,8 +161,8 @@ void createSphereVBO(float radius, int slices, int stacks)
 void renderSphereVBO() 
 {
     // Bind the VBO and IBO
-    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+    glBindBuffer(GL_ARRAY_BUFFER, SphereVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, SphereIBO);
     
     // Enable vertex and normal arrays
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -178,7 +173,7 @@ void renderSphereVBO()
     glNormalPointer(GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     
     // Draw the sphere
-    glDrawElements(GL_TRIANGLES, numSphereIndices, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, NumSphereIndices, GL_UNSIGNED_INT, 0);
     
     // Disable arrays
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -189,6 +184,10 @@ void renderSphereVBO()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+/*
+ This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.
+ This is not how your eye sees things but can be useful when determining if objects are lined up along the z-axis. 
+*/
 void orthogonalView()
 {
 	glMatrixMode(GL_PROJECTION);
@@ -251,7 +250,7 @@ float4 findCenterOfMass()
 /*
  This function centers the LA and resets the center of view to (0, 0, 0).
  It is called periodically in a running simulation to center the LA, because the LA is not symmetrical 
- and will wander off over time. It is also use center the LA before all the views are set.
+ and will wander off over time. It is also use to center the LA before all the views are set.
 */
 void centerObject()
 {
@@ -464,15 +463,16 @@ void drawPicture()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
-	if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0); // Green is running
-	else glColor3d(1.0,0.0,0.0); // Red is paused			
+	//if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0); // Green is running
+	//else glColor3d(1.0,0.0,0.0); // Red is paused	
+	glColor3d(Node[PulsePointNode].color.x, Node[PulsePointNode].color.y, Node[PulsePointNode].color.z);
 	glPushMatrix();
 	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
 	renderSphereVBO();
 	glPopMatrix();
 	
 	// Drawing center node
-	//This draws a center node at the center of the simulation for debugging purposes
+	//This draws a node at the center of the simulation for debugging purposes
 	if(true) // false turns it off, true turns it on.
 	{
 		glColor3d(0.0,0.0,1.0);
@@ -487,9 +487,9 @@ void drawPicture()
 	{
 		for(int i = 0; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
-			if(Simulation.DrawFrontHalfFlag == 1 || Simulation.DrawNodesFlag == 1) //if we're only drawing the front half of the nodes
+			if(Simulation.DrawFrontHalfFlag == 1 || Simulation.DrawNodesFlag == 1) //If we're only drawing the nodes on the front half.
 			{
-				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //draw only the nodes in the front.
+				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //Draw only the nodes in the front half.
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
@@ -514,13 +514,13 @@ void drawPicture()
 	// the .isDrawNode flag.
 	else 
 	{
-		glPointSize(2.0);
+		glPointSize(NodePointSize);
 		glBegin(GL_POINTS);
 	 	for(int i = 0; i < NumberOfNodes; i++)
 		{
 			if(Simulation.DrawFrontHalfFlag == 1)
 			{
-				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front.
+				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front half.
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					if(Node[i].isDrawNode)
@@ -558,7 +558,7 @@ void drawPicture()
 				
 				if(Simulation.DrawFrontHalfFlag == 1)
 				{
-					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front.
+					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front half.
 					{
 						glColor3d(Muscle[muscleNumber].color.x, Muscle[muscleNumber].color.y, Muscle[muscleNumber].color.z);
 						glBegin(GL_LINES);
@@ -582,7 +582,6 @@ void drawPicture()
 	// Puts a ball at the location of the mouse if a mouse function is on.
 	if(Simulation.isInMouseFunctionMode)
 	{
-		//glColor3d(1.0, 1.0, 1.0);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -604,9 +603,7 @@ void drawPicture()
 		glReadPixels(0, 0, CaptureWidth, CaptureHeight, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		fwrite(Buffer, 4 * CaptureWidth * CaptureHeight, 1, MovieFile);
 	}
-
 }
-
 
 /* 
 	 This function creates the GUI using ImGui.
@@ -625,7 +622,6 @@ void drawPicture()
 	 ImGui::isItemHovered to check if an item is hovered over (used for tooltips)
 
 	 For buttons and checkboxes, its best to use ternary operators when posssible
-
 */
 void createGUI()
 {
