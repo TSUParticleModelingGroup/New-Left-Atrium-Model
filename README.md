@@ -109,8 +109,10 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
 
     sudo apt update
 	sudo apt install libxinerama-dev libxcursor-dev libxi-dev
-
-
+	
+  Install gedit:
+    sudo apt update
+	sudo apt gedit
 
 
 <a id="building-and-running"></a>    
