@@ -113,7 +113,7 @@ Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc
   Install gedit:
   
     sudo apt update
-	sudo apt gedit
+	sudo apt install gedit
 
 
 <a id="building-and-running"></a>    
