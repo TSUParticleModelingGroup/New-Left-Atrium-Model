@@ -12,6 +12,7 @@
  void setMusclesFromBlenderFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
+ void findRadiusAndMassOfLeftAtrium();
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
@@ -30,9 +31,7 @@
  5. Reads and assigns the node positions from the node file.
  6. Finds the center of the LA
  7. Places the center of the LA at (0,0,0).
- 8. Finds the average radius of the LA.
- 9. Finds the mass of the LA.
-10. Sets the pulse node.
+ 8. Sets the pulse node.
 */
 void setNodesFromBlenderFile()
 {	
@@ -149,26 +148,7 @@ void setNodesFromBlenderFile()
 		Node[i].position.z -= centerOfObject.z;
 	}
 	
-	// 8. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
-	double averageRadius = 0.0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
-	}
-	averageRadius /= (double)NumberOfNodes;
-	RadiusOfLeftAtrium = averageRadius;
-	printf("\n RadiusOfLeftAtrium = %f millimeters", RadiusOfLeftAtrium);
-	
-	// 9. Setting the mass of the LA. 
-	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
-	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
-	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
-	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
-	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
-	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
-	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
-	
-	// 10. This is the pulse node that generates the beat.
+	// 8. This is the pulse node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
@@ -463,22 +443,52 @@ double croppedRandomNumber(double stddev, double left, double right)
 }
 
 /*
- In this function, we set the remaining value of the nodes and muscle which were not already set in the setNodesFromBlenderFile(), 
- the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
- 1: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ This function 
+ 1. Finds the average radius of the LA which we will use as the radius of the LA.
+ 2. Finds the mass of the LA.
+*/
+void findRadiusAndMassOfLeftAtrium()
+{
+        // 1. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
+	double averageRadius = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
+	}
+	averageRadius /= (double)NumberOfNodes;
+	RadiusOfLeftAtrium = averageRadius;
+	printf("\n RadiusOfLeftAtrium = %f millimeters", RadiusOfLeftAtrium);
+	
+	// 2. Setting the mass of the LA. 
+	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
+	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
+	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
+	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
+	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
+	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
+	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
+	
+	printf("\n LA radius and mass has been set.\n");
+}
+
+/*
+ In this function, we set the remaining value of the nodes and muscle which were not already 
+ set in the setNodesFromBlenderFile(), the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
+ 1: Checking to make sure LA radius and mass are set before we use them to set Node and Muscle attributes.
+ 2: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 2: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+ 3: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
     fraction by the mass of the left atrium to get the mass on an individual muscle. 
- 3: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+ 4: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses (like we used the ratio of muscle length in 2) to 
     find the area of each node. Area is used to get a force on the node from the LA pressure.
- 4: Here we set the muscle contraction strength attributes. 
+ 5: Here we set the muscle contraction strength attributes. 
     The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
     In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
     If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
     The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
     can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
- 5: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
+ 6: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
     
  Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
@@ -486,10 +496,15 @@ double croppedRandomNumber(double stddev, double left, double right)
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
-	double stddev, left, right;
-	int id, id2;
-	
 	// 1:
+	if(RadiusOfLeftAtrium < 0.0 || MassOfLeftAtrium < 0.0) // They are intiallized at -1.0.
+	{
+	      printf("\n You are trying to Node and Muscle attributes before LA radius and mass are set.");
+	      printf("\n The simulation has been terminated.\n\n");
+	      exit(0);
+	}
+	
+	// 2:
 	double dx, dy, dz, d;
 	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -502,13 +517,13 @@ void setRemainingNodeAndMuscleAttributes()
 		totalLengthOfAllMuscles += d;
 	}
 		
-	// 2:
+	// 3:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
-	// 3:
+	// 4:
 	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
 	double connectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -525,7 +540,8 @@ void setRemainingNodeAndMuscleAttributes()
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
-	// 4:
+	// 5:
+	double stddev, left, right;
  	double radius = MyocyteDiameter/2.0;
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
  	double myocyteMass = myocyteVolume*MyocardialTissueDensity;
@@ -579,7 +595,8 @@ void setRemainingNodeAndMuscleAttributes()
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
-	// 5:
+	// 6:
+	int id, id2;
 	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
 	{	
 		if(i == -1)
@@ -588,7 +605,7 @@ void setRemainingNodeAndMuscleAttributes()
 			Node[id].color.x = BachmannColor.x;
 			Node[id].color.y = BachmannColor.y;
 			Node[id].color.z = BachmannColor.z;
-			Node[id].isDrawNode = true;
+			Node[id].isDrawNode = false; // The pulse node is always drawn as a sphere so no need to also draw it as a point.
 		}
 		else
 		{
