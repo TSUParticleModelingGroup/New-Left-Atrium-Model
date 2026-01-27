@@ -415,9 +415,9 @@ int main(int argc, char** argv)
 
 	// Create a windowed mode window and its OpenGL context
 	Window = glfwCreateWindow(XWindowSize, YWindowSize, "SVT", NULL, NULL); // args: width, height, title, monitor, share
-	if (!glfwInit()) 
+	if (!Window) 
 	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
+		fprintf(stderr, "Failed to create window\n");
 		return -1;
 	}
 
