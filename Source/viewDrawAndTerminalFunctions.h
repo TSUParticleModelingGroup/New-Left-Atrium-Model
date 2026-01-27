@@ -473,7 +473,7 @@ void drawPicture()
 	
 	// Drawing center node
 	//This draws a node at the center of the simulation for debugging purposes
-	if(true) // false turns it off, true turns it on.
+	if(false) // false turns it off, true turns it on.
 	{
 		glColor3d(0.0,0.0,1.0);
 		glPushMatrix();

@@ -183,14 +183,14 @@ GLuint NumSphereVertices, NumSphereIndices; // Number of vertices and indices in
 // This is the node that the beat initiates from.
 // It is initially read in form files in the NodesMuscles folder.
 // *** Should be stored if a runfile is saved.
-int PulsePointNode;
+int PulsePointNode = -1; // Set to -1 to flag it if it is used before it is set.
 
 // Nodes that orient the simulation. 
 // If the node's center of mass is at <0,0,0> and the UpNode is up and FrontNode is in the front looking at you, you should be in the standard view.
 // They are initially read in form files in the NodesMuscles folder.
 // *** Should be stored if a runfile is saved.
-int UpNode;
-int FrontNode;
+int UpNode = -1; // Set to -1 to flag it if it is used before it is set.
+int FrontNode = -1; // Set to -1 to flag it if it is used before it is set.
 
 // Holds the name of the medical view you are in for displaying in the terminal print.
 // It is initialized here.
@@ -202,8 +202,8 @@ char ViewName[256] = "no view set";
 // refractory period and conduction velocity respectively. 
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
 // *** Should be stored if a runfile is saved.
-float RefractoryPeriodAdjustmentMultiplier;
-float MuscleConductionVelocityAdjustmentMultiplier;
+float RefractoryPeriodAdjustmentMultiplier = -1.0; // Set to -1.0 to flag it if it is used before it is set.
+float MuscleConductionVelocityAdjustmentMultiplier = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // These are all the globals that are read in from the BasicSimulationSetup file and are explained in detail there.
 int NodesMusclesFileOrPreviousRunsFile;
@@ -251,20 +251,20 @@ double MuscleCompressionStopFraction;
 double MuscleCompressionStopFractionSTD;
 
 // This will hold the radius of the left atrium which we will use to scale the size of everything in the simulation.
-// It is calculated in setNodesAndMuscles.h/setNodesFromBlenderFile().
+// It is calculated in setNodesAndMuscles.h/findRadiusAndMassOfLeftAtrium().
 // *** Should be stored if a runfile is saved.
-double RadiusOfLeftAtrium;
+double RadiusOfLeftAtrium = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // This will hold the mass of the left atrium.
-// It is calculated in setNodesAndMuscles.h/setNodesFromBlenderFile().
+// It is calculated in setNodesAndMuscles.h/findRadiusAndMassOfLeftAtrium().
 // *** Should be stored if a runfile is saved.
-double MassOfLeftAtrium;
+double MassOfLeftAtrium = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // This will hold the force per mass fraction of a myocte which we will use to scale a a muscles strength
 // by its mass.
 // It is calculated in setNodesAndMuscles.h/setRemainingNodeAndMuscleAttributes().
 // *** Should be stored if a runfile is saved.
-double MyocyteForcePerMassFraction;
+double MyocyteForcePerMassFraction = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // Variable that holds mouse locations to be translated into positions in the simulation and mouse other functionality.
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
@@ -277,13 +277,13 @@ double ScrollSpeed; // How fast your scroll moves.
 // These set how often you recenter the nodes. The nodes will drift off because of roundoff and other things
 // and need to be recentered periodically.
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
-int RecenterCount;
-int RecenterRate;
+int RecenterCount = -1; // Set to -1 to flag it if it is used before it is set.
+int RecenterRate = -1; // Set to -1 to flag it if it is used before it is set.
 
 // Keeps track of the time into the simulation.
 // It is initialized in setNodesAndMuscles.h/setRemainingParameters().
 // *** Should be stored if a runfile is saved.
-double RunTime;
+double RunTime = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // These keep track of where the view is as you zoom in and out and rotate.
 // These are initialized in setNodesAndMuscles.h/setRemainingParameters().
@@ -312,7 +312,9 @@ double UpZ;
 // Functions in the SVT.h file.
 void nBody(double);
 void allocateMemory();
-void readSimulationParameters();
+void readBasicSimulationSetupParameters();
+void readIntermediateSimulationSetupParameters();
+void readAdvancedSimulationSetupParameters();
 void setup();
 int main(int, char**);
 
@@ -335,6 +337,7 @@ void setBachmannBundleFromBlenderFile();
 void setMusclesFromBlenderFile();
 void linkNodesToMuscles();
 double croppedRandomNumber(double, double, double);
+void findRadiusAndMassOfLeftAtrium();
 void setRemainingNodeAndMuscleAttributes();
 void getNodesandMusclesFromPreviuosRun();
 void setRemainingParameters();

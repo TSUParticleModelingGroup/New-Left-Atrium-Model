@@ -10,6 +10,9 @@
  void nBody(double);
  void setupCudaEnvironment();
  void readSimulationParameters();
+ void readBasicSimulationSetupParameters();
+ void readIntermediateSimulationSetupParameters();
+ void readAdvancedSimulationSetupParameters();
  void setup();
  int main(int, char**);
 */
@@ -107,7 +110,7 @@ void setupCudaEnvironment()
 /*
  This function reads in all the user defined parameters in the three SimulationSetup files.
 */
-void readSimulationParameters()
+void readBasicSimulationSetupParameters()
 {
 	ifstream data;
 	string name;
@@ -151,7 +154,15 @@ void readSimulationParameters()
 		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
+	
 	data.close();
+	printf("\n Basic Simulation Parameters have been read in from BasicSimulationSetup file.\n");
+}
+
+void readIntermediateSimulationSetupParameters()
+{
+	ifstream data;
+	string name;
 	
 	data.open("./IntermediateSimulationSetup");
 	if(data.is_open() == 1)
@@ -249,7 +260,15 @@ void readSimulationParameters()
 		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
+	
 	data.close();
+	printf("\n Intermediate Simulation Parameters have been read in from IntermediateSimulationSetup file.\n");
+}
+
+void readAdvancedSimulationSetupParameters()
+{
+	ifstream data;
+	string name;
 	
 	data.open("./AdvancedSimulationSetup");
 	if(data.is_open() == 1)
@@ -312,7 +331,7 @@ void readSimulationParameters()
 	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
 	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
 	
-	printf("\n Simulation Parameters have been read in from simulationSetup files.\n");
+	printf("\n Advanced Simulation Parameters have been read in from AdvancedSimulationSetup file.\n");
 }
 
 /*
@@ -331,7 +350,9 @@ void setup()
 	cudaStreamCreate(&MemoryStream);
 		
 	// Getting user inputs.
-	readSimulationParameters();
+	readBasicSimulationSetupParameters();
+	readIntermediateSimulationSetupParameters();
+	readAdvancedSimulationSetupParameters();
 	
 	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
@@ -341,6 +362,7 @@ void setup()
 		setBachmannBundleFromBlenderFile();
 		setMusclesFromBlenderFile();
 		linkNodesToMuscles();
+		findRadiusAndMassOfLeftAtrium();
 		setRemainingNodeAndMuscleAttributes();
 		hardCodedAblations();
 		hardCodedPeriodicEctopicEvents();
