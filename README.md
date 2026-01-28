@@ -216,6 +216,7 @@ Refer to the changelog for details.
   - Melanie Little
   - Derek Hopkins
   - Brandon Wyatt
+  - Madhur Wyatt
   - Charles Puelz (CoPI)
   - Bryant Wyatt (PI)
 
