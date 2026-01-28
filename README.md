@@ -54,7 +54,7 @@ The LA was chosen for modeling due to its role in complex arrhythmias [17-20]. O
 
 Video Micro-Reenter: 		https://youtu.be/llIGgZSiTnE  
 Video Macro-Reenter: 		https://youtu.be/3m_7lrOe2cw  
-Video Rotor: 				https://youtu.be/c-ID603Vm9Q  
+Video Spiral Wave-Reentry: 				https://youtu.be/c-ID603Vm9Q  
 Video AFib-Like: 			https://youtu.be/GG6Q7uG8OhQ   
 
 <a id="installation"></a>
