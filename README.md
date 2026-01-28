@@ -52,17 +52,10 @@ The LA was chosen for modeling due to its role in complex arrhythmias [17-20]. O
 <a id="videos"></a>
 ## Videos
 
-Video 1-D Base: 		https://youtu.be/1LfkSLHCras  
-Video 2-D Base: 		https://youtu.be/uiBhadBPQuk  
-Video 2-D Reentry: 		https://youtu.be/9or9AD9T4vQ  
-Video 3-D Base: 		https://youtu.be/mIRA23GSZKs  
-Video 3-D Micro-reentry: 	https://youtu.be/9KuRWVdBDR0  
-Video 3-D Higher Node Count: 	https://youtu.be/SaPKsIT6DkM  
-Video LA Base: 			https://youtu.be/9QzJhKyeVGc  
-Video LA PV Flutter: 		https://youtu.be/E1mbqbofrDo  
-Video LA Micro-reentry: 	https://youtu.be/qZ7-WLGbyLQ  
-Video LA Roof Flutter: 		https://youtu.be/LkOr0d9mS2c  
-Video Realistic LA: 		https://youtu.be/G_ZcHeLRRjc  
+Video Micro-Reenter: 		https://youtu.be/llIGgZSiTnE  
+Video Macro-Reenter: 		https://youtu.be/3m_7lrOe2cw  
+Video Rotor: 				https://youtu.be/c-ID603Vm9Q  
+Video AFib-Like: 			https://youtu.be/GG6Q7uG8OhQ   
 
 <a id="installation"></a>
 ## Installation
