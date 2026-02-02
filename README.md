@@ -108,6 +108,11 @@ Video AFib-Like: 			https://youtu.be/GG6Q7uG8OhQ
     sudo apt update
 	sudo apt install gedit
 
+  Install ffmpeg:
+  
+    sudo apt update
+	sudo apt install ffmpeg
+
 
 <a id="building-and-running"></a>    
 ## Building and Running
