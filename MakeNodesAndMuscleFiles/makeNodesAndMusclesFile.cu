@@ -37,9 +37,12 @@ void setup()
 	Depth = Radius/10.0;
 	
 	// How many cuts in each direction;
-	WidthLayers = 200;
-	HeightLayers = 200;
-	DepthLayers = 1;
+	Width = 20.0;
+	Height = 20.0;
+	Depth = 1.0;
+	WidthLayers = 20;
+	HeightLayers = 20;
+	DepthLayers = 0;
 }
 
 /*
@@ -96,7 +99,7 @@ void setNodesAndMusclesUniformSheet()
 	if(1 < nodesZ) dz = Depth/(float)(nodesZ - 1);
 	else dz = 0.0;
 	
-	double stddev = 0.5;
+	double stddev = 0.0;
 	
 	Node = (float3*)malloc(NumberOfNodes*sizeof(float3));
 	Muscle = (int2*)malloc(NumberOfMuscles*sizeof(int2));
@@ -327,7 +330,7 @@ void saveNodesAndMuscle()
 
 int main(int argc, char** argv)
 {
-	int type = 2;
+	int type = 1;
 	setup();
 	if(type == 1) setNodesAndMusclesUniformSheet();
 	if(type == 2) setNodesAndMusclesCrossSheet();

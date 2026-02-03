@@ -8,7 +8,7 @@ A standard value is around 289 milliseconds [I1].
 We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
 We suggest a value in the range of [0.0, 100.0]. Both should be floats.
 
---BaseMusclerRefractoryPeriod = 289.0;
+--BaseMusclerRefractoryPeriod = 300.0;
 --MuscleRefractoryPeriodSTD = 0.0;
 
 This is the portion of the refractory period that is absolute. 
