@@ -6,6 +6,8 @@
  In short this file holds the functions that present information to the user.
 
  floa4 findCenterOfMass();
+ void renderSphere();
+ void sphereVBO();
  void rotateXAxis(float);
  void rotateYAxis(float);
  void rotateZAxis(float);
@@ -82,131 +84,6 @@ void renderSphere(float radius, int slices, int stacks)
     }
 }
 
-/*
-	Function to render a sphere using a VBO
-	This function creates a VBO for a sphere and binds it for rendering.
-
-	This code creates vertices and indices to make a sphere using triangle strips.
-	It uses OpenGL functions to create and bind the VBO and IBO (what makes up the sphere).
-	The sphere stays in the GPU memory and is faster to render and puts less load on the CPU.
-*/
-void createSphereVBO(float radius, int slices, int stacks)
-{
-    std::vector<float> vertices;
-    std::vector<unsigned int> indices;
-    
-    // Generate sphere vertices with positions and normals
-	for (int i = 0; i <= stacks; ++i) 
-	{
-		// Calculate the vertical angle phi (0 to PI, from top to bottom of sphere)
-		float phi = PI * i / stacks;
-		float sinPhi = sin(phi);
-		float cosPhi = cos(phi);
-		
-		for (int j = 0; j <= slices; ++j) 
-		{
-			// Calculate the horizontal angle theta (0 to 2PI, around the sphere)
-			float theta = 2.0f * PI * j / slices;
-			float sinTheta = sin(theta);
-			float cosTheta = cos(theta);
-			
-			// Convert spherical to Cartesian coordinates
-			// x = r * sin(phi) * cos(theta)
-			// y = r * cos(phi)          // y is up/down axis (poles of the sphere)
-			// z = r * sin(phi) * sin(theta)
-			float x = radius * sinPhi * cosTheta;
-			float y = radius * cosPhi;
-			float z = radius * sinPhi * sinTheta;
-			
-			// For a sphere, normal vectors point outward from center
-			// and are simply the normalized position vector (position/radius)
-			float nx = sinPhi * cosTheta;  // Same as x/radius
-			float ny = cosPhi;             // Same as y/radius
-			float nz = sinPhi * sinTheta;  // Same as z/radius
-			
-			// Store the vertex data in interleaved format:
-			// Each vertex has 6 floats - 3 for position (x,y,z) and 3 for normal (nx,ny,nz)
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
-			vertices.push_back(nx);
-			vertices.push_back(ny);
-			vertices.push_back(nz);
-		}
-	}
-    
-	// Generate indices for triangle strips
-	// This section creates triangles by connecting the grid of vertices:
-	// - First defines index values that point to positions in the vertex array 
-	// - Creates two triangles for each grid cell (rectangular patch)
-	// - Each triangle is defined by three indices in counter-clockwise order
-	for (int i = 0; i < stacks; ++i) 
-	{
-		for (int j = 0; j < slices; ++j) 
-		{
-			// Calculate indices for the four corners of the current grid cell
-			int first = i * (slices + 1) + j;          // Current vertex
-			int second = first + slices + 1;           // Vertex below current
-			
-			// First triangle: Connect current vertex, vertex below, and vertex to the right
-			indices.push_back(first);
-			indices.push_back(second);
-			indices.push_back(first + 1);
-			
-			// Second triangle: Connect vertex below, vertex below+right, and vertex to the right
-			indices.push_back(second);
-			indices.push_back(second + 1);
-			indices.push_back(first + 1);
-		}
-	}
-
-	// Store the total counts for rendering
-	NumSphereVertices = vertices.size() / 6; // 6 floats per vertex (pos + normal)
-	NumSphereIndices = indices.size();
-
-	// Create and setup OpenGL buffers on the GPU
-	// - Generate unique buffer IDs
-	// - Bind buffers to set them as active
-	// - Copy data from CPU arrays to GPU memory
-	glGenBuffers(1, &SphereVBO);  // Generate Vertex Buffer Object for storing positions and normals
-	glBindBuffer(GL_ARRAY_BUFFER, SphereVBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	// Same process for the index buffer
-	glGenBuffers(1, &SphereIBO);  // Generate Index Buffer Object for storing triangle connections
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, SphereIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-	// Unbind buffers to prevent accidental modification
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void renderSphereVBO() 
-{
-    // Bind the VBO and IBO
-    glBindBuffer(GL_ARRAY_BUFFER, SphereVBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, SphereIBO);
-    
-    // Enable vertex and normal arrays
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    
-    // Set up pointers to vertex and normal data
-    glVertexPointer(3, GL_FLOAT, 6 * sizeof(float), 0);
-    glNormalPointer(GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    
-    // Draw the sphere
-    glDrawElements(GL_TRIANGLES, NumSphereIndices, GL_UNSIGNED_INT, 0);
-    
-    // Disable arrays
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    
-    // Unbind buffers
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
 
 /*
  This function sets your view to orthogonal. In orthogonal view all object are kept in line in the z direction.

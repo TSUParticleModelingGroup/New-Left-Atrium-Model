@@ -297,6 +297,7 @@ GLFWwindow* Window; // Window pointer
 int XWindowSize;
 int YWindowSize; 
 double Near; // Front and back of clip planes
+double Near; // Front and back of clip planes
 double Far;
 double EyeX; // Where your eye is
 double EyeY;
