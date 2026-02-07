@@ -54,76 +54,34 @@ using namespace std;
 
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
-struct nodeAttributesStructure
+typedef struct 
 {
 	float4 position;
-	float4 velocity;
-	float4 force;
-	float mass;
-	float area;
-	bool isBeatNode;
-	float beatPeriod;
-	float beatTimer;
-	bool isFiring;
-	bool isAblated;
-	bool isDrawNode;
 	float4 color;
+	int type;
 	int muscle[MUSCLES_PER_NODE];
-};
+	float mass = 0.005266; // We took the average mass per node from the original program. Mass is only used to calculate COM for rotations in this program so any number should work here.
+} nodeAttributesStructure;
 
 // Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
-struct muscleAttributesStructure
+typedef struct 
 {
 	int nodeA;
 	int nodeB;    
-	int apNode;
-	bool isOn;
-	bool isEnabled;
-	float timer;
-	float mass;
-	float naturalLength;
-	float relaxedStrength;
-	float compressionStopFraction;
-	float conductionVelocity;
-	float conductionDuration;
-	float refractoryPeriod;
-	float absoluteRefractoryPeriodFraction;
-	float contractionStrength;
 	float4 color;
-};
+} muscleAttributesStructure; 
 
 // This structure will contain all the switches that control the actions in the code.
 // 
-struct simulationSwitchesStructure
+typedef struct 
 {
-	bool isPaused;
-	bool isInAblateMode;
-	bool isInEctopicBeatMode;
-	bool isInEctopicEventMode;
-	bool isInAdjustMuscleAreaMode;
-	bool isInAdjustMuscleLineMode;
-	bool isInFindNodeMode;
-	bool isInMouseFunctionMode;
-	bool isRecording;
-	// Turns the contractions on and off to speed up the simulation when only studying electrical activity.
-	bool ContractionisOn; 
-	// 0 Orthogonal, 1 Frustum
+	int mode;
 	int ViewFlag; 
-	// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
 	int DrawNodesFlag; 
-	// Tells the program to draw the front half of the simulation or the full simulation.
-	// We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
-	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
-	// orient yourself.
 	int DrawFrontHalfFlag;
-	// For Find Nodes functionality
-	//These need to be globals or they get wiped when the GUI redraws
-	bool nodesFound;       // Whether nodes have been identified
-        int frontNodeIndex;    // Index of the frontmost node (max Z)
-        int topNodeIndex;      // Index of the topmost node (max Y)
-	//GUI related
+	bool isInMouseFunctionMode; // This is true if the user is in any of the mouse function modes, like ablate mode, ectopic beat mode, adjust muscle area mode, or adjust muscle line mode.
 	bool guiCollapsed; // for hotkey to collapse GUI
-};
+} simulationSwitchesStructure;
 
 // Globals Start ******************************************
 // Make sure any globals that are not initialived in one of the simulation setup files
@@ -136,23 +94,22 @@ struct simulationSwitchesStructure
 int NumberOfNodes;
 int NumberOfMuscles;
 int NumberOfNodesInBachmannsBundle;
-
+int NumberOfNodesInLeftAtrialAppendage;
 // This will hold all the nodes.
 // It is initially read in form files in the NodesMuscles folder.
 // *** The Nodes (CPU values) should be stored if a runfile is saved.
 nodeAttributesStructure *Node;
-nodeAttributesStructure *NodeGPU;
 
 // This will hold all the muscles.
 // It is initially read in form files in the NodesMuscles folder.
 // *** The Muscles (CPU values) should be stored if a runfile is saved.
 muscleAttributesStructure *Muscle;
-muscleAttributesStructure *MuscleGPU;
 
 // This will hold all the nodes that extend from the beat node to create Bachmann's Bundle.
 // It is initially read in form files in the NodesMuscles folder.
 // *** This should be stored if a runfile is saved.
 int *BachmannsBundle;
+int *LeftAtrialAppendage;
 
 // This will hold all the simulation switches.
 // It is initialized in setNodesAndMuscles.h/setRemainingParameters().
@@ -297,7 +254,6 @@ GLFWwindow* Window; // Window pointer
 int XWindowSize;
 int YWindowSize; 
 double Near; // Front and back of clip planes
-double Near; // Front and back of clip planes
 double Far;
 double EyeX; // Where your eye is
 double EyeY;
@@ -319,17 +275,7 @@ void readAdvancedSimulationSetupParameters();
 void setup();
 int main(int, char**);
 
-// Functions in the CUDAFunctions.h file.
-__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
-__global__ void getForces(muscleAttributesStructure *, nodeAttributesStructure *, float, int, float4, float, float, float, float);
-__global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float, float, bool);
-__global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
-__global__ void recenter(nodeAttributesStructure *, int, float, float4);
-void cudaErrorCheck(const char *, int);
-void copyNodesMusclesToGPU();
-void copyNodesMusclesFromGPU();
-void copyNodesFromGPU();
-void copyNodesToGPU();
+
 
 // Functions in the setNodesAndMuscles.h file.
 void setNodesFromBlenderFile();

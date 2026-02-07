@@ -22,7 +22,6 @@
 #include "setNodesAndMuscles.h"
 #include "callBackFunctions.h"
 #include "viewDrawAndTerminalFunctions.h"
-#include "cudaFunctions.h"
 
 
 /*
@@ -87,10 +86,13 @@ void readBasicSimulationSetupParameters()
 		
 		getline(data,name,'=');
 		data >> NodePointSize;
-		
+
+		//TODO: Rework settings file to fix this
+		int temp;	
 		getline(data,name,'=');
-		data >> Simulation.ContractionisOn;
-		
+		//data >> Simulation.ContractionisOn;
+		data >> temp;
+
 		getline(data,name,'=');
 		data >> BackGround.x;
 		
@@ -130,15 +132,6 @@ void setup()
 		setBachmannBundleFromBlenderFile();
 		setMusclesFromBlenderFile();
 		linkNodesToMuscles();
-		findRadiusAndMassOfLeftAtrium();
-		setRemainingNodeAndMuscleAttributes();
-		hardCodedAblations();
-		hardCodedPeriodicEctopicEvents();
-		hardCodedIndividualMuscleAttributes();
-	}
-	else if(NodesMusclesFileOrPreviousRunsFile == 1)
-	{
-		getNodesandMusclesFromPreviousRun();
 	}
 	else
 	{
@@ -154,7 +147,7 @@ void setup()
 	setupCudaEnvironment();
 
 	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
-	copyNodesMusclesToGPU();
+	//copyNodesMusclesToGPU();
 	
 	printf("\n\n Have a good simulation.\n\n");
 }
@@ -220,9 +213,6 @@ int main(int argc, char** argv)
 
 	glfwSetInputMode(Window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwSetInputMode(Window, GLFW_REPEAT, GLFW_TRUE);  // Explicitly enable key repeat
-
-	//create a sphere VBO for drawing the nodes (since allnodes are the same we create one VBO and use it for all nodes)
-	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
 
 	//these set up our callbacks, most have been changed to adapters until GUI is implemented
 	glfwSetFramebufferSizeCallback(Window, reshape);  //sets the callback for the window resizing
@@ -296,6 +286,9 @@ int main(int argc, char** argv)
 		because X and Y windows size don't work for this
 
 	*/
+
+	createSphereVBO(NodeRadiusAdjustment * RadiusOfLeftAtrium, 20, 20); //the first arg was the radius used in the draw nodes flag
+
 	// Get current size
     int width, height;
     glfwGetFramebufferSize(Window, &width, &height);
@@ -349,7 +342,7 @@ int main(int argc, char** argv)
 		ImGui_ImplGlfw_NewFrame();
 
 		ImGui::NewFrame();
-		
+		/*	
 		// Update physics --multiple steps per frame for performance
 		if (!Simulation.isPaused) 
 		{
@@ -365,10 +358,9 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+		*/
 		
 		// Always draw every frame - this is critical for GLFW performance
-		cudaStreamSynchronize(ComputeStream); 
-		copyNodesMusclesFromGPU();
 		drawPicture();
 		
 		// Create and render GUI
@@ -390,8 +382,6 @@ int main(int argc, char** argv)
 	//free memory
 	cudaFreeHost(Node);
 	cudaFreeHost(Muscle);
-	cudaFree(NodeGPU);
-	cudaFree(MuscleGPU);
 
 	//shutdown ImGui
 	ImGui_ImplOpenGL3_Shutdown();

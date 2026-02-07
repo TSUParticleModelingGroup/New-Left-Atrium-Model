@@ -39,9 +39,6 @@ void reshape(GLFWwindow* window, int width, int height)
 	XWindowSize = width;
 	YWindowSize = height;
 
-	// if we are recording we do not want to change the viewport or projection
-	//otherwise the movie will be messed up
-	if (Simulation.isRecording) return;
 
 	// if not recording, set the viewport to match the new window size
 	glViewport(0, 0, width, height); // Set the viewport size to match the window size
@@ -70,48 +67,33 @@ void reshape(GLFWwindow* window, int width, int height)
 /*
  Turns off all the user interactions.
 */
-void mouseFunctionsOff()
+//TODO: THis is a template for setting mouse functions
+void setMouseMode(int mode)
 {
-	//Simulation.isPaused = true;
-	Simulation.isInAblateMode = false;
-	Simulation.isInEctopicBeatMode = false;
-	Simulation.isInEctopicEventMode = false;
-	Simulation.isInAdjustMuscleAreaMode = false;
-	Simulation.isInAdjustMuscleLineMode = false;
-	Simulation.isInFindNodeMode = false;
-	Simulation.isInMouseFunctionMode = false;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
-	drawPicture();
-}
+	Simulation.mode = mode;
+	if (mode == 0) // or -1 or whatever we decide for simulation off
+	{
+		Simulation.isInMouseFunctionMode = false;
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
+	} else {
 
-/*
- Puts the user in ablate mode.
-*/
-void mouseAblateMode()
-{
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAblateMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		Simulation.isInMouseFunctionMode = true;
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 	//orthogonalView();
 	drawPicture();
 }
 
+
+void mouseAblateMode() 
+{
+
+}
 /*
  Puts the user in ectopic beat mode.
 */
 void mouseEctopicBeatMode()
 {
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInEctopicBeatMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//orthogonalView();
-	drawPicture();
 }
 
 /*
@@ -119,14 +101,7 @@ void mouseEctopicBeatMode()
 */
 void mouseEctopicEventMode()
 {
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInEctopicEventMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//orthogonalView();
-	drawPicture();
+
 }
 
 /*
@@ -134,16 +109,6 @@ void mouseEctopicEventMode()
 */
 void mouseAdjustMusclesAreaMode()
 {
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAdjustMuscleAreaMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//orthogonalView();
-	drawPicture();
-	
-	//bool returnFlag = setMouseMuscleAttributes();
 }
 
 /*
@@ -151,17 +116,6 @@ void mouseAdjustMusclesAreaMode()
 */
 void mouseAdjustMusclesLineMode()
 {
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAdjustMuscleLineMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//orthogonalView();
-	drawPicture();
-	
-	//bool returnFlag = setMouseMuscleAttributes();
-	
 }
 
 /*
@@ -169,14 +123,6 @@ void mouseAdjustMusclesLineMode()
 */
 void mouseIdentifyNodeMode()
 {
-	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInFindNodeMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//orthogonalView();
-	drawPicture();
 }
 
 /*
@@ -196,25 +142,21 @@ void mouseIdentifyNodeMode()
 */
 void setEctopicBeat(int nodeId)
 {
-	Node[nodeId].isBeatNode = true;
-	
-	if(!Node[nodeId].isAblated)
+	// TODO: the isBeatNode is now a node type, the same as the bachman's bundle nodes. So we need to change this.
+	//Node[nodeId].isBeatNode = true;
+
+	// TODO: ablation is now a type 
+	/*if(!Node[nodeId].isAblated) 
 	{
 		Node[nodeId].isDrawNode = true;
 		Node[nodeId].color.x = 1.0;
 		Node[nodeId].color.y = 1.0;
 		Node[nodeId].color.z = 0.0;
-	}
+	}*/
 	drawPicture();
-	
-	// Set default values - these used to come from user input functions
-	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
-	Node[nodeId].beatTimer = 0; // Default to start immediately
-	
-	
-	// We only let you set 1 ectopic beat at a time.
-	Simulation.isInEctopicBeatMode = false;
+
 }
+
 
 /*
  This function is used to clear the print buffer.
@@ -267,130 +209,8 @@ string getTimeStamp()
 	return timeStamp;
 }
 
-/*
- This function turns the movie capture on.
-*/
-void movieOn()
-{
-	// Lock the capture resolution at the time capture starts so window resizes
-	// do not affect the video dimensions.
-	//CaptureWidth = XWindowSize;
-	//CaptureHeight = YWindowSize;
-
-	string ts = getTimeStamp();
-	ts.append(".mp4");
-
-	// Setting up the movie buffer.
-	/*const char* cmd = "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-		      "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output.mp4";*/
-
-	char baseCommand[512]; // Command to run ffmpeg with the correct parameters for capturing a movie
-	//use sprintf to create the command string for ffmpeg, used XWindowSize and YWindowSize to set the size of the image
-
-	//Low Quality, Fast Speed, Small Size
-	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-	// 	"-c:v libx264 -threads 0 -preset fast -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
-
-	//Medium Quality, Medium Speed, Medium Size
-	// sprintf(baseCommand, "ffmpeg -loglevel quiet -r 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-	// 			"-c:v libx264 -threads 0 -preset medium -y -pix_fmt yuv420p -crf 0 -vf vflip \"%s\"", XWindowSize, YWindowSize, ts.c_str());
 
 
-
-	// General: High quality, compatible, Medium Size
-	// H.264 (yuv420p) needs even width/height; encoders may fail on odd sizes.
-	// Pad by up to 1 pixel (minimal impact) so ffmpeg/libx264 accepts the frames.
-	int outW = CaptureWidth + (CaptureWidth % 2); // round up to even
-	int outH = CaptureHeight + (CaptureHeight % 2);
-	int padX = (outW - CaptureWidth) / 2;
-	int padY = (outH - CaptureHeight) / 2;
-	sprintf(baseCommand, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -r 60 -i - "
-		"-c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -crf 14 -preset slow -tune film -threads 0 -movflags +faststart -y -vf \"vflip,pad=%d:%d:%d:%d\" \"%s\"", 
-		CaptureWidth, CaptureHeight, outW, outH, padX, padY, ts.c_str());
-	//use the command string to create the output file name
-	MovieFile = popen(baseCommand, "w");
-
-	//Buffer = new int[XWindowSize*YWindowSize];
-	Buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
-
-	Simulation.isRecording = true;
-}
-
-/*
- This function turns the movie capture off.
-*/
-void movieOff()
-{
-	if(Simulation.isRecording) 
-	{
-		pclose(MovieFile);
-	}
-	free(Buffer);
-	Simulation.isRecording = false;
-}
-
-/*
- This function takes a screenshot of the simulation.
-*/
-void screenShot()
-{	
-	bool savedPauseState;
-	FILE* ScreenShotFile;
-	unsigned char* buffer; //unsigned char because we are using RGBA data, which is 4 bytes per pixel, 1 char = 1 byte
-
-	char cmd[512]; // Command to run ffmpeg with the correct parameters for capturing a screenshot
-
-	//commands for ffmpeg, use the locked capture size so screenshots match recorded frames
-	sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s %dx%d -i - "
-				"-c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4", 
-				CaptureWidth, CaptureHeight);
-
-	// Capture a single frame and write a lossless PNG directly to preserve colors.
-	// We generate a timestamped filename up-front and write one frame (-frames:v 1).
-	string ts = getTimeStamp();
-	sprintf(cmd, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -i - -frames:v 1 -vf vflip -c:v png \"%s.png\"", 
-				CaptureWidth, CaptureHeight, ts.c_str());
-
-	//SC 25 submission
-	//sprintf(cmd, "ffmpeg -loglevel quiet -framerate 60 -f rawvideo -pix_fmt rgba -s 3840x2160 -i - -c:v libx264rgb -threads 0 -preset fast -y -crf 0 -vf vflip output1.mp4");
-
-	//const char* cmd = "ffmpeg -r 60 -f rawvideo -pix_fmt rgba -s 1000x1000 -i - "
-	//              "-threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip output1.mp4";
-	
-	//open the pipe to ffmpeg and allocate the buffer for the screenshot with the size of 4*XWin* YWin to hold the RGBA data
-	ScreenShotFile = popen(cmd, "w");
-	buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
-	
-	if(!Simulation.isPaused) //if the simulation is running
-	{
-		Simulation.isPaused = true; //pause the simulation
-		savedPauseState = false; //save the pause state
-	}
-	else //if the simulation is already paused
-	{
-		savedPauseState = true; //save the pause state
-	}
-	
-	for(int i =0; i < 1; i++)
-	{
-		drawPicture();
-		glReadPixels(0, 0, CaptureWidth, CaptureHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		fwrite(buffer, 4 * CaptureWidth * CaptureHeight, 1, ScreenShotFile);
-	}
-	
-	pclose(ScreenShotFile);
-	free(buffer);
-
-	printf("\nScreenshot Captured: \n");
-	cout << "Saved as " << ts << ".png" << endl;
-
-	
-	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
-	//system("rm output1.mp4");
-
-	Simulation.isPaused = savedPauseState; //restore the pause state before we took the screenshot
-	//ffmpeg -i output1.mp4 output_%03d.jpeg
-}
 
 
 /*
@@ -402,11 +222,8 @@ void screenShot()
 */
 void saveSettings()
 {
+	/*
 	// Copying the latest node and muscle information down from the GPU.
-	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
-	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
-	cudaErrorCheck(__FILE__, __LINE__);
 	
 	// Moving into the file that contains previuos run files.
 	chdir("./PreviousRunsFile");
@@ -551,176 +368,9 @@ void saveSettings()
 	
 	// Moving back to the SVT directory.
 	chdir("../");
+	*/
 }
 
-void saveState()
-{
-    // Copy latest data from GPU
-    cudaMemcpy(Node, NodeGPU, NumberOfNodes * sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
-    cudaMemcpy(Muscle, MuscleGPU, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
-
-    // Open file for writing (binary mode)
-	// we're using a binary file (.bin) because it is faster and smaller than a text file, we can read and write the entire structs at once
-	//rather than writing each variable one at a time, translating to and from text, and dealing with formatting
-	//its also worth noting that any variable can be easily saved, so we can easily add anything to this
-    FILE* file = fopen("simulation_state.bin", "wb");
-    if (!file) 
-	{
-        printf("Error: Could not open file for saving state.\n");
-        return;
-    }
-
-    // Save runtime value
-    fwrite(&RunTime, sizeof(double), 1, file);
-
-	// Save mass of left atrium so saved state can restore recenter correctly
-	fwrite(&MassOfLeftAtrium, sizeof(double), 1, file);
-    
-    // Save simulation timers and relevant state variables
-	//this lets you save the mouse function you're in, I thought it might be useful for trigger placement, so I added it
-    fwrite(&Simulation, sizeof(Simulation), 1, file);
-
-    // Save node and muscle counts
-    fwrite(&NumberOfNodes, sizeof(int), 1, file);
-    fwrite(&NumberOfMuscles, sizeof(int), 1, file);
-
-    // Save all nodes and muscles
-    fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, file);
-    fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, file);
-
-    fclose(file);
-    //printf("Simulation state saved at runtime: %.2f ms\n", RunTime);
-}
-
-void loadState()
-{
-    // Open file for reading (binary mode)
-    FILE* file = fopen("simulation_state.bin", "rb");
-    if (!file) 
-	{
-        printf("Error: Could not open file for loading state.\n");
-        return;
-    }
-
-    // Load runtime value
-    fread(&RunTime, sizeof(double), 1, file);
-	
-	// Load mass of left atrium
-	fread(&MassOfLeftAtrium, sizeof(double), 1, file);
-    
-    // Load simulation timers and relevant state variables
-    fread(&Simulation, sizeof(Simulation), 1, file);
-
-    // Load node and muscle counts
-    int nNodes, nMuscles;
-    fread(&nNodes, sizeof(int), 1, file);
-    fread(&nMuscles, sizeof(int), 1, file);
-
-    // Sanity check
-    if (nNodes != NumberOfNodes || nMuscles != NumberOfMuscles) 
-    {
-        printf("Error: Node/Muscle count mismatch. State not loaded.\n");
-        fclose(file);
-        return;
-    }
-
-    // Load all nodes and muscles
-    fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, file);
-    fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, file);
-
-    fclose(file);
-
-    // Copy loaded data back to GPU
-    cudaMemcpy(NodeGPU, Node, NumberOfNodes * sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-    cudaMemcpy(MuscleGPU, Muscle, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice);
-
-    drawPicture();
-	Simulation.isPaused = true; // Pause the simulation after loading state
-    //printf("Simulation state loaded at runtime: %.2f ms\n", RunTime);
-}
-
-void findNodes()
-{
-	copyNodesFromGPU();
-
-	//Reset previous nodes if they exist
-	if (Simulation.frontNodeIndex >= 0 && Simulation.topNodeIndex >= 0) //if the front and top node indices are valid
-	
-	{
-		// Reset front node based on ablation status
-		if (Node[Simulation.frontNodeIndex].isAblated) 
-		{
-			Node[Simulation.frontNodeIndex].isDrawNode = true; // Keep it visible, set to white
-			Node[Simulation.frontNodeIndex].color.x = 1.0f;
-			Node[Simulation.frontNodeIndex].color.y = 1.0f;
-			Node[Simulation.frontNodeIndex].color.z = 1.0f;
-		} 
-		else 
-		{
-			Node[Simulation.frontNodeIndex].isDrawNode = false; //back to default color
-			Node[Simulation.frontNodeIndex].color.x = 0.0f;
-			Node[Simulation.frontNodeIndex].color.y = 1.0f;
-			Node[Simulation.frontNodeIndex].color.z = 0.0f;
-		}
-
-		// Reset top node based on ablation status
-		if (Node[Simulation.topNodeIndex].isAblated) 
-		{
-			Node[Simulation.topNodeIndex].isDrawNode = true; // Keep it visible, set color to white
-			Node[Simulation.topNodeIndex].color.x = 1.0f;
-			Node[Simulation.topNodeIndex].color.y = 1.0f;
-			Node[Simulation.topNodeIndex].color.z = 1.0f;
-		} 
-		else 
-		{
-			Node[Simulation.topNodeIndex].isDrawNode = false; //back to default color
-			Node[Simulation.topNodeIndex].color.x = 0.0f;
-			Node[Simulation.topNodeIndex].color.y = 1.0f;
-			Node[Simulation.topNodeIndex].color.z = 0.0f;
-		}
-	}
-
-	//give bad values to the indices so we know they are not valid unless they are made valid again
-	float maxZ = -10000.0;
-	float maxY = -10000.0;
-	int indexZ = -1;
-	int indexY = -1;
-	
-	// Loop through all nodes, checking for the max Z and Y values
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(maxZ < Node[i].position.z) 
-		{
-			maxZ = Node[i].position.z;
-			indexZ = i;
-		}
-		
-		if(maxY < Node[i].position.y) 
-		{
-			maxY = Node[i].position.y;
-			indexY = i;
-		}
-	}
-	
-	//set the colors of the nodes to blue and purple, respectively
-	Node[indexZ].isDrawNode = true; // Set the front node to be drawn as blue
-	Node[indexZ].color.x = 0.0;
-	Node[indexZ].color.y = 0.0;
-	Node[indexZ].color.z = 1.0;
-	
-	Node[indexY].isDrawNode = true; // Set the top node to be drawn as purple
-	Node[indexY].color.x = 1.0;
-	Node[indexY].color.y = 0.0;
-	Node[indexY].color.z = 1.0;
-	
-	// Store indices for persistent display
-	Simulation.frontNodeIndex = indexZ;
-	Simulation.topNodeIndex = indexY;
-	Simulation.nodesFound = true;
-	
-	drawPicture(); // Redraw the picture to show the new colors
-	copyNodesToGPU(); // Copy the updated nodes back to GPU (since the color changed)
-}
 
 /*
  This function directs the action that needs to be taken if a user hits a key on the key board.
@@ -728,6 +378,8 @@ void findNodes()
 */
 void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+		
+	
 
 	//See if GUI wants this event (Prevents keys from being registered when doing things like typing in a text box)
 	    ImGuiIO& io = ImGui::GetIO();
@@ -742,6 +394,14 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 	// Check for specific key presses
 	switch (key)
 	{
+		// ALT + q to turn mouse functions off
+		case GLFW_KEY_Q:
+			if (mods & GLFW_MOD_ALT)
+			{
+				setMouseMode(-1);
+			}
+			break;
+			/*
 		case GLFW_KEY_ESCAPE: // Escape key to exit
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
@@ -871,13 +531,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			}
 			break;
 
-		// ALT + q to turn mouse functions off
-		case GLFW_KEY_Q:
-			if (mods & GLFW_MOD_ALT)
-			{
-				mouseFunctionsOff();
-			}
-			break;
+		
 
 		//view toggles -- follows numpad format and matches with GUI
 		//kp is numpad keys, so need 2 cases for each
@@ -944,7 +598,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             drawPicture();
             break;
 		
-		/* Ortho/frustum needs to be fixed */
+		/* Ortho/frustum needs to be fixed/
 		// case GLFW_KEY_0: // Toggle orthogonal/frustum view
 		// case GLFW_KEY_KP_0:
 		// 	if (Simulation.ViewFlag == 0)
@@ -1026,12 +680,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			Simulation.guiCollapsed = !Simulation.guiCollapsed;
 		}
 		break;
-
+		*/
 		default: // For any other key, do nothing
 			break;
 
 	}
-    
+	
     
 }
 
@@ -1064,17 +718,15 @@ void keyHeld(GLFWwindow* window)
 	bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || 
 						glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
-	// Copy nodes from GPU once per frame
-    copyNodesFromGPU();
 
 	float dAngle = 0.01;
-	float zoom = 0.01*RadiusOfLeftAtrium;
+	//float zoom = 0.01*RadiusOfLeftAtrium;
+	float zoom = 0.5;
 	float temp;
 	float4 lookVector;
 	float d;
 	float4 centerOfMass;
 	
-	//copyNodesMusclesFromGPU();
 	
 	lookVector.x = CenterX - EyeX;
 	lookVector.y = CenterY - EyeY;
@@ -1305,7 +957,6 @@ void keyHeld(GLFWwindow* window)
 	}
 
 	drawPicture(); // Redraw the picture after all the changes
-	copyNodesToGPU(); // Copy the modified nodes back to the GPU
 
 }
 /*
@@ -1337,8 +988,8 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 	}
 	
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
-	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
-	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
+	MouseX = ( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
+	MouseY = (-2.0*y/YWindowSize + 1.0) * sensitivityMultiplier;
 }
 
 /*
@@ -1360,12 +1011,12 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 	
 	if(action == GLFW_PRESS)
 	{
-		copyNodesMusclesFromGPU();
 		hit = HitMultiplier*RadiusOfLeftAtrium;
 		
 		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
-			if(Simulation.isInAdjustMuscleLineMode)
+			/*
+			if(Simulation.isInAdjustMuscleLineMode) 
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1535,10 +1186,11 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 						}
 					}
 				}
-			}
+			}*/
 		}
 		else if(button == GLFW_MOUSE_BUTTON_RIGHT) // Right Mouse button down
 		{
+			/*
 			if(Simulation.isInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
@@ -1683,7 +1335,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 						}
 					}
 				}
-			}
+			}*/
 		}
 		else if(button == GLFW_MOUSE_BUTTON_MIDDLE)
 		{
@@ -1702,7 +1354,6 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 			
 		}
 		drawPicture();
-		copyNodesMusclesToGPU();
 		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
 	
@@ -1721,3 +1372,4 @@ void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
     // printf("MouseZ = %f\n", MouseZ);
     drawPicture();
 }
+
