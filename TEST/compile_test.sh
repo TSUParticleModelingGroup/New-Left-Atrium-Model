@@ -3,8 +3,8 @@
 #if you get a permission denied error, type this command in the terminal:
 #chmod 755 compile.sh
 
-cd Source
-
+#cd Source
+#We should be in the Source in the test directory
 #compile the ImGui files
 
 nvcc -c imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp
@@ -17,6 +17,6 @@ nvcc SVT.cu glad.c\
      -lglfw -lGL -lGLU -lm -lX11 -lXrandr -lXinerama -lXcursor -lXi
 
 #move svt and all .o files to ExecutableFiles
-mv svt ../ExecutableFiles
+mv svt bin/
 
-mv *.o ../ExecutableFiles
+mv *.o bin/

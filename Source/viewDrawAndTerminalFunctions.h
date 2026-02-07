@@ -1,3 +1,5 @@
+#include "header.h"
+
 /*
  This file contains:
  1: All the functions that determine how to orient and view the simulation.
@@ -47,7 +49,7 @@ void renderSphere(float radius, int slices, int stacks)
             glNormal3f(x, y, z);
             glVertex3f(x * radius, y * radius, z * radius);
 
-            // Vertex 2
+            // Vertex 3
             x = -sin(beta) * cos(theta);
             y = cos(beta);
             z = sin(beta) * sin(theta);
@@ -232,6 +234,7 @@ float4 findCenterOfMass()
 		 centerOfMass.z += Node[i].position.z*Node[i].mass;
 		 centerOfMass.w += Node[i].mass;
 	}
+	printf("Average Mass %lf", centerOfMass.w/NumberOfNodes);
 	if(centerOfMass.w < 0.00001) // .w holds the mass.
 	{
 		printf("\n The mass is too small.");
@@ -986,7 +989,6 @@ void createGUI()
 		{
 			mouseEctopicBeatMode();
 			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInEctopicBeatMode = true;
 		}
 		if (ImGui::IsItemHovered())
 		{

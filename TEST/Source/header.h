@@ -22,7 +22,7 @@
 #include <cuda_runtime.h>
 
 // OpenGL headers - GLAD must come BEFORE GLFW
-#include "../include/glad/glad.h"
+#include "../../include/glad/glad.h"
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
 

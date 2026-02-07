@@ -1,4 +1,93 @@
 {
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.startupEditor": "none",
+  "editor.fontFamily": "monospace",
+  "editor.fontLigatures": false,
+  "editor.fontSize": 13,
+  "editor.lineHeight": 20,
+  "terminal.integrated.fontFamily": "monospace",
+  "terminal.integrated.cursorStyle": "block",
+  "workbench.activityBar.visible": false,
+  "workbench.statusBar.visible": false,
+  "workbench.editor.showTabs": false,
+  "window.titleBarStyle": "custom",
+  "window.menuBarVisibility": "toggle",
+  "editor.minimap.enabled": false,
+  "editor.cursorBlinking": "solid",
+  "editor.lineNumbers": "on",
+  "editor.renderLineHighlight": "all",
+  "editor.guides.indentation": false,
+
+  "workbench.colorCustomizations": {
+    "editor.background": "#000000",
+    "editor.foreground": "#dcdcdc",
+    "sideBar.background": "#000000",
+    "activityBar.background": "#000000",
+    "statusBar.background": "#000000",
+    "statusBar.foreground": "#dcdcdc",
+    "titleBar.activeBackground": "#000000",
+    "titleBar.activeForeground": "#dcdcdc",
+    "terminal.background": "#000000",
+    "terminal.foreground": "#dcdcdc",
+    "terminal.ansiBlack": "#000000",
+    "terminal.ansiRed": "#f38ba8",
+    "terminal.ansiGreen": "#a6e3a1",
+    "terminal.ansiYellow": "#f9e2af",
+    "terminal.ansiBlue": "#89b4fa",
+    "terminal.ansiMagenta": "#cba6f7",
+    "terminal.ansiCyan": "#94e2d5",
+    "terminal.ansiWhite": "#dcdcdc",
+    "terminal.ansiBrightBlack": "#6c7086",
+    "terminal.ansiBrightRed": "#f38ba8",
+    "terminal.ansiBrightGreen": "#a6e3a1",
+    "terminal.ansiBrightYellow": "#f9e2af",
+    "terminal.ansiBrightBlue": "#89b4fa",
+    "terminal.ansiBrightMagenta": "#cba6f7",
+    "terminal.ansiBrightCyan": "#94e2d5",
+    "terminal.ansiBrightWhite": "#ffffff",
+    "editorLineNumber.foreground": "#6c7086",
+    "editorLineNumber.activeForeground": "#dcdcdc",
+    "editor.selectionBackground": "#2a2636",
+    "editor.selectionHighlightBackground": "#2a2636",
+    "editor.inactiveSelectionBackground": "#201e2a",
+    "editor.lineHighlightBackground": "#272533",
+    "editorGroup.border": "#6c7086",
+    "editorGroupHeader.tabsBackground": "#000000",
+    "editorGroupHeader.noTabsBackground": "#000000",
+    "tab.activeBackground": "#000000",
+    "tab.border": "#6c7086",
+    "titleBar.border": "#6c7086"
+  },
+
+  "catppuccin.flavour": "mocha",
+  "catppuccin.colorOverrides": {
+    "mocha": {
+      "base": "#000000",
+      "mantle": "#000000",
+      "crust": "#000000",
+      "text": "#dcdcdc",
+      "subtext0": "#bfbfbf",
+      "overlay0": "#111111",
+      "surface0": "#070707",
+      "surface1": "#0b0b0b",
+      "muted": "#6b6b6b",
+      "accent": "#8ab4f8"
+    }
+  },
+
+  "catppuccin.customUIColors": {
+    "mocha": {
+      "statusBar.background": "#000000",
+      "statusBar.foreground": "#8ab4f8",
+      "activityBar.background": "#000000"
+    }
+  },
+
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  }
+}
+{
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",

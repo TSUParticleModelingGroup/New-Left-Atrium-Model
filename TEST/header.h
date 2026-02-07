@@ -369,7 +369,6 @@ void createGUI();
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
- void mouseEctopicEventMode();
  void mouseAdjustMusclesAreaMode();
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();

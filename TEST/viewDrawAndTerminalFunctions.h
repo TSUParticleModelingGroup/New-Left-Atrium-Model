@@ -4,15 +4,8 @@
  2: All the functions that draw the actual simulation. 
  3: The functions that print to the linux terminal all the setting of the simulation.
  In short this file holds the functions that present information to the user.
- 
- The functions are listed below in the order they appear.
- void renderSphere(float, int, int);
- void createSphereVBO(float, int, int);
- void renderSphereVBO();
- void orthogonalView();
- void frustumView();
- float4 findCenterOfMass();
- void centerObject();
+
+ floa4 findCenterOfMass();
  void rotateXAxis(float);
  void rotateYAxis(float);
  void rotateZAxis(float);
@@ -23,6 +16,37 @@
  void drawPicture();
  void createGUI();
 */
+
+float4 findCenterOfMass()
+{
+	float4 centerOfMass;
+	
+	
+	centerOfMass.x = 0.0;
+	centerOfMass.y = 0.0;
+	centerOfMass.z = 0.0;
+	centerOfMass.w = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		 centerOfMass.x += Node[i].position.x*Node[i].mass;
+		 centerOfMass.y += Node[i].position.y*Node[i].mass;
+		 centerOfMass.z += Node[i].position.z*Node[i].mass;
+		 centerOfMass.w += Node[i].mass;
+	}
+	if(centerOfMass.w < 0.00001) // .w holds the mass.
+	{
+		printf("\n The mass is too small.");
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+	else
+	{
+		centerOfMass.x /= centerOfMass.w;
+		centerOfMass.y /= centerOfMass.w;
+		centerOfMass.z /= centerOfMass.w;
+	}
+	return(centerOfMass);
+}
 
 // Add this to a utility file, only used for the mouse selection since it's just 1 object
 void renderSphere(float radius, int slices, int stacks) 
@@ -213,39 +237,6 @@ void frustumView()
 	drawPicture();
 }
 
-/*
- This function finds the center of mass of the LA. It may seem like this function does not belong with
- the display functions but it is used to center th LA in the view.
-*/
-float4 findCenterOfMass()
-{
-	float4 centerOfMass;
-	
-	centerOfMass.x = 0.0;
-	centerOfMass.y = 0.0;
-	centerOfMass.z = 0.0;
-	centerOfMass.w = 0.0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		 centerOfMass.x += Node[i].position.x*Node[i].mass;
-		 centerOfMass.y += Node[i].position.y*Node[i].mass;
-		 centerOfMass.z += Node[i].position.z*Node[i].mass;
-		 centerOfMass.w += Node[i].mass;
-	}
-	if(centerOfMass.w < 0.00001) // .w holds the mass.
-	{
-		printf("\n The mass is too small.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	else
-	{
-		centerOfMass.x /= centerOfMass.w;
-		centerOfMass.y /= centerOfMass.w;
-		centerOfMass.z /= centerOfMass.w;
-	}
-	return(centerOfMass);
-}
 
 /*
  This function centers the LA and resets the center of view to (0, 0, 0).

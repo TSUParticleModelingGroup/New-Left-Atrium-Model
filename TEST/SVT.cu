@@ -18,57 +18,12 @@
 */
 
 // Local include files
-#include "./header.h"
-#include "./setNodesAndMuscles.h"
-#include "./callBackFunctions.h"
-#include "./viewDrawAndTerminalFunctions.h"
-#include "./cudaFunctions.h"
+#include "header.h"
+#include "setNodesAndMuscles.h"
+#include "callBackFunctions.h"
+#include "viewDrawAndTerminalFunctions.h"
+#include "cudaFunctions.h"
 
-/*
- This function is called by the openGL idle function. Hence this function is called every time openGL is not doing anything else,
- which is most of the time.
- This function orchestrates the simulation by;
- 1: Calling the getForces function which gets all the forces except the drag force on all nodes.
- 2: Calling the upDateNodes function which moves the nodes based off of the forces from the getForces function.
-    It uses the leap-frog formulas to integrate the nodes forward in time. It also sees if a node is a beat node  
-    and if it needs to send out a signal.
- 3: Calling the updateMuscles function to adjust where they are in their cycle and react accordingly.
- 4: Sees if it is time to recenter the simulation.
- 5: Sees if simulation needs to be redrawn to the screen.
- 6: Sees if the terminal screen needs to be updated.
- 
- Note: If Pause is on it skips all this and if Contraction is not on it skips all of its moving calculations
- and only performs calculations that deal with electrical conduction and muscle timing. 
-*/
-void nBody(double dt)
-{	
-	//no need to check if we're paused because we handle that in main
-
-	if(Simulation.ContractionisOn)
-	{
-		getForces<<<GridNodes, BlockNodes, 0, ComputeStream>>>(MuscleGPU, NodeGPU, dt, NumberOfNodes, CenterOfSimulation, MuscleCompressionStopFraction, RadiusOfLeftAtrium, DiastolicPressureLA, SystolicPressureLA);
-		cudaErrorCheck(__FILE__, __LINE__);
-	}
-
-	updateNodes<<<GridNodes, BlockNodes, 0, ComputeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, Drag, dt, RunTime, Simulation.ContractionisOn);
-	cudaErrorCheck(__FILE__, __LINE__);
-
-	updateMuscles<<<GridMuscles, BlockMuscles, 0, ComputeStream>>>(MuscleGPU, NodeGPU, NumberOfMuscles, NumberOfNodes, dt, ReadyColor, DepolarizingColor, RepolarizingColor, RelativeRepolarizingColor);
-	cudaErrorCheck(__FILE__, __LINE__);
-	
-	if(Simulation.ContractionisOn)
-	{
-		RecenterCount++;
-		if(RecenterCount == RecenterRate) 
-		{
-			recenter<<<1, BLOCKCENTEROFMASS, 0, ComputeStream>>>(NodeGPU, NumberOfNodes, MassOfLeftAtrium, CenterOfSimulation);
-			cudaErrorCheck(__FILE__, __LINE__);
-			RecenterCount = 0;
-		}
-	}
-	
-	RunTime += dt;
-}
 
 /*
  Setting up the CUDA environment. We have three:
@@ -107,15 +62,12 @@ void setupCudaEnvironment()
     }
 }
 
-/*
- This function reads in all the user defined parameters in the three SimulationSetup files.
-*/
 void readBasicSimulationSetupParameters()
 {
 	ifstream data;
 	string name;
 	
-	data.open("./BasicSimulationSetup");
+	data.open("../BasicSimulationSetup");
 	if(data.is_open() == 1)
 	{
 		getline(data,name,'=');
@@ -159,185 +111,6 @@ void readBasicSimulationSetupParameters()
 	printf("\n Basic Simulation Parameters have been read in from BasicSimulationSetup file.\n");
 }
 
-void readIntermediateSimulationSetupParameters()
-{
-	ifstream data;
-	string name;
-	
-	data.open("./IntermediateSimulationSetup");
-	if(data.is_open() == 1)
-	{
-		getline(data,name,'=');
-		data >> BaseMuscleRefractoryPeriod;
-		
-		getline(data,name,'=');
-		data >> MuscleRefractoryPeriodSTD;
-		        
-		getline(data,name,'=');
-		data >> BaseAbsoluteRefractoryPeriodFraction;
-		
-		getline(data,name,'=');
-		data >> AbsoluteRefractoryPeriodFractionSTD;
-		
-		getline(data,name,'=');
-		data >> BaseMuscleConductionVelocity;
-		
-		getline(data,name,'=');
-		data >> MuscleConductionVelocitySTD; 
-		
-		getline(data,name,'=');
-		data >> BachmannsBundleMultiplier;
-		
-		getline(data,name,'=');
-		data >> BeatPeriod;
-		
-		getline(data,name,'=');
-		data >> PrintRate;
-		
-		getline(data,name,'=');
-		data >> DrawRate;
-		
-		getline(data,name,'=');
-		data >> Dt;
-		
-		getline(data,name,'=');
-		data >> ReadyColor.x;
-		
-		getline(data,name,'=');
-		data >> ReadyColor.y;
-		
-		getline(data,name,'=');
-		data >> ReadyColor.z;
-		
-		getline(data,name,'=');
-		data >> DepolarizingColor.x;
-		
-		getline(data,name,'=');
-		data >> DepolarizingColor.y;
-		
-		getline(data,name,'=');
-		data >> DepolarizingColor.z;
-		
-		getline(data,name,'=');
-		data >> RepolarizingColor.x;
-		
-		getline(data,name,'=');
-		data >> RepolarizingColor.y;
-		
-		getline(data,name,'=');
-		data >> RepolarizingColor.z;
-		
-		getline(data,name,'=');
-		data >> RelativeRepolarizingColor.x;
-		
-		getline(data,name,'=');
-		data >> RelativeRepolarizingColor.y;
-		
-		getline(data,name,'=');
-		data >> RelativeRepolarizingColor.z;
-		
-		getline(data,name,'=');
-		data >> DeadColor.x;
-		
-		getline(data,name,'=');
-		data >> DeadColor.y;
-		
-		getline(data,name,'=');
-		data >> DeadColor.z;
-		
-		getline(data,name,'=');
-		data >> BachmannColor.x;
-		
-		getline(data,name,'=');
-		data >> BachmannColor.y;
-		
-		getline(data,name,'=');
-		data >> BachmannColor.z;
-	}
-	else
-	{
-		printf("\n\n Could not open IntermediateSimulationSetup file.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	
-	data.close();
-	printf("\n Intermediate Simulation Parameters have been read in from IntermediateSimulationSetup file.\n");
-}
-
-void readAdvancedSimulationSetupParameters()
-{
-	ifstream data;
-	string name;
-	
-	data.open("./AdvancedSimulationSetup");
-	if(data.is_open() == 1)
-	{
-		getline(data,name,'=');
-		data >> WallThicknessFraction;
-		
-		getline(data,name,'=');
-		data >> MyocyteLength;
-		
-		getline(data,name,'=');
-		data >> MyocyteDiameter;
-		
-		getline(data,name,'=');
-		data >> MyocyteContractionForce;
-		
-		getline(data,name,'=');
-		data >> MyocardialTissueDensity;
-		
-		getline(data,name,'=');
-		data >> MyocyteForcePerMassMultiplier;
-		
-		getline(data,name,'=');
-		data >> MyocyteForcePerMassSTD;
-		
-		getline(data,name,'=');
-		data >> DiastolicPressureLA;
-		
-		getline(data,name,'=');
-		data >> SystolicPressureLA;
-		
-		getline(data,name,'=');
-		data >> PressureMultiplier;
-		
-		getline(data,name,'=');
-		data >> Drag;
-		
-		getline(data,name,'=');
-		data >> MuscleRelaxedStrengthFraction;
-		
-		getline(data,name,'=');
-		data >> MuscleCompressionStopFraction;
-		
-		getline(data,name,'=');
-		data >> MuscleCompressionStopFractionSTD;
-	}
-	else
-	{
-		printf("\n\n Could not open AdvancedSimulationSetup file.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	data.close();
-	
-	// Adjusting blood pressure from millimeters of Mercury to our units.
-	// We simulate blood pressure as a central push-back force.
-	// 1 millimeter of mercury is 133.322387415 Pascals or kg/(meters*seconds*seconds).
-	// Converting this into our units of grams, milliseconds, and millimeters gives 0.000133322387415.
-	// Therefore, 1 millimeter of mercury is equivalent to 0.000133322387415 in our units of g/(mm*ms*ms).
-	DiastolicPressureLA *= 0.000133322387415*PressureMultiplier; 
-	SystolicPressureLA  *= 0.000133322387415*PressureMultiplier;
-	
-	printf("\n Advanced Simulation Parameters have been read in from AdvancedSimulationSetup file.\n");
-}
-
-/*
- This function calls all the functions that are used to setup the nodes muscles and initial parameters 
- of the simulation.
-*/
 void setup()
 {	
 
@@ -348,12 +121,7 @@ void setup()
 	//create CUDA streams for async memory copy and compute
 	cudaStreamCreate(&ComputeStream);
 	cudaStreamCreate(&MemoryStream);
-		
-	// Getting user inputs.
-	readBasicSimulationSetupParameters();
-	readIntermediateSimulationSetupParameters();
-	readAdvancedSimulationSetupParameters();
-	
+	readBasicSimulationSetupParameters();	
 	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
@@ -367,10 +135,6 @@ void setup()
 		hardCodedAblations();
 		hardCodedPeriodicEctopicEvents();
 		hardCodedIndividualMuscleAttributes();
-		for(int i = 0; i < NumberOfMuscles; i++)
-		{	
-			checkMuscle(i);
-		}
 	}
 	else if(NodesMusclesFileOrPreviousRunsFile == 1)
 	{
@@ -594,7 +358,6 @@ int main(int argc, char** argv)
 			{
 				//if(RunTime < 25.0) nBody(Dt/10.0); // Ease into the simulation.
 				//else nBody(Dt);
-				nBody(Dt);
 				// Check if we hit the 10ms mark and need to pause
 				if (Simulation.isPaused) 
 				{

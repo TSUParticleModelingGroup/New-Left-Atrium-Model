@@ -17,19 +17,7 @@
  void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
  void hardCodedAblations();
- void hardCodedPeriodicEctopicEvents();
- void hardCodedIndividualMuscleAttributes();
- void checkMuscle(int);
-*/
-
-/*
- This function 
- 1. Opens the node file.
- 2. Finds the number of nodes, the pulse node, the up and front nodes.
- 3. Allocates memory to hold the nodes on the CPU and the GPU
- 4. Sets all the nodes to their default or start values.
- 5. Reads and assigns the node positions from the node file.
- 6. Finds the center of the LA
+ void hardCodedPeriodicEctopicEvents();fscanf(inFile, "%d", &NumberOfNodes)
  7. Places the center of the LA at (0,0,0).
  8. Sets the pulse node.
 */
@@ -41,11 +29,13 @@ void setNodesFromBlenderFile()
 	char fileName[256];
 	
 	// Generating the name of the file that holds the nodes.
-	char directory[] = "./NodesMuscles/";
+	
+	char directory[] = "NodesMuscles/";
 	strcpy(fileName, "");
 	strcat(fileName, directory);
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/Nodes");
+	printf("%s", fileName);
 	
 	// 1. Opening the node file.
 	inFile = fopen(fileName,"rb");
@@ -536,7 +526,9 @@ void setRemainingNodeAndMuscleAttributes()
 				connectedMuscleMass += Muscle[Node[i].muscle[j]].mass;
 			}
 		}
-		Node[i].mass = connectedMuscleMass/2.0;
+		//Node[i].mass = connectedMuscleMass/2.0;
+		Node[i].mass = 0.005266; // We took the average mass per node from the original program. Mass is only used to calculate COM for rotations in this program.
+		//printf("Connected Muscle Mass: %lf\n", connectedMuscleMass/2);
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
