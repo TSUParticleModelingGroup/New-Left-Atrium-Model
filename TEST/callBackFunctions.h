@@ -71,7 +71,7 @@ void reshape(GLFWwindow* window, int width, int height)
 void setMouseMode(int mode)
 {
 	Simulation.mode = mode;
-	if (mode == 0) // or -1 or whatever we decide for simulation off
+	if (mode == -1) // or -1 or whatever we decide for simulation off
 	{
 		Simulation.isInMouseFunctionMode = false;
 		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.

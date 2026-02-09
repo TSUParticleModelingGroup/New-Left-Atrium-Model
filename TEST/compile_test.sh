@@ -3,7 +3,7 @@
 #if you get a permission denied error, type this command in the terminal:
 #chmod 755 compile.sh
 
-#cd Source
+
 #We should be in the Source in the test directory
 #compile the ImGui files
 
