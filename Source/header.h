@@ -331,19 +331,18 @@ void copyNodesFromGPU();
 void copyNodesToGPU();
 
 // Functions in the setNodesAndMuscles.h file.
-void setNodesFromBlenderFile();
+void readPulseUpAndFrontNodesFromFile();
+void readNodesFromFile();
+void centerNodes();
 void checkNodes();
-void setBachmannBundleFromBlenderFile();
-void setMusclesFromBlenderFile();
+void readBachmannBundleFromFile();
+void readMusclesFromFile();
 void linkNodesToMuscles();
 double croppedRandomNumber(double, double, double);
 void findRadiusAndMassOfLeftAtrium();
 void setRemainingNodeAndMuscleAttributes();
 void getNodesandMusclesFromPreviuosRun();
 void setRemainingParameters();
-void hardCodedAblations();
-void hardCodedPeriodicEctopicEvents();
-void hardCodedIndividualMuscleAttributes();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.

@@ -6,34 +6,31 @@
  
  The functions are listed below in the order they appear.
  
- void setNodesFromBlenderFile();
+ void readNodesFromFile();
+ void centerNodes();
  void checkNodes();
- void setBachmannBundleFromBlenderFile();
- void setMusclesFromBlenderFile();
+ void readPulseUpAndFrontNodesFromFile();
+ void readBachmannBundleFromFile();
+ void readMusclesFromFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void findRadiusAndMassOfLeftAtrium();
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
- void hardCodedAblations();
- void hardCodedPeriodicEctopicEvents();
- void hardCodedIndividualMuscleAttributes();
  void checkMuscle(int);
 */
-
+		
 /*
  This function 
  1. Opens the node file.
- 2. Finds the number of nodes, the pulse node, the up and front nodes.
+ 2. Finds the number of nodes.
  3. Allocates memory to hold the nodes on the CPU and the GPU
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
- 6. Finds the center of the LA
- 7. Places the center of the LA at (0,0,0).
  8. Sets the pulse node.
 */
-void setNodesFromBlenderFile()
+void readNodesFromFile()
 {	
 	FILE *inFile;
 	float x, y, z;
@@ -59,13 +56,6 @@ void setNodesFromBlenderFile()
 	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
-	fscanf(inFile, "%d", &PulsePointNode);
-	printf("\n PulsePointNode = %d", PulsePointNode);
-	fscanf(inFile, "%d", &UpNode);
-	printf("\n UpNode = %d", UpNode);
-	fscanf(inFile, "%d", &FrontNode);
-	printf("\n FrontNode = %d", FrontNode);
-	printf("\n");
 	
 	// 3. Allocating memory for the CPU and GPU nodes. 
 	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
@@ -124,7 +114,18 @@ void setNodesFromBlenderFile()
 		Node[id].position.z = z;
 	}
 	
-	// 6. Finding center on LA
+	fclose(inFile);
+	printf("\n Nodes positions have been read in.\n");
+}
+
+/*
+ This function 
+ 1. Finds the center of the LA
+ 2. Places the center of the LA at (0,0,0).
+*/
+void centerNodes()
+{
+        // 1. Finding center on LA
 	float4 centerOfObject;
 	centerOfObject.x = 0.0;
 	centerOfObject.y = 0.0;
@@ -140,27 +141,20 @@ void setNodesFromBlenderFile()
 	centerOfObject.y /= centerOfObject.w;
 	centerOfObject.z /= centerOfObject.w;
 	
-	// 7. Centering the LA at (0,0,0)
+	// 2. Centering the LA at (0,0,0)
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x -= centerOfObject.x;
 		Node[i].position.y -= centerOfObject.y;
 		Node[i].position.z -= centerOfObject.z;
 	}
-	
-	// 8. This is the pulse node that generates the beat.
-	Node[PulsePointNode].isBeatNode = true;
-	Node[PulsePointNode].beatPeriod = BeatPeriod;
-	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
-	
-	fclose(inFile);
-	printf("\n Blender generated nodes have been created.\n");
+	printf("\n Nodes have been centered.\n");
 }
 
 /* This function checks to see if two nodes are too close relative to all the other nodes 
    in the simulations. 
    1: This for loop finds all the nearest neighbor distances and then it calculates the average of this value. 
-      This get a sense of how close nodes are in general. If you have more nodes they are going to be 
+      This get a sense of how close nodes are in general. If you have more nodes they arvoid readPulseUpAndFrontNodesFromFile()e going to be 
       closer together, this number just gets you a scale to compare to.
    2: This for loop checks to see if two nodes are closer than an cutoffDivider times smaller than the 
       average minimal distance. If it is, the nodes are printed out with their separation and a flag is set.
@@ -234,12 +228,52 @@ void checkNodes()
 
 /*
  This function 
+ 1. Opens the PulseNodeUpNodeFrontNode file.
+ 2. Then reads in and sets the globals:PulsePointNode, UpNode, and FrontNode.
+ 3. Sets the pulse node.
+*/
+void readPulseUpAndFrontNodesFromFile()
+{	
+	FILE *inFile;
+	char fileName[256];
+	
+	// Generating the name of the file that holds the nodes.
+	char directory[] = "./NodesMuscles/";
+	strcpy(fileName, "");
+	strcat(fileName, directory);
+	strcat(fileName, NodesMusclesFileName);
+	strcat(fileName, "/PulseNodeUpNodeFrontNode");
+	
+	// 1. Opening the node file.
+	inFile = fopen(fileName,"rb");
+	if(inFile == NULL)
+	{
+		printf("\n\n Can't open Nodes file %s.", fileName);
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+	
+	// 2. Reading the header information.
+	fscanf(inFile, "%d", &PulsePointNode);
+	printf("\n PulsePointNode = %d", PulsePointNode);
+	fscanf(inFile, "%d", &UpNode);
+	printf("\n UpNode = %d", UpNode);
+	fscanf(inFile, "%d", &FrontNode);
+	printf("\n FrontNode = %d", FrontNode);
+	printf("\n");
+	
+	fclose(inFile);
+	printf("\n PulsePointNode, UpNode, and FrontNode have been read in.\n");
+}
+
+/*
+ This function 
  1. Opens the Bachmann's Bundle (BB) file.
  2. Reads the number of nodes in the BB.
  3. Allocating memory on both CPU and GPU to hold BB.
  4. Reads the BB nodes.
  */
-void setBachmannBundleFromBlenderFile()
+void readBachmannBundleFromFile()
 {	
 	FILE *inFile;
 	int id;
@@ -268,14 +302,6 @@ void setBachmannBundleFromBlenderFile()
 	// Allocating memory for the Bachmann's Bundle nodes.
 	BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
 	
-	// If we want to use BB on the GPU use the following and define BachmannsBundleGPU in header.h.
-	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
-	//cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	//cudaErrorCheck(__FILE__, __LINE__);
-	
-	//cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
-	//cudaErrorCheck(__FILE__, __LINE__);
-	
 	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
 	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
 	{
@@ -284,7 +310,7 @@ void setBachmannBundleFromBlenderFile()
 	}
 	
 	fclose(inFile);
-	printf("\n Bachmann's Bundle Node have been read in.\n");
+	printf("\n Bachmann's Bundle Nodes have been read in.\n");
 }
 
 /*
@@ -295,7 +321,7 @@ void setBachmannBundleFromBlenderFile()
  4. Sets all the muscles to their default or start values.
  5. Reads and connects the muscle to the two nodes it is connected to.
 */
-void setMusclesFromBlenderFile()
+void readMusclesFromFile()
 {	
 	FILE *inFile;
 	int id, idNode1, idNode2;
@@ -475,20 +501,21 @@ void findRadiusAndMassOfLeftAtrium()
  In this function, we set the remaining value of the nodes and muscle which were not already 
  set in the setNodesFromBlenderFile(), the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
  1: Checking to make sure LA radius and mass are set before we use them to set Node and Muscle attributes.
- 2: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ 2: Setting the pulse point node.
+ 3: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 3: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+ 4: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
     fraction by the mass of the left atrium to get the mass on an individual muscle. 
- 4: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+ 5: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses (like we used the ratio of muscle length in 2) to 
     find the area of each node. Area is used to get a force on the node from the LA pressure.
- 5: Here we set the muscle contraction strength attributes. 
+ 6: Here we set the muscle contraction strength attributes. 
     The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
     In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
     If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
     The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
     can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
- 6: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
+ 7: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
     
  Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
  generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
@@ -499,12 +526,17 @@ void setRemainingNodeAndMuscleAttributes()
 	// 1:
 	if(RadiusOfLeftAtrium < 0.0 || MassOfLeftAtrium < 0.0) // They are intiallized at -1.0.
 	{
-	      printf("\n You are trying to Node and Muscle attributes before LA radius and mass are set.");
+	      printf("\n You are trying to set Node and Muscle attributes before LA radius and mass are set.");
 	      printf("\n The simulation has been terminated.\n\n");
 	      exit(0);
 	}
 	
-	// 2:
+	// 2. This is the pulse point node that generates the beat.
+	Node[PulsePointNode].isBeatNode = true;
+	Node[PulsePointNode].beatPeriod = BeatPeriod;
+	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
+	
+	// 3:
 	double dx, dy, dz, d;
 	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -517,13 +549,13 @@ void setRemainingNodeAndMuscleAttributes()
 		totalLengthOfAllMuscles += d;
 	}
 		
-	// 3:
+	// 4:
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
-	// 4:
+	// 5:
 	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
 	double connectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -540,7 +572,7 @@ void setRemainingNodeAndMuscleAttributes()
 		Node[i].area = surfaceAreaOfLeftAtrium*(Node[i].mass/MassOfLeftAtrium);
 	}
 	
-	// 5:
+	// 6:
 	double stddev, left, right;
  	double radius = MyocyteDiameter/2.0;
  	double myocyteVolume = PI*radius*radius*MyocyteLength;
@@ -595,7 +627,7 @@ void setRemainingNodeAndMuscleAttributes()
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
-	// 6:
+	// 7:
 	int id, id2;
 	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
 	{	
@@ -779,81 +811,6 @@ void setRemainingParameters()
 	RecenterCount = 0;
 	RecenterRate = 10;
 }
-
-/*
- If you know that you want to ablate a set of nodes before the simulation
- starts you can do it here, or just wait and do it in the running simulation.
- Do not ablate the PulsePointNode node unless you want to have a simulation 
- that just sits there.
- 
- An example is given and commented out below to work from.
-*/
-void hardCodedAblations()
-{	
-	// To ablate a selected node set your index and uncomment this line.
-	
-	/*
-	int index = ***;
-	if(0 < index && index < NumberOfNodes)
-	{
-		Node[index].isAblated = true;
-		Node[index].isDrawNode = true;
-		Node[index].color.x = 1.0;
-		Node[index].color.y = 1.0;
-		Node[index].color.z = 1.0;
-	}
-	
-	if(index == PulsePointNode) 
-	{
-		printf("\n\n You have ablated the pulse point node in the hardCodedAblations() function.");
-		printf("\n If this is what you wanted to do, it's fine.");
-		printf("\n If not, change your selection in the code hardCodedAblations() function.");
-		printf("\n");
-	}
-	*/
-}
-
-/*
- If you know that you want to set a node to be a pulse node before the simulation
- starts you can do it here, or just wait and do it in the running simulation.
- Do not set the the PulsePointNode node because it has already been set in the 
- setNodesFromBlenderFile() function
- 
- An example is given and commented out below to work from.
-*/
-void hardCodedPeriodicEctopicEvents()
-{	
-	/*
-	int index = ***;
-	if(0 < index && index < NumberOfNodes && index != PulsePointNode)
-	{
-		Node[index].isBeatNode = true;
-		Node[index].beatPeriod = ***;
-		Node[index].beatTimer = ***;
-		Node[index].isDrawNode = true;
-		Node[index].color.x = 1.0;
-		Node[index].color.y = 0.0;
-		Node[index].color.z = 1.0;
-	}
-	*/
-}
-
-/*
- If you know that you want to set a muscle's attributes before the simulation
- starts you can do it here, or just wait and do it in the running simulation.
- 
- An example is given and commented out below to work from.
-*/
-void hardCodedIndividualMuscleAttributes()
-{
-	/*
-	int index = 100; // Set index to the muscle number you want.
-	Muscle[index].conductionVelocity = BaseMuscleConductionVelocity*(10.0);
-	Muscle[index].conductionDuration = Muscle[index].naturalLength/Muscle[index].conductionVelocity;
-	Muscle[index].refractoryPeriod = BaseMuscleRefractoryPeriod*(10.0);
-	checkMuscle(index);
-	*/
-}		
 		
 /*
  This code 

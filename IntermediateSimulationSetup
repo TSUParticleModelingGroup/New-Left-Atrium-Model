@@ -28,7 +28,7 @@ We added a standard deviation in case the user would like to introduce some rand
 Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
 Both should be floats.
 
---BaseMuscleConductionVelocity = 0.3;
+--BaseMuscleConductionVelocity = 1.0;
 --MuscleConductionVelocitySTD = 0.0;
 
 This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle. [I3]

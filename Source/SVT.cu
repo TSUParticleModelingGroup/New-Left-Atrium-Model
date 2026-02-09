@@ -108,7 +108,7 @@ void setupCudaEnvironment()
 }
 
 /*
- This function reads in all the user defined parameters in the three SimulationSetup files.
+ This function reads in all the user defined parameters in the BasicSimulationSetup file.
 */
 void readBasicSimulationSetupParameters()
 {
@@ -159,6 +159,9 @@ void readBasicSimulationSetupParameters()
 	printf("\n Basic Simulation Parameters have been read in from BasicSimulationSetup file.\n");
 }
 
+/*
+ This function reads in all the user defined parameters in the IntermediateSimulationSetup file.
+*/
 void readIntermediateSimulationSetupParameters()
 {
 	ifstream data;
@@ -265,6 +268,9 @@ void readIntermediateSimulationSetupParameters()
 	printf("\n Intermediate Simulation Parameters have been read in from IntermediateSimulationSetup file.\n");
 }
 
+/*
+ This function reads in all the user defined parameters in the AdvancedSimulationSetup file.
+*/
 void readAdvancedSimulationSetupParameters()
 {
 	ifstream data;
@@ -357,16 +363,15 @@ void setup()
 	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
-		setNodesFromBlenderFile();
+		readNodesFromFile();
+		centerNodes();
 		checkNodes();
-		setBachmannBundleFromBlenderFile();
-		setMusclesFromBlenderFile();
+		readPulseUpAndFrontNodesFromFile();
+		readBachmannBundleFromFile();
+		readMusclesFromFile();
 		linkNodesToMuscles();
 		findRadiusAndMassOfLeftAtrium();
 		setRemainingNodeAndMuscleAttributes();
-		hardCodedAblations();
-		hardCodedPeriodicEctopicEvents();
-		hardCodedIndividualMuscleAttributes();
 		for(int i = 0; i < NumberOfMuscles; i++)
 		{	
 			checkMuscle(i);

@@ -21,6 +21,7 @@ LeftAtriumRealBase
 LeftAtriumRealPartialAppendage
 LeftAtriumRealRemovedAppendage
 TheRock
+TheRock3D
 The code is not currently written for models with depth, but it does work with them. Use the 3D models with this in mind.
 3DIdealLAtrium2.3K
 3DIdealLAtrium2.3K_BB
@@ -29,6 +30,7 @@ These are not closed objects, as long as you have muscle contractions turned off
 If you turn muscle contraction on it will run but there is no center to simulate pressure from.
 10X10
 21X21
+25X25X5
 Plain200X200
 Rand200X200
 Rand300X300
@@ -37,7 +39,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = LeftAtriumRealBase
+--InputFileName = TheRock3D
 
 Name of previous run files that were stored in GitHub.
 test
