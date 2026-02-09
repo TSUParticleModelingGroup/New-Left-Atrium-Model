@@ -401,10 +401,11 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				setMouseMode(-1);
 			}
 			break;
-			/*
 		case GLFW_KEY_ESCAPE: // Escape key to exit
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
+			/*
+
 
 		case GLFW_KEY_F1: // F1 key to toggle run/pause
 		case GLFW_KEY_R: // r/R key to toggle run/pause
@@ -988,7 +989,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 	}
 	
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
-	MouseX = ( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
+	MouseX = -( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
 	MouseY = (-2.0*y/YWindowSize + 1.0) * sensitivityMultiplier;
 }
 
