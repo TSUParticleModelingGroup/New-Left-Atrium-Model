@@ -336,7 +336,7 @@ void readNodesFromFile();
 void centerNodes();
 void checkNodes();
 void readBachmannBundleFromFile();
-void readMusclesFromFile();
+void readAndConnectMusclesFromFile();
 void linkNodesToMuscles();
 double croppedRandomNumber(double, double, double);
 void findRadiusAndMassOfLeftAtrium();

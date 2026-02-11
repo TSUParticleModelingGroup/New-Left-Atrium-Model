@@ -360,7 +360,7 @@ void setup()
 	readIntermediateSimulationSetupParameters();
 	readAdvancedSimulationSetupParameters();
 	
-	// Getting nodes and muscle from blender generator files or a previous run file.
+	// Getting nodes and muscle from files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
 		readNodesFromFile();
@@ -368,7 +368,7 @@ void setup()
 		checkNodes();
 		readPulseUpAndFrontNodesFromFile();
 		readBachmannBundleFromFile();
-		readMusclesFromFile();
+		readAndConnectMusclesFromFile();
 		linkNodesToMuscles();
 		findRadiusAndMassOfLeftAtrium();
 		setRemainingNodeAndMuscleAttributes();

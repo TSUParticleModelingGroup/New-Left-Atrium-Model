@@ -11,7 +11,7 @@
  void checkNodes();
  void readPulseUpAndFrontNodesFromFile();
  void readBachmannBundleFromFile();
- void readMusclesFromFile();
+ void readAndConnectMusclesFromFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void findRadiusAndMassOfLeftAtrium();
@@ -153,10 +153,10 @@ void centerNodes()
 
 /* This function checks to see if two nodes are too close relative to all the other nodes 
    in the simulations. 
-   1: This for loop finds all the nearest neighbor distances and then it calculates the average of this value. 
-      This get a sense of how close nodes are in general. If you have more nodes they arvoid readPulseUpAndFrontNodesFromFile()e going to be 
+   1: This for loop finds all the closest neighbor distances and then it calculates the average of this value. 
+      This get a sense of how close nodes are in general. If you have more nodes they are going to be 
       closer together, this number just gets you a scale to compare to.
-   2: This for loop checks to see if two nodes are closer than an cutoffDivider times smaller than the 
+   2: This for loop checks to see if two nodes are closer than a cutoffDivider times smaller than the 
       average minimal distance. If it is, the nodes are printed out with their separation and a flag is set.
       Adjust the cutoffDivider for tighter and looser tolerances.
    3: If the flag is set, the simulation is terminated so the user can correct the node file that contains the faulty nodes.
@@ -169,7 +169,7 @@ void checkNodes()
 	float cutoffDivider = 100.0;
 	float cutoff;
 	
-	// 1: Finding average nearest neighbor distance.
+	// 1: Finding average closest neighbor distance.
 	averageMinSeparation = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -214,7 +214,7 @@ void checkNodes()
 		}
 	}
 	
-	// 3: Terminating the simulation if nodes were flagged.
+	// 3: Terminating the simulation if nodes were flagged and this switch is on.
 	if(flag == true)
 	{
 		printf("\n\n The average nearest separation for all the nodes is %f.", averageMinSeparation);
@@ -229,8 +229,7 @@ void checkNodes()
 /*
  This function 
  1. Opens the PulseNodeUpNodeFrontNode file.
- 2. Then reads in and sets the globals:PulsePointNode, UpNode, and FrontNode.
- 3. Sets the pulse node.
+ 2. Then reads in and sets the globals: PulsePointNode, UpNode, and FrontNode.
 */
 void readPulseUpAndFrontNodesFromFile()
 {	
@@ -270,7 +269,7 @@ void readPulseUpAndFrontNodesFromFile()
  This function 
  1. Opens the Bachmann's Bundle (BB) file.
  2. Reads the number of nodes in the BB.
- 3. Allocating memory on both CPU and GPU to hold BB.
+ 3. Allocating memory on both CPU hold BB.
  4. Reads the BB nodes.
  */
 void readBachmannBundleFromFile()
@@ -286,7 +285,7 @@ void readBachmannBundleFromFile()
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/BachmannsBundle");
 	
-	// Opening the file.
+	// 1. Opening the file.
 	inFile = fopen(fileName,"rb");
 	if(inFile == NULL)
 	{
@@ -295,14 +294,14 @@ void readBachmannBundleFromFile()
 		exit(0);
 	}
 	
-	// Reading the header information.
+	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
 	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
 	
-	// Allocating memory for the Bachmann's Bundle nodes.
+	// 3. Allocating memory for the Bachmann's Bundle nodes.
 	BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
 	
-	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
+	// 4. Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
 	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
 	{
 		fscanf(inFile, "%d ", &id);
@@ -321,7 +320,7 @@ void readBachmannBundleFromFile()
  4. Sets all the muscles to their default or start values.
  5. Reads and connects the muscle to the two nodes it is connected to.
 */
-void readMusclesFromFile()
+void readAndConnectMusclesFromFile()
 {	
 	FILE *inFile;
 	int id, idNode1, idNode2;
@@ -334,7 +333,7 @@ void readMusclesFromFile()
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/Muscles");
 	
-	// Opening the muscle file.
+	// 1. Opening the muscle file.
 	inFile = fopen(fileName,"rb");
 	if (inFile == NULL)
 	{
@@ -343,10 +342,11 @@ void readMusclesFromFile()
 		exit(0);
 	}
 	
+	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfMuscles);
 	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
 	
-	// Allocating memory for the CPU and GPU muscles. 
+	// 3. Allocating memory for the CPU and GPU muscles. 
 	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
 	cudaErrorCheck(__FILE__, __LINE__);
@@ -354,7 +354,7 @@ void readMusclesFromFile()
 	cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaErrorCheck(__FILE__, __LINE__);
 
-	// Setting all muscles to their default settings; 
+	// 4. Setting all muscles to their default settings; 
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].nodeA = -1;
@@ -380,7 +380,7 @@ void readMusclesFromFile()
 		Muscle[i].color.w = 0.0;
 	}
 	
-	// Reading in from the blender file what two nodes the muscle connects.
+	// 5. Reading in from the blender file what two nodes the muscle connects.
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		fscanf(inFile, "%d", &id);
@@ -509,17 +509,24 @@ void findRadiusAndMassOfLeftAtrium()
  5: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
     muscles connected to it. We can then use the ratio of node masses (like we used the ratio of muscle length in 2) to 
     find the area of each node. Area is used to get a force on the node from the LA pressure.
- 6: Here we set the muscle contraction strength attributes. 
-    The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
-    In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
-    If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
-    The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
-    can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
- 7: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
-    
- Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
- generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
- future updates to the program. 
+ 6: Here we set the base muscle attributes. 
+    a: Setting the muscles conduction velocity. 
+    b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
+    c: Setting the muscle's refractory period.
+    d: Setting the muscle's absolute refractory period.
+    e: Setting the muscle's contraction strength.
+      The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
+      In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
+      If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
+      The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
+      can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
+    f: Setting the muscle's compression stop fraction (The max percent of the muscles length that is lost in contraction).
+     Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
+     generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
+     future updates to the program. 
+ 7: Setting all the atributes of BB. 
+ 8: Setting all the atributes of the LAA.
+ 9: Setting all the atributes of the PV.
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
@@ -531,7 +538,7 @@ void setRemainingNodeAndMuscleAttributes()
 	      exit(0);
 	}
 	
-	// 2. This is the pulse point node that generates the beat.
+	// 2: This is the pulse point node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
@@ -545,17 +552,17 @@ void setRemainingNodeAndMuscleAttributes()
 		dy = Node[Muscle[i].nodeA].position.y - Node[Muscle[i].nodeB].position.y;
 		dz = Node[Muscle[i].nodeA].position.z - Node[Muscle[i].nodeB].position.z;
 		d = sqrt(dx*dx + dy*dy + dz*dz);
-		Muscle[i].naturalLength = d;
+		Muscle[i].naturalLength = d; // The natural length is how far apart its two ends are at rest.
 		totalLengthOfAllMuscles += d;
 	}
 		
-	// 4:
+	// 4: Calculating the mass of each individual muscle.
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].mass = MassOfLeftAtrium*(Muscle[i].naturalLength/totalLengthOfAllMuscles);
 	}
 
-	// 5:
+	// 5: Calculating a mass for each node.
 	double surfaceAreaOfLeftAtrium = 4.0*PI*RadiusOfLeftAtrium*RadiusOfLeftAtrium;
 	double connectedMuscleMass;
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -581,23 +588,28 @@ void setRemainingNodeAndMuscleAttributes()
         
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
+	        // a: Setting the muscles conduction velocity.
 		stddev = MuscleConductionVelocitySTD;
 		left = -MuscleConductionVelocitySTD;
 		right = MuscleConductionVelocitySTD;
 		Muscle[i].conductionVelocity = BaseMuscleConductionVelocity + croppedRandomNumber(stddev, left, right);
 		
+		// b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
 		Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		
+		// c: Setting the muscle's refractory period.
 		stddev = MuscleRefractoryPeriodSTD;
 		left = -MuscleRefractoryPeriodSTD;
 		right = MuscleRefractoryPeriodSTD;	
 		Muscle[i].refractoryPeriod = BaseMuscleRefractoryPeriod + croppedRandomNumber(stddev, left, right);
 		
+		// d: Setting the muscle's absolute refractory period.
 		stddev = AbsoluteRefractoryPeriodFractionSTD;
 		left = -AbsoluteRefractoryPeriodFractionSTD;
 		right = AbsoluteRefractoryPeriodFractionSTD;
 		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
 		
+		// e: Setting the muscle's contraction strength.
 		stddev = MyocyteForcePerMassSTD;
 		left = -MyocyteForcePerMassSTD;
 		right = MyocyteForcePerMassSTD;
@@ -621,16 +633,21 @@ void setRemainingNodeAndMuscleAttributes()
 		
 		Muscle[i].relaxedStrength = MuscleRelaxedStrengthFraction*Muscle[i].contractionStrength;
 		
+		// f: Setting the muscle's compression stop fraction (The max percent of the muscles length that is lost in contraction).
 		stddev = MuscleCompressionStopFractionSTD;
 		left = -MuscleCompressionStopFractionSTD;     
 		right = MuscleCompressionStopFractionSTD;         
 		Muscle[i].compressionStopFraction = MuscleCompressionStopFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
-	// 7:
+	// 7: Setting all the atributes of BB.
+	// !! Make sure this loop is after the basic muscle loop because all values are created as a multiple of those values.
 	int id, id2;
 	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
 	{	
+	        // a: Coloring the nodes. 
+	        //    The pulse point node is technically the first node in BB but it has other functions so it not an index in the BB vector.
+	        //    But it is colored the same.
 		if(i == -1)
 		{
 			id = PulsePointNode;
@@ -648,10 +665,13 @@ void setRemainingNodeAndMuscleAttributes()
 			Node[id].isDrawNode = true;
 		}
 		
+		// b: Adjusting the values that a muscle connected to BB nodes will have.
 		for(int k = 0; k < MUSCLES_PER_NODE; k++)
 		{
 			id2 = Node[id].muscle[k];
-			if(id2 != -1)
+			// If a node is connected to a muscle it will have a positive number. 
+			// If it is -1 it means you are past the number of muscle that node is connected to.
+			if(id2 != -1) 
 			{
 				for(int j = i+1; j < NumberOfNodesInBachmannsBundle; j++)
 				{
@@ -670,6 +690,24 @@ void setRemainingNodeAndMuscleAttributes()
 			}
 		}
 	}
+	
+	// 8: Setting all the atributes of the LAA.
+	// !! Make sure this loop is after the basic muscle loop because all values are created as a multiple of those values.
+	/*
+	for(int i = 0; i < NumberOfNodesInLAA; i++)
+	{
+	
+	}
+	*/
+	
+	// 9: Setting all the atributes of the PV.
+	// !! Make sure this loop is after the basic muscle loop because all values are created as a multiple of those values.
+	/*
+	for(int i = 0; i < NumberOfPVNodes; i++)
+	{
+	
+	}
+	*/
 	
 	printf("\n All node and muscle attributes have been set.\n");
 }
