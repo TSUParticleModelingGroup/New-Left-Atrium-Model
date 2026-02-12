@@ -1,5 +1,3 @@
-
-
 /*
  This file contains all the functions that read in the nodes and muscles, links them together, 
  sets up the node and muscle attributes, and assigns them their values in our units. 
@@ -8,22 +6,31 @@
  
  The functions are listed below in the order they appear.
  
- void setNodesFromBlenderFile();
+ void readNodesFromFile();
+ void centerNodes();
  void checkNodes();
- void setBachmannBundleFromBlenderFile();
- void setMusclesFromBlenderFile();
+ void readPulseUpAndFrontNodesFromFile();
+ void readBachmannBundleFromFile();
+ void readMusclesFromFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
  void findRadiusAndMassOfLeftAtrium();
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
- void hardCodedAblations();
- void hardCodedPeriodicEctopicEvents();fscanf(inFile, "%d", &NumberOfNodes)
- 7. Places the center of the LA at (0,0,0).
+ void checkMuscle(int);
+*/
+		
+/*
+ This function 
+ 1. Opens the node file.
+ 2. Finds the number of nodes.
+ 3. Allocates memory to hold the nodes on the CPU and the GPU
+ 4. Sets all the nodes to their default or start values.
+ 5. Reads and assigns the node positions from the node file.
  8. Sets the pulse node.
 */
-void setNodesFromBlenderFile()
+void readNodesFromFile()
 {	
 	FILE *inFile;
 	float x, y, z;
@@ -31,16 +38,14 @@ void setNodesFromBlenderFile()
 	char fileName[256];
 	
 	// Generating the name of the file that holds the nodes.
-	
-	char directory[] = "NodesMuscles/";
+	char directory[] = "../NodesMuscles/";
 	strcpy(fileName, "");
 	strcat(fileName, directory);
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/Nodes");
-	printf("%s", fileName);
 	
 	// 1. Opening the node file.
-	inFile = fopen(fileName,"rb");
+	inFile = fopen(fileName,"r");
 	if(inFile == NULL)
 	{
 		printf("\n\n Can't open Nodes file %s.", fileName);
@@ -51,16 +56,10 @@ void setNodesFromBlenderFile()
 	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
-	fscanf(inFile, "%d", &PulsePointNode);
-	printf("\n PulsePointNode = %d", PulsePointNode);
-	fscanf(inFile, "%d", &UpNode);
-	printf("\n UpNode = %d", UpNode);
-	fscanf(inFile, "%d", &FrontNode);
-	printf("\n FrontNode = %d", FrontNode);
-	printf("\n");
 	
 	// 3. Allocating memory for the CPU and GPU nodes. 
 	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+	//cudaErrorCheck(__FILE__, __LINE__);
 	
 	
 	// 4. Setting all nodes to zero or their default settings; 
@@ -85,17 +84,29 @@ void setNodesFromBlenderFile()
 		}
 	}
 	
+	printf("\n\nFile %s has been opened and memory has been allocated for the nodes.\n", fileName);
+
 	// 5. Reading in the nodes positions.
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		fscanf(inFile, "%d %f %f %f", &id, &x, &y, &z);
-		
 		Node[id].position.x = x;
 		Node[id].position.y = y;
 		Node[id].position.z = z;
 	}
 	
-	// 6. Finding center on LA
+	fclose(inFile);
+	printf("\n Nodes positions have been read in.\n");
+}
+
+/*
+ This function 
+ 1. Finds the center of the LA
+ 2. Places the center of the LA at (0,0,0).
+*/
+void centerNodes()
+{
+    // 1. Finding center on LA
 	float4 centerOfObject;
 	centerOfObject.x = 0.0;
 	centerOfObject.y = 0.0;
@@ -103,36 +114,28 @@ void setNodesFromBlenderFile()
 	centerOfObject.w = (double)NumberOfNodes;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		 centerOfObject.x += Node[i].position.x;
-		 centerOfObject.y += Node[i].position.y;
-		 centerOfObject.z += Node[i].position.z;
+		centerOfObject.x += Node[i].position.x;
+		centerOfObject.y += Node[i].position.y;
+		centerOfObject.z += Node[i].position.z;
 	}
 	centerOfObject.x /= centerOfObject.w;
 	centerOfObject.y /= centerOfObject.w;
 	centerOfObject.z /= centerOfObject.w;
 	
-	// 7. Centering the LA at (0,0,0)
+	// 2. Centering the LA at (0,0,0)
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x -= centerOfObject.x;
 		Node[i].position.y -= centerOfObject.y;
 		Node[i].position.z -= centerOfObject.z;
 	}
-
-	//TODO: The .isBeatNode has been changed to a node type, the same as the bachman's bundle nodes.
-	// 8. This is the pulse node that generates the beat.
-	//Node[PulsePointNode].isBeatNode = true;
-	//Node[PulsePointNode].beatPeriod = BeatPeriod;
-	// Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
-	
-	fclose(inFile);
-	printf("\n Blender generated nodes have been created.\n");
+	printf("\n Nodes have been centered.\n");
 }
 
 /* This function checks to see if two nodes are too close relative to all the other nodes 
    in the simulations. 
    1: This for loop finds all the nearest neighbor distances and then it calculates the average of this value. 
-      This get a sense of how close nodes are in general. If you have more nodes they are going to be 
+      This get a sense of how close nodes are in general. If you have more nodes they arvoid readPulseUpAndFrontNodesFromFile()e going to be 
       closer together, this number just gets you a scale to compare to.
    2: This for loop checks to see if two nodes are closer than an cutoffDivider times smaller than the 
       average minimal distance. If it is, the nodes are printed out with their separation and a flag is set.
@@ -206,57 +209,65 @@ void checkNodes()
 
 /*
  This function 
- 1. Opens the Left Atrial Appendage (LAA) file.
- 2. Reads the number of nodes in the LAA.
- 3. Allocates memory on both CPU and GPU to hold BB.
- 4. Reads the LAA nodes.
- */
-void setLeftAtrialAppendageFromBlenderFile()
+ 1. Opens the PulseNodeUpNodeFrontNode file.
+ 2. Then reads in and sets the globals:PulsePointNode, UpNode, and FrontNode.
+ 3. Sets the pulse node.
+*/
+void readPulseUpAndFrontNodesFromFile()
 {	
 	FILE *inFile;
-	int id;
 	char fileName[256];
 	
 	// Generating the name of the file that holds the nodes.
-	char directory[] = "./NodesMuscles/";
+	char directory[] = "../NodesMuscles/";
 	strcpy(fileName, "");
 	strcat(fileName, directory);
 	strcat(fileName, NodesMusclesFileName);
-	strcat(fileName, "/LeftAtrialAppendage");
+	strcat(fileName, "/PulseNodeUpNodeFrontNode");
 	
-	// Opening the file.
-	inFile = fopen(fileName,"rb");
-	if(inFile == NULL)
+	// 1. Opening the node file.
+	inFile = fopen(fileName,"r");
+	if(!inFile)
 	{
-		printf("\n\n Can't open Left Atrial Appendage file.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
+		//create a file with default values (0) if it doesn't exist
+		inFile = fopen(fileName,"wb");
+		if(!inFile)
+		{
+			printf("\n\n Can't open or create PulseNodeUpNodeFrontNode file %s.", fileName);
+			printf("\n The simulation has been terminated.\n\n");
+			exit(0);
+		}
+		else
+		{
+			int defaultValue = 0;
+			for(int i = 0; i < 3; i++)
+			{
+				fwrite(&defaultValue, sizeof(int), 1, inFile);
+				if(ferror(inFile))
+				{
+					printf("\n\n Can't write to PulseNodeUpNodeFrontNode file %s.", fileName);
+					printf("\n The simulation has been terminated.\n\n");
+					exit(0);
+				}
+				else
+				{
+					printf("\n PulseNodeUpNodeFrontNode file %s was created with default values.", fileName);
+				}
+			}
+		}
 	}
 	
-	// Reading the header information.
-	fscanf(inFile, "%d", &NumberOfNodesInLeftAtrialAppendage);
-	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInLeftAtrialAppendage);
-	
-	// Allocating memory for the LAA nodes.
-	LeftAtrialAppendage = (int*)malloc(NumberOfNodesInLeftAtrialAppendage*sizeof(int));
-	
-	// If we want to use BB on the GPU use the following and define BachmannsBundleGPU in header.h.
-	// Allocating memory for the CPU and GPU LAA nodes. 
-	//cudaHostAlloc(&LeftAtrialAppendage, NumberOfNodesInLeftAtrialAppendage*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	////cudaErrorCheck(__FILE__, __LINE__);
-	
-	//cudaMalloc((void**)&LeftAtrialAppendage, NumberOfNodesInLeftAtrialAppendage*sizeof(int));
-	////cudaErrorCheck(__FILE__, __LINE__);
-	
-	// Reading the nodes that extend from the pulse node to create LeftAtrialAppendage.
-	for(int i = 0; i < NumberOfNodesInLeftAtrialAppendage; i++)
-	{
-		fscanf(inFile, "%d ", &id);
-		LeftAtrialAppendage[i] = id;
-	}
+	// 2. Reading the header information.
+	fscanf(inFile, "%d", &PulsePointNode);
+	printf("\n PulsePointNode = %d", PulsePointNode);
+	fscanf(inFile, "%d", &UpNode);
+	printf("\n UpNode = %d", UpNode);
+	fscanf(inFile, "%d", &FrontNode);
+	printf("\n FrontNode = %d", FrontNode);
+	printf("\n");
 	
 	fclose(inFile);
-	printf("\n Left Atrial Appendage nodes have been read in.\n");
+	printf("\n PulsePointNode, UpNode, and FrontNode have been read in.\n");
 }
 
 /*
@@ -266,21 +277,21 @@ void setLeftAtrialAppendageFromBlenderFile()
  3. Allocating memory on both CPU and GPU to hold BB.
  4. Reads the BB nodes.
  */
-void setBachmannBundleFromBlenderFile()
+void readBachmannBundleFromFile()
 {	
 	FILE *inFile;
 	int id;
 	char fileName[256];
 	
 	// Generating the name of the file that holds the nodes.
-	char directory[] = "./NodesMuscles/";
+	char directory[] = "../NodesMuscles/";
 	strcpy(fileName, "");
 	strcat(fileName, directory);
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/BachmannsBundle");
 	
 	// Opening the file.
-	inFile = fopen(fileName,"rb");
+	inFile = fopen(fileName,"r");
 	if(inFile == NULL)
 	{
 		printf("\n\n Can't open Bachmann's Bundle file.");
@@ -295,14 +306,6 @@ void setBachmannBundleFromBlenderFile()
 	// Allocating memory for the Bachmann's Bundle nodes.
 	BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
 	
-	// If we want to use BB on the GPU use the following and define BachmannsBundleGPU in header.h.
-	// Allocating memory for the CPU and GPU Bachmann's Bundle nodes. 
-	//cudaHostAlloc(&BachmannsBundle, NumberOfNodesInBachmannsBundle*sizeof(int), cudaHostAllocDefault); // Making page locked memory on the CPU.
-	////cudaErrorCheck(__FILE__, __LINE__);
-	
-	//cudaMalloc((void**)&BachmannsBundleGPU, NumberOfNodesInBachmannsBundle*sizeof(int));
-	////cudaErrorCheck(__FILE__, __LINE__);
-	
 	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
 	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
 	{
@@ -311,7 +314,7 @@ void setBachmannBundleFromBlenderFile()
 	}
 	
 	fclose(inFile);
-	printf("\n Bachmann's Bundle Node have been read in.\n");
+	printf("\n Bachmann's Bundle Nodes have been read in.\n");
 }
 
 /*
@@ -322,21 +325,21 @@ void setBachmannBundleFromBlenderFile()
  4. Sets all the muscles to their default or start values.
  5. Reads and connects the muscle to the two nodes it is connected to.
 */
-void setMusclesFromBlenderFile()
+void readMusclesFromFile()
 {	
 	FILE *inFile;
 	int id, idNode1, idNode2;
 	char fileName[256];
     
 	// Generating the name of the file that holds the muscles.
-	char directory[] = "./NodesMuscles/";
+	char directory[] = "../NodesMuscles/";
 	strcpy(fileName, "");
 	strcat(fileName, directory);
 	strcat(fileName, NodesMusclesFileName);
 	strcat(fileName, "/Muscles");
 	
 	// Opening the muscle file.
-	inFile = fopen(fileName,"rb");
+	inFile = fopen(fileName,"r");
 	if (inFile == NULL)
 	{
 		printf("\n\n Can't open Muscles file %s.", fileName);
@@ -351,14 +354,14 @@ void setMusclesFromBlenderFile()
 	//Muscle = (muscleAttributesStructure*)malloc(NumberOfMuscles*sizeof(muscleAttributesStructure));
 	cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
 	//cudaErrorCheck(__FILE__, __LINE__);
-
+	
 	// Setting all muscles to their default settings; 
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		Muscle[i].nodeA = -1;
 		Muscle[i].nodeB = -1;
 
-		// Setting all muscle colors to ready (red)
+		// Setting all muscle colors to default color (red)
 		Muscle[i].color.x = 1.0;
 		Muscle[i].color.y = 0.0;
 		Muscle[i].color.z = 0.0;
@@ -423,6 +426,149 @@ void linkNodesToMuscles()
 }
 
 /*
+ This function: 
+ 1: Uses the Box-Muller method to create a standard normal random number from two uniform random numbers.
+ 2: Sets the standard deviation to what was input.
+ 3: Checks to see if the random number is between the desired numbers. If not throw it away and choose again.
+*/
+double croppedRandomNumber(double stddev, double left, double right)
+{
+	double temp1, temp2;
+	double randomNumber;
+	bool test = false;
+			
+	while(test == false)
+	{
+		// Getting two uniform random numbers in [0,1]
+		temp1 = ((double) rand() / (RAND_MAX));
+		temp2 = ((double) rand() / (RAND_MAX));
+		
+		// Using Box-Muller to get a standard normally distributed random number (mean = 0, stddev = 1)
+		randomNumber = sqrt(-2.0 * log(temp1))*cos(2.0*PI*temp2);
+		
+		// Setting its Standard Deviation to the the desired value. 
+		randomNumber *= stddev;
+		
+		// Chopping the random number between left and right.  
+		if(randomNumber < left || right < randomNumber) test = false;
+		else test = true;
+	}
+	return(randomNumber);	
+}
+
+/*
+ This function 
+ 1. Finds the average radius of the LA which we will use as the radius of the LA.
+ 2. Finds the mass of the LA.
+*/
+void findRadiusAndMassOfLeftAtrium()
+{
+        // 1. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
+	double averageRadius = 0.0;
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
+	}
+	averageRadius /= (double)NumberOfNodes;
+	RadiusOfLeftAtrium = averageRadius;
+	printf("\n RadiusOfLeftAtrium = %f millimeters", RadiusOfLeftAtrium);
+	
+	// 2. Setting the mass of the LA. 
+	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
+	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
+	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
+	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
+	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
+	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
+	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
+	
+	printf("\n LA radius and mass has been set.\n");
+}
+
+/*
+ In this function, we set the remaining value of the nodes and muscle which were not already 
+ set in the setNodesFromBlenderFile(), the setMusclesFromBlenderFile(), and the linkNodesToMuscles() functions.
+ 1: Checking to make sure LA radius and mass are set before we use them to set Node and Muscle attributes.
+ 2: Setting the pulse point node.
+ 3: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+    the left atrium. 
+ 4: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
+    fraction by the mass of the left atrium to get the mass on an individual muscle. 
+ 5: Next, we use the muscle mass to find the mass of each node by taking half (each muscle is connected to two nodes) the mass of all 
+    muscles connected to it. We can then use the ratio of node masses (like we used the ratio of muscle length in 2) to 
+    find the area of each node. Area is used to get a force on the node from the LA pressure.
+ 6: Here we set the muscle contraction strength attributes. 
+    The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
+    In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
+    If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
+    The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
+    can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
+ 7: Setting Bachmann's Bundle, coloring the nodes and adjusting the connecting muscle's conduction velocity. 
+    
+ Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
+ generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
+ future updates to the program. 
+*/
+void setRemainingNodeAndMuscleAttributes()
+{	
+
+	// 3:
+	double dx, dy, dz, d;
+	double totalLengthOfAllMuscles = 0.0;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{	
+		dx = Node[Muscle[i].nodeA].position.x - Node[Muscle[i].nodeB].position.x;
+		dy = Node[Muscle[i].nodeA].position.y - Node[Muscle[i].nodeB].position.y;
+		dz = Node[Muscle[i].nodeA].position.z - Node[Muscle[i].nodeB].position.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		totalLengthOfAllMuscles += d;
+	}
+		
+	// 7:
+	int id, id2;
+	for(int i = -1; i < NumberOfNodesInBachmannsBundle; i++)
+	{	
+		if(i == -1)
+		{
+			id = PulsePointNode;
+			Node[id].color.x = BachmannColor.x;
+			Node[id].color.y = BachmannColor.y;
+			Node[id].color.z = BachmannColor.z;
+		}
+		else
+		{
+			id = BachmannsBundle[i];
+			Node[id].color.x = BachmannColor.x;
+			Node[id].color.y = BachmannColor.y;
+			Node[id].color.z = BachmannColor.z;
+		}
+		
+		for(int k = 0; k < MUSCLES_PER_NODE; k++)
+		{
+			id2 = Node[id].muscle[k];
+			if(id2 != -1)
+			{
+				for(int j = i+1; j < NumberOfNodesInBachmannsBundle; j++)
+				{
+					for(int l = 0; l < MUSCLES_PER_NODE; l++)
+					{
+						if(Node[BachmannsBundle[j]].muscle[l] == id2)
+						{
+							Muscle[id2].color.x = BachmannColor.x;
+							Muscle[id2].color.y = BachmannColor.y;
+							Muscle[id2].color.z = BachmannColor.z;
+						}
+					}
+				
+				}
+			}
+		}
+	}
+	
+	printf("\n All node and muscle attributes have been set.\n");
+}
+
+/*
  This function sets any remaining parameters that are not part of the nodes or muscles structures.
  It also sets or initializes the run parameters for this run.
 */
@@ -431,7 +577,11 @@ void setRemainingParameters()
 	// If this is a new run these values are set hre. If it is a previous run these values will aready be read in.
 	if (NodesMusclesFileOrPreviousRunsFile == 0) 
 	{
-		// TODO: See if we can move this to the header as defaults
+		RunTime = 0.0;
+		
+		RefractoryPeriodAdjustmentMultiplier = 1.0;
+		MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+		
 		CenterOfSimulation.x = 0.0;
 		CenterOfSimulation.y = 0.0;
 		CenterOfSimulation.z = 0.0;
@@ -442,17 +592,15 @@ void setRemainingParameters()
 		AngleOfSimulation.z = 0.0;
 		AngleOfSimulation.w = 0.0;
 
-		//Simulation.ContractionisOn = false; //This is set in the BasicSimulationSetup file.
+              
 		Simulation.ViewFlag = 1;
 		Simulation.DrawNodesFlag = 0;
 		Simulation.DrawFrontHalfFlag = 0;
-		// Simulation.guiCollapsed = false; //This is set in viewDrawAndTerminalFuctions.h/createGUI().
 		
 		setView(6); //Set deafult view only if not loading from previous run.
 	}
 	
 	HitMultiplier = 0.03;
-	MouseZ = RadiusOfLeftAtrium;
 	MouseX = 0.0;
 	MouseY = 0.0;
 	ScrollSpeedToggle = 1;
@@ -462,8 +610,18 @@ void setRemainingParameters()
 	RecenterRate = 10;
 }
 
+/*
+ Checks to see if an error occurred in a CUDA call and returns the file name and line number where the error occurred.
+*/
+void cudaErrorCheck(const char *file, int line)
+{
+	cudaError_t  error;
+	error = cudaGetLastError();
 
-		
-		
-
-
+	if(error != cudaSuccess)
+	{
+		printf("\n CUDA ERROR: message = %s, File = %s, Line = %d\n", cudaGetErrorString(error), file, line);
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+}

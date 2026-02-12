@@ -52,6 +52,13 @@ using namespace std;
 // This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
+//Node type defines.
+#define SET_MOUSE_OFF -1
+#define SET_STANDARD 0
+#define SET_BACHMANN_BUNDLE 1
+#define SET_APPENDAGE 2
+//#define SET_SCAR_TISSUE 3
+
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
 typedef struct 

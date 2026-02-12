@@ -127,11 +127,14 @@ void setup()
 	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
-		setNodesFromBlenderFile();
+		readNodesFromFile();
+		centerNodes();
 		checkNodes();
-		setBachmannBundleFromBlenderFile();
-		setMusclesFromBlenderFile();
+		readPulseUpAndFrontNodesFromFile();
+		readBachmannBundleFromFile();
+		readMusclesFromFile();
 		linkNodesToMuscles();
+		setRemainingNodeAndMuscleAttributes();
 	}
 	else
 	{
@@ -167,9 +170,9 @@ int main(int argc, char** argv)
 	Far = 80.0*RadiusOfLeftAtrium;
 
 	//Where your eye is located
-	EyeX = 0.0*RadiusOfLeftAtrium;
-	EyeY = 0.0*RadiusOfLeftAtrium;
-	EyeZ = 2.0*RadiusOfLeftAtrium;
+	EyeX = 0.0;
+	EyeY = 0.0;
+	EyeZ = 10;
 
 	//Where you are looking
 	CenterX = 0.0;
