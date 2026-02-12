@@ -600,11 +600,13 @@ void setRemainingParameters()
 		setView(6); //Set deafult view only if not loading from previous run.
 	}
 	
-	HitMultiplier = 0.03;
+	HitMultiplier = 0.5;
+	//MouseZ = RadiusOfLeftAtrium;
+	MouseZ = 35; // See the comment on the eye initialization in the SVT.cu file for why this is no longer dependent on the radius of the LA.
 	MouseX = 0.0;
 	MouseY = 0.0;
 	ScrollSpeedToggle = 1;
-	ScrollSpeed = 1.0;
+	ScrollSpeed = 0.5;
 	MouseWheelPos = 0;
 	RecenterCount = 0;
 	RecenterRate = 10;

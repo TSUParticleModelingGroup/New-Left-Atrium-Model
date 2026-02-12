@@ -989,7 +989,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 	}
 	
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
-	MouseX = -( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
+	MouseX = ( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
 	MouseY = (-2.0*y/YWindowSize + 1.0) * sensitivityMultiplier;
 }
 
