@@ -167,9 +167,16 @@ int main(int argc, char** argv)
 	Far = 80.0*RadiusOfLeftAtrium;
 
 	//Where your eye is located
+	// It is important that this is a positive number, as the camera looks down the negative z axis. 
+	// If this is negative you will be looking at the back of the LA instead of the front. The front of the LA is what we are interested in so we want to be looking at that. 
+	// We also want to be far enough away to see the whole thing, but not too far away or it will look small and we will lose detail. 
+	// 75 seems to be a good number for this, but feel free to change it and see how it looks.
+	// SPECIFICALLY: If this is negative, the mouse directions become inverted and the drawFrontHalf function breaks.
 	EyeX = 0.0*RadiusOfLeftAtrium;
 	EyeY = 0.0*RadiusOfLeftAtrium;
-	EyeZ = 2.0*RadiusOfLeftAtrium;
+	EyeZ = 50; 
+
+	
 
 	//Where you are looking
 	CenterX = 0.0;
