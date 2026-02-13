@@ -721,8 +721,7 @@ void keyHeld(GLFWwindow* window)
 
 
 	float dAngle = 0.01;
-	//float zoom = 0.01*RadiusOfLeftAtrium;
-	float zoom = 0.5;
+	float zoom = 0.01*RadiusOfLeftAtrium;
 	float temp;
 	float4 lookVector;
 	float d;
@@ -989,8 +988,8 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 	}
 	
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
-	MouseX = ( 2.0*x/XWindowSize - 1.0) * sensitivityMultiplier;
-	MouseY = (-2.0*y/YWindowSize + 1.0) * sensitivityMultiplier;
+	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
+	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
 }
 
 /*
