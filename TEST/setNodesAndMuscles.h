@@ -104,6 +104,8 @@ void readNodesFromFile()
  1. Finds the center of the LA
  2. Places the center of the LA at (0,0,0).
 */
+
+
 void centerNodes()
 {
     // 1. Finding center on LA

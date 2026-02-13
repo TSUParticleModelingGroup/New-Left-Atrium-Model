@@ -4,6 +4,9 @@
  3: The functions that print to the linux terminal all the setting of the simulation.
  In short this file holds the functions that present information to the user.
 
+ int findCenterOfObject(nodeAttributesStructure *nodes, int count);
+ int moveObjectToOrigin(nodeAttributesStructure *nodes, int count);
+ int findAverageRadiusOfObject(nodeAttributesStructure *nodes, int count);
  floa4 findCenterOfMass();
  void renderSphere();
  void sphereVBO();
@@ -18,10 +21,143 @@
  void createGUI();
 */
 
+/*
+This function finds the center of an object by averaging the positions of all the nodes in the object together. 
+It returns 1 on success and 0 on failure. The center is returned through the objectCenter pointer parameter.
+*/
+int findCenterOfObject(float3* objectCenter, nodeAttributesStructure *nodes, int count) 
+{
+	// Input validation
+	if (!objectCenter) 
+	{
+		printf("findCenterOfObject Error: objectCenter pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (!nodes) 
+	{
+		printf("findCenterOfObject Error: nodes pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (count <= 0) 
+	{
+		printf("findCenterOfObject Error: count must be greater than zero.\n");
+		return 0; // Can't divide by zero or have negative nodes
+	}
+
+	// Calculate the sum of all node positions
+	float3 center = {0,0,0};
+	for (int i = 0; i < count; i++)
+	{
+		center.x += nodes[i].position.x;
+		center.y += nodes[i].position.y;
+		center.z += nodes[i].position.z;
+	}
+	
+	// Average the sum to find the center and then set it
+	// objectCenter->x is the same as (*objectCenter).x
+	objectCenter->x =  center.x / count;
+	objectCenter->y = center.y / count;	
+	objectCenter->z = center.z / count;
+
+	// Debugging print and return on s
+	//printf("The center of the object is at (%f, %f, %f)\n", objectCenter->x, objectCenter->y, objectCenter->z);
+	return 1;
+}
+
+/* 
+This function moves an object to the origin by 
+	1. Finding the center of the object, which is also how far offset the object is from the origin.
+	2. Translating every node in the object by the opposite amount of that offset..
+	3. Returns 1 on success and 0 on failure.
+	
+*/
+int moveObjectToOrigin(nodeAttributesStructure *nodes, int count) 
+{
+	// Input validation
+	if (!nodes) 
+	{
+		printf("moveObjectToOrigin Error: nodes pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (count <= 0) 
+	{
+		printf("moveObjectToOrigin Error: count must be greater than zero.\n");
+		return 0; // Can't divide by zero or have negative nodes
+	}
+	float epsilon = 0.0001f; // A small value to check if the center is already at the origin, so we don't do unnecessary calculations and risk floating point errors.
+	float3 center;
+	if(!findCenterOfObject(&center, nodes, count)) return 0; // note that findCenterOfObject will print an error if it fails, so we don't need to print another one here.
+	if(abs(center.x) < epsilon && abs(center.y) < epsilon && abs(center.z) < epsilon) return 1; // The object is already at the origin, so we can just return success without doing anything.
+	
+	// Moving the object
+	for (int i = 0; i < count; i++)
+	{
+		nodes[i].position.x -= center.x;
+		nodes[i].position.y -= center.y;
+		nodes[i].position.z -= center.z;
+	}
+
+	//Debugging
+
+	//printf("The object has been moved from (%f, %f, %f) to the origin (0, 0, 0)\n", center.x, center.y, center.z);
+	//float3 tempCenter;
+	//if(!findCenterOfObject(&tempCenter, nodes, count)) return 0; // Again findCenterOfObject will print an error if it fails, so we don't need to print another one here.	
+	//printf("To verify the object was moved correctly, the new center of the object is at (%f, %f, %f)\n", tempCenter.x, tempCenter.y, tempCenter.z);
+	
+	return 1;
+}
+
+/*
+This funciton finds the average radius of the object by 
+	1. Finding the center of the object.
+	2. Finding the distance from each node to the center, which is the radius of that node.
+	3. Averaging all those radii together to get the average radius of the object.
+	4. Returns 1 on success and 0 on failure
+*/
+int findAverageRadiusOfObject(double* r, nodeAttributesStructure *nodes, int count) 
+{
+	// Input validation
+	if (!r) 
+	{
+		printf("findAverageRadiusOfObject Error: objectCenter pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (!nodes) 
+	{
+		printf("findAverageRadiusOfObject Error: nodes pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (count <= 0) 
+	{
+		printf("findAverageRadiusOfObject Error: count must be greater than zero.\n");
+		return 0; // Can't divide by zero or have negative nodes
+	}
+
+	// Calculate the center of the object
+	float3 center = {0,0,0};
+	if (!findCenterOfObject(&center, nodes, count)) return 0; // Failed to find center, so can't find radius. Again findCenterOfObject will print its own error if it fails
+
+	// Calculate the distance from each node to the center
+	float totalRadius = 0.0f;
+	for (int i=0; i < count; i++)
+	{
+		float dx = nodes[i].position.x - center.x;
+		float dy = nodes[i].position.y - center.y;
+		float dz = nodes[i].position.z - center.z;
+		float distance = sqrtf(dx*dx + dy*dy + dz*dz);
+		totalRadius += distance;
+	}
+
+	// Average the distances to find the average radius and then set it, and return success
+	*r = totalRadius / count;
+	//printf("The average radius of the object is %f\n", *r); // The average radius for RealisticLA is around 25.8
+	return 1;
+
+}
+	
 float4 findCenterOfMass()
 {
 	float4 centerOfMass;
-	
 	
 	centerOfMass.x = 0.0;
 	centerOfMass.y = 0.0;

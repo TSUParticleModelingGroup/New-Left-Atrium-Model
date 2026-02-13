@@ -127,8 +127,12 @@ void setup()
 	// Getting nodes and muscle from blender generator files or a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == 0)
 	{
-		readNodesFromFile();
-		centerNodes();
+		readNodesFromFile();	
+		float3 objectCenter;
+		if(!findCenterOfObject(&objectCenter, Node, NumberOfNodes)) exit(0);
+		if(!moveObjectToOrigin(Node, NumberOfNodes)) exit(0);
+		if(!findAverageRadiusOfObject(&RadiusOfLeftAtrium, Node, NumberOfNodes)) exit(0);
+		//centerNodes();
 		checkNodes();
 		readPulseUpAndFrontNodesFromFile();
 		readBachmannBundleFromFile();
