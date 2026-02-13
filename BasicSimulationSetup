@@ -37,7 +37,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = LeftAtriumRealBase
+--InputFileName =  LeftAtriumRealBase
 
 Name of previous run files that were stored in GitHub.
 test
