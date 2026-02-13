@@ -14,7 +14,6 @@
  void readMusclesFromFile();
  void linkNodesToMuscles();
  double croppedRandomNumber(double, double, double);
- void findRadiusAndMassOfLeftAtrium();
  void setRemainingNodeAndMuscleAttributes();
  void getNodesandMusclesFromPreviousRun();
  void setRemainingParameters();
@@ -458,34 +457,7 @@ double croppedRandomNumber(double stddev, double left, double right)
 	return(randomNumber);	
 }
 
-/*
- This function 
- 1. Finds the average radius of the LA which we will use as the radius of the LA.
- 2. Finds the mass of the LA.
-*/
-void findRadiusAndMassOfLeftAtrium()
-{
-        // 1. Finding the average radius of the LA from its nodes and setting this as the radius of the LA.
-	double averageRadius = 0.0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		averageRadius += sqrt(Node[i].position.x*Node[i].position.x + Node[i].position.y*Node[i].position.y + Node[i].position.z*Node[i].position.z);
-	}
-	averageRadius /= (double)NumberOfNodes;
-	RadiusOfLeftAtrium = averageRadius;
-	printf("\n RadiusOfLeftAtrium = %f millimeters", RadiusOfLeftAtrium);
-	
-	// 2. Setting the mass of the LA. 
-	double innerVolumeOfLA = (4.0*PI/3.0)*averageRadius*averageRadius*averageRadius;
-	printf("\n Inner volume of LA = %f cubic millimeters", innerVolumeOfLA);
-	double outerRadiusOfLA = averageRadius/(1.0 - WallThicknessFraction);
-	double outerVolumeOfLA = (4.0*PI/3.0)*outerRadiusOfLA*outerRadiusOfLA*outerRadiusOfLA;
-	double volumeOfTissue = outerVolumeOfLA - innerVolumeOfLA;
-	MassOfLeftAtrium = volumeOfTissue*MyocardialTissueDensity;
-	printf("\n Mass of LA = %f grams", MassOfLeftAtrium);
-	
-	printf("\n LA radius and mass has been set.\n");
-}
+
 
 /*
  In this function, we set the remaining value of the nodes and muscle which were not already 
