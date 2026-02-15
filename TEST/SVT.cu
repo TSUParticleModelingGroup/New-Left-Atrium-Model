@@ -181,7 +181,7 @@ int main(int argc, char** argv)
 	// SPECIFICALLY: If this is negative, the mouse directions become inverted and the drawFrontHalf function breaks.
 	EyeX = 0.0*RadiusOfLeftAtrium;
 	EyeY = 0.0*RadiusOfLeftAtrium;
-	EyeZ = 50; 
+	EyeZ = 2.0*RadiusOfLeftAtrium; 
 
 	
 

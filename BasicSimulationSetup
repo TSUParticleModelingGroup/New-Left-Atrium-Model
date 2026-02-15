@@ -34,10 +34,11 @@ Rand200X200
 Rand300X300
 Rand100X100X10
 Cross200X200
+TestSphere
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName =  LeftAtriumRealBase
+--InputFileName =  NewTestSphere
 
 Name of previous run files that were stored in GitHub.
 test

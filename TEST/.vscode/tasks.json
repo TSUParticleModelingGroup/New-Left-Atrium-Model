@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Recompile and run SVT for diagnostics (clean, correct)",
+			"type": "shell",
+			"command": "./compile_test.sh && ./bin/svt",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

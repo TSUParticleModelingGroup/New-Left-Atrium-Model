@@ -23,18 +23,19 @@
 /*
  This function 
  1. Opens the node file.
- 2. Finds the number of nodes.
+ 2. Finds the number of nodes, the pulse node, the up and front nodes.
  3. Allocates memory to hold the nodes on the CPU and the GPU
  4. Sets all the nodes to their default or start values.
  5. Reads and assigns the node positions from the node file.
- 8. Sets the pulse node.
+ 6. Sets the pulse node.
 */
 void readNodesFromFile()
 {	
 	FILE *inFile;
 	float x, y, z;
-	int id;
+	int id, nodeType;
 	char fileName[256];
+
 	
 	// Generating the name of the file that holds the nodes.
 	char directory[] = "../NodesMuscles/";
@@ -55,6 +56,15 @@ void readNodesFromFile()
 	// 2. Reading the header information.
 	fscanf(inFile, "%d", &NumberOfNodes);
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
+	fscanf(inFile, "%d", &PulsePointNode);
+	printf("\n PulsePointNode = %d", PulsePointNode);
+	fscanf(inFile, "%d", &UpNode);
+	printf("\n UpNode = %d", UpNode);
+	fscanf(inFile, "%d", &FrontNode);
+	printf("\n FrontNode = %d", FrontNode);
+
+	// No Bachmann's Bundle file in this flow.
+	NumberOfNodesInBachmannsBundle = 0;
 	
 	// 3. Allocating memory for the CPU and GPU nodes. 
 	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
@@ -86,12 +96,34 @@ void readNodesFromFile()
 	printf("\n\nFile %s has been opened and memory has been allocated for the nodes.\n", fileName);
 
 	// 5. Reading in the nodes positions.
+	// Format: id type x y z
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		fscanf(inFile, "%d %f %f %f", &id, &x, &y, &z);
+		fscanf(inFile, "%d %d %f %f %f", &id, &nodeType, &x, &y, &z);
+
 		Node[id].position.x = x;
 		Node[id].position.y = y;
 		Node[id].position.z = z;
+		Node[id].type = nodeType;
+		// Color nodes by type for debugging/visual validation.
+		if(nodeType == NODE_TYPE_STANDARD)
+		{
+			Node[id].color.x = 1.0f;
+			Node[id].color.y = 0.0f;
+			Node[id].color.z = 0.0f;
+		}
+		else if(nodeType == NODE_TYPE_BACHMANN_BUNDLE)
+		{
+			Node[id].color.x = 1.0f;
+			Node[id].color.y = 1.0f;
+			Node[id].color.z = 0.0f;
+		}
+		else if(nodeType == NODE_TYPE_APPENDAGE)
+		{
+			Node[id].color.x = 1.0f;
+			Node[id].color.y = 0.5f;
+			Node[id].color.z = 0.0f;
+		}
 	}
 	
 	fclose(inFile);
@@ -216,59 +248,7 @@ void checkNodes()
 */
 void readPulseUpAndFrontNodesFromFile()
 {	
-	FILE *inFile;
-	char fileName[256];
-	
-	// Generating the name of the file that holds the nodes.
-	char directory[] = "../NodesMuscles/";
-	strcpy(fileName, "");
-	strcat(fileName, directory);
-	strcat(fileName, NodesMusclesFileName);
-	strcat(fileName, "/PulseNodeUpNodeFrontNode");
-	
-	// 1. Opening the node file.
-	inFile = fopen(fileName,"r");
-	if(!inFile)
-	{
-		//create a file with default values (0) if it doesn't exist
-		inFile = fopen(fileName,"wb");
-		if(!inFile)
-		{
-			printf("\n\n Can't open or create PulseNodeUpNodeFrontNode file %s.", fileName);
-			printf("\n The simulation has been terminated.\n\n");
-			exit(0);
-		}
-		else
-		{
-			int defaultValue = 0;
-			for(int i = 0; i < 3; i++)
-			{
-				fwrite(&defaultValue, sizeof(int), 1, inFile);
-				if(ferror(inFile))
-				{
-					printf("\n\n Can't write to PulseNodeUpNodeFrontNode file %s.", fileName);
-					printf("\n The simulation has been terminated.\n\n");
-					exit(0);
-				}
-				else
-				{
-					printf("\n PulseNodeUpNodeFrontNode file %s was created with default values.", fileName);
-				}
-			}
-		}
-	}
-	
-	// 2. Reading the header information.
-	fscanf(inFile, "%d", &PulsePointNode);
-	printf("\n PulsePointNode = %d", PulsePointNode);
-	fscanf(inFile, "%d", &UpNode);
-	printf("\n UpNode = %d", UpNode);
-	fscanf(inFile, "%d", &FrontNode);
-	printf("\n FrontNode = %d", FrontNode);
-	printf("\n");
-	
-	fclose(inFile);
-	printf("\n PulsePointNode, UpNode, and FrontNode have been read in.\n");
+	// Pulse/Up/Front are read from the Nodes file header.
 }
 
 /*
@@ -280,42 +260,7 @@ void readPulseUpAndFrontNodesFromFile()
  */
 void readBachmannBundleFromFile()
 {	
-	FILE *inFile;
-	int id;
-	char fileName[256];
-	
-	// Generating the name of the file that holds the nodes.
-	char directory[] = "../NodesMuscles/";
-	strcpy(fileName, "");
-	strcat(fileName, directory);
-	strcat(fileName, NodesMusclesFileName);
-	strcat(fileName, "/BachmannsBundle");
-	
-	// Opening the file.
-	inFile = fopen(fileName,"r");
-	if(inFile == NULL)
-	{
-		printf("\n\n Can't open Bachmann's Bundle file.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	
-	// Reading the header information.
-	fscanf(inFile, "%d", &NumberOfNodesInBachmannsBundle);
-	printf("\n NumberOfNodesInBachmannsBundle = %d", NumberOfNodesInBachmannsBundle);
-	
-	// Allocating memory for the Bachmann's Bundle nodes.
-	BachmannsBundle = (int*)malloc(NumberOfNodesInBachmannsBundle*sizeof(int));
-	
-	// Reading the nodes that extend from the pulse node to create Bachmann's Bundle.
-	for(int i = 0; i < NumberOfNodesInBachmannsBundle; i++)
-	{
-		fscanf(inFile, "%d ", &id);
-		BachmannsBundle[i] = id;
-	}
-	
-	fclose(inFile);
-	printf("\n Bachmann's Bundle Nodes have been read in.\n");
+	// Bachmann's Bundle file is not used in this flow.
 }
 
 /*

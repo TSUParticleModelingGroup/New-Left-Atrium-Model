@@ -1,0 +1,15 @@
+To load a model from blender:
+
+Select all
+File > Export > Export as .stl
+
+It is best to create a directory for your model and drop the STL file in the directory:
+
+mkdir /NodesMuscles/NewModel
+mv NewModel.stl /NodesMuscles/NewModel
+
+then run something along the lines of this command:
+python MakeNodesAndMuscleFiles/stl_to_nodes.py path/to/model.stl
+
+
+It will create a nodes and muscles file with default types and headers for use in the model config and model.
