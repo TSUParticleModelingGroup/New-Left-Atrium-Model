@@ -674,18 +674,24 @@ void drawPicture()
 				{
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front half.
 					{
-						glColor3d(Muscle[muscleNumber].color.x, Muscle[muscleNumber].color.y, Muscle[muscleNumber].color.z);
 						glBegin(GL_LINES);
+							// Color at first node endpoint
+							glColor3f(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 							glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
+							// Color at second node endpoint (OpenGL interpolates between the two)
+							glColor3f(Node[k].color.x, Node[k].color.y, Node[k].color.z);
 							glVertex3f(Node[k].position.x, Node[k].position.y, Node[k].position.z);
 						glEnd();
 					}
 				}
 				else
 				{
-					glColor3d(Muscle[muscleNumber].color.x, Muscle[muscleNumber].color.y, Muscle[muscleNumber].color.z);
 					glBegin(GL_LINES);
+						// Color at first node endpoint
+						glColor3f(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 						glVertex3f(Node[i].position.x, Node[i].position.y, Node[i].position.z);
+						// Color at second node endpoint (OpenGL interpolates between the two)
+						glColor3f(Node[k].color.x, Node[k].color.y, Node[k].color.z);
 						glVertex3f(Node[k].position.x, Node[k].position.y, Node[k].position.z);
 					glEnd();
 				}
