@@ -3,6 +3,9 @@
  All the functions are prototyped in this file as well.
 */
 
+#ifndef HEADER_H
+#define HEADER_H
+
 // External include files
 #include <iostream>
 #include <fstream>
@@ -31,6 +34,8 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
+
+// TODO absolutely need to remove this, it can mess up a lot of code
 using namespace std;
 
 // Cuda defines
@@ -367,3 +372,4 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
 void myMouse(GLFWwindow* window, int button, int state, double x, double y);
 void scrollWheel(GLFWwindow*, double, double);
 
+#endif // HEADER_H

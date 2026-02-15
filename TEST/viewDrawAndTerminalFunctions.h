@@ -1,3 +1,6 @@
+#ifndef VIEWDRAWANDTERMINALFUNCTIONS_H
+#define VIEWDRAWANDTERMINALFUNCTIONS_H
+
 /* This file contains:
  1: All the functions that determine how to orient and view the simulation.
  2: All the functions that draw the actual simulation. 
@@ -1059,3 +1062,4 @@ void createGUI()
     
   
 }
+#endif // VIEWDRAWANDTERMINALFUNCTIONS_H

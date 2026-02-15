@@ -1,3 +1,5 @@
+#ifndef CALLBACKFUNCTIONS_H
+#define CALLBACKFUNCTIONS_H
 
 /*
  This file contains all the callBack functions and functions that it calls to do its work.
@@ -15,16 +17,13 @@
  void mouseIdentifyNodeMode();
  bool setMouseMuscleAttributes();
  void setEctopicBeat(int nodeId);
- void clearStdin();
- string getTimeStamp();
  void movieOn();
  void movieOff();
  void screenShot();
  void saveSettings();
  void saveState();
  void loadState();
- void findNodes();
- void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+ void KeyPressed(GLFWwindow* fwindow, int key, int scancode, int action, int mods);
  void keyHeld(GLFWwindow* window);
  void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
  void myMouse(GLFWwindow* window, int button, int state, double x, double y);
@@ -214,56 +213,9 @@ void setEctopicBeat(int nodeId)
 }
 
 
-/*
- This function is used to clear the print buffer.
-*/
-void clearStdin()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF)
-    {
-        /* discard characters */
-    }
-}
 
 
-/*
- This function returns a timestamp in M-D-Y-H.M.S format.
- This is use so each file that is created has a unique name. 
- Note: You cannot create more than one file in a second or you will over write the previous file.
-*/
-string getTimeStamp()
-{
-	// Want to get a time stamp string representing current date/time, so we have a
-	// unique name for each video/screenshot taken.
-	time_t t = time(0); 
-	struct tm * now = localtime( & t );
-	int month = now->tm_mon + 1, day = now->tm_mday, year = now->tm_year, 
-				curTimeHour = now->tm_hour, curTimeMin = now->tm_min, curTimeSec = now->tm_sec;
 
-	stringstream smonth, sday, syear, stimeHour, stimeMin, stimeSec;
-
-	smonth << month;
-	sday << day;
-	syear << (year + 1900); // The computer starts counting from the year 1900, so 1900 is year 0. So we fix that.
-	stimeHour << curTimeHour;
-	stimeMin << curTimeMin;
-	stimeSec << curTimeSec;
-	string timeStamp;
-
-	if (curTimeMin <= 9)
-	{
-		timeStamp = smonth.str() + "-" + sday.str() + "-" + syear.str() + '_' + stimeHour.str() + ".0" + stimeMin.str() + 
-					"." + stimeSec.str();
-	}
-	else
-	{		
-		timeStamp = smonth.str() + "-" + sday.str() + '-' + syear.str() + "_" + stimeHour.str() + "." + stimeMin.str() +
-					"." + stimeSec.str();
-	}
-
-	return timeStamp;
-}
 
 
 /*
@@ -704,13 +656,6 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_APOSTROPHE: //increase DrawRate
 			DrawRate += 50;
 			if(DrawRate > 5000) DrawRate = 5000;
-			break;
-
-		case GLFW_KEY_F: //Alt + f to find nodes
-			if (mods & GLFW_MOD_ALT)
-			{
-				findNodes();
-			}
 			break;
 
 		case GLFW_KEY_S: // Ctrl + s to save state
@@ -1256,3 +1201,4 @@ void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
     drawPicture();
 }
 
+#endif // CALLBACKFUNCTIONS_H

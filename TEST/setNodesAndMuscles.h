@@ -1,3 +1,6 @@
+#ifndef SETNODESNMUSCLES_H
+#define SETNODESNMUSCLES_H
+
 /*
  This file contains all the functions that read in the nodes and muscles, links them together, 
  sets up the node and muscle attributes, and assigns them their values in our units. 
@@ -529,3 +532,5 @@ void cudaErrorCheck(const char *file, int line)
 		exit(0);
 	}
 }
+
+#endif // SETNODESNMUSCLES_H
