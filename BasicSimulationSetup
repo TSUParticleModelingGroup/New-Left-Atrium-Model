@@ -38,7 +38,7 @@ TestSphere
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName =  NewTestSphere
+--InputFileName =  LeftAtriumRealBase
 
 Name of previous run files that were stored in GitHub.
 test
@@ -57,7 +57,7 @@ Connection line width for the lines that represent muscles connecting the nodes:
 1.0 to 3.0 works well for simulations with many nodes, and 5.0 to 10.0 is suitable for simulations with fewer nodes.
 It should be a float.
 	
---LineWidth = 3.0;
+--LineWidth = 1.0;
 
 Set the size of the node spheres here. It is scaled by the RadiusOfLeftAtrium. A good value is 0.01.
 It should be a float.

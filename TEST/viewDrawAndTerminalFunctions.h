@@ -185,6 +185,8 @@ float4 findCenterOfMass()
 	return(centerOfMass);
 }
 
+// TODO: The edge rendering scales with the camera position, but the node rendering does not, which can look weird when zooming in and out. 
+// It would be nice to make the node rendering also scale with camera position in the future for a more consistent look.
 void createSphereVBO(float radius, int slices, int stacks)
 {
     std::vector<float> vertices;
@@ -698,9 +700,8 @@ void drawPicture()
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 		glPushMatrix();
 		glTranslatef(MouseX, MouseY, MouseZ);
-		
+		// TODO: define a speicific radius for the sphere so we don't need to repeat calculations.	
 		renderSphere(HitMultiplier*RadiusOfLeftAtrium,20,20);
-		//renderSphere(5.0*NodeRadiusAdjustment*RadiusOfAtria,20,20);
 		glPopMatrix();
 		glDisable(GL_BLEND);
 	}
@@ -975,21 +976,22 @@ void createGUI()
 		}*/
 
 		// Mouse mode buttons
+		// TODO: Implement the mouse mode defines here.
 		if (ImGui::Button("Mouse Off"))
 		{
-			setMouseMode(-1); // OR whatever number for simulation off 
+			setMouseMode(&Simulation, MOUSE_MODE_OFF); // OR whatever number for simulation off 
 		}
 		if (ImGui::IsItemHovered())
 		{
-			// TODO: add helper function
 		}
 
-		if (ImGui::Button("Set Normal Mode")) 
+		if (ImGui::Button("Set Standard Node")) 
 		{
-			setMouseMode(0); // TODO: Determine numbers for different modes and replace with constants or an enum for readability
+			setMouseMode(&Simulation, MOUSE_MODE_STANDARD); 
 		}
+		// TODO: Make helper functions for tooltips
 		if (ImGui::IsItemHovered())
-		{ // TODO: Make a helper function for tooltips since this is repeated so much
+		{  
 			ImGui::BeginTooltip();
 			ImGui::Text("(F7)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 			ImGui::EndTooltip();
@@ -997,26 +999,26 @@ void createGUI()
 
 		if (ImGui::Button("Set Bachmann's Bundle")) 
 		{
-			setMouseMode(1); // TODO: Determine numbers for different modes and replace with constants or an enum for readability
+			setMouseMode(&Simulation, MOUSE_MODE_BACHMANNS_BUNDLE);
 		}
 		if(ImGui::IsItemHovered) 
-		{ // TODO: Write Helper Funcitons
+		{ 
 			// displayTooltip("Bachmann's Bundle Mode", "Left-click to select nodes for Bachmann's Bundle\nRight-click to undo selection");
 		}
 		if (ImGui::Button("Set Appendage")) 
 		{
-			setMouseMode(2); // TODO: Determine numbers for different modes and replace with constants or an enum for readability
+			setMouseMode(&Simulation, MOUSE_MODE_APPENDAGE);
 		}
 		if(ImGui::IsItemHovered) 
-		{ // TODO: Write Helper Funcitons
+		{ 
 			// displayTooltip("Bachmann's Bundle Mode", "Left-click to select nodes for Bachmann's Bundle\nRight-click to undo selection");
 		}
 		if (ImGui::Button("Scar Tissue")) 
 		{
-			// setMouseMode(MOUSE_MODE_SCAR_TISSUE); // TODO: add defines for mouse mode
+			setMouseMode(&Simulation, MOUSE_MODE_SCAR_TISSUE); 
 		}
 		if(ImGui::IsItemHovered) 
-		{ // TODO: Write Helper Funcitons
+		{ 
 			// displayTooltip("Bachmann's Bundle Mode", "Left-click to select nodes for Bachmann's Bundle\nRight-click to undo selection");
 		}
 
@@ -1036,9 +1038,6 @@ void createGUI()
 			ImGui::Text("(F6)\nSave current muscle properties and simulation\nsettings to a file for later use");
 			ImGui::EndTooltip();
 		}
-
-       
-
     }
 
 	//Display movement controls

@@ -67,63 +67,122 @@ void reshape(GLFWwindow* window, int width, int height)
 /*
  Turns off all the user interactions.
 */
-//TODO: THis is a template for setting mouse functions
-void setMouseMode(int mode)
+
+// This enables or disables the spherical node selector and sets the isInMouseFunctionMode flag.
+void toggleNodeSelector(simulationSwitchesStructure* sim, int mode) 
 {
-	Simulation.mode = mode;
-	if (mode == MOUSE_SET_MOUSE_OFF) //turn on cursor if mouse functions are off, turn off cursor if mouse functions are on
+	if (mode == MOUSE_MODE_OFF) //turn on cursor if mouse functions are off, turn off cursor if mouse functions are on
 	{
-		Simulation.isInMouseFunctionMode = false;
+		// TODO: the functionality of this parameter can probably be checked by just seeing if mode == -1
+		// That is, instead of checking Simulation.isInMouseFunctionMode, we can just check if mode == MOUSE_MODE_OFF, which is -1. 
+		// This would remove the need for isInMouseMode entirely, but that is a later fix.
+		// Will need to figure out where this bool is used to determine if removing it is worth it.
+		sim->isInMouseFunctionMode = false; 
 		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
 	} else {
-
-		Simulation.isInMouseFunctionMode = true;
+		sim->isInMouseFunctionMode = true;
 		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
-	//orthogonalView();
-	drawPicture();
 }
 
-
-void mouseAblateMode() 
+// Sets the simulation's mouse mode toggles the node se
+void setMouseMode(simulationSwitchesStructure* sim, int mode)
 {
-
+	sim->mouseMode = mode;
+	toggleNodeSelector(sim, mode);	
+	// drawPicture();
 }
-/*
- Puts the user in ectopic beat mode.
-*/
-void mouseEctopicBeatMode()
+
+
+// Returns the default color for invalid types
+float4 getColorFromType(int type)
 {
+	switch (type)
+	{
+		case NODE_TYPE_STANDARD:			return COLOR_STANDARD;
+		case NODE_TYPE_BACHMANN_BUNDLE:		return COLOR_BACHMANNS_BUNDLE;
+		case NODE_TYPE_APPENDAGE:			return COLOR_APPENDAGE;
+		case NODE_TYPE_SCAR_TISSUE:			return COLOR_SCAR_TISSUE;
+		default:							return COLOR_STANDARD; 
+	}
 }
 
-/*
- Puts the user in ectopic event mode.
-*/
-void mouseEctopicEventMode()
+// Because of the way mouse modes are defined in the header, we can conveniently pass in the mouse mode as the node type.
+int setNodeMode(nodeAttributesStructure* node, int nodeType)
 {
+	// Input validation
+	if (!node) 
+	{
+		printf("setNodeMode Error: node pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (nodeType < 0) 
+	{
+		printf("setNodeMode Error: nodeType %d is invalid. nodeType must be non-negative.\n", nodeType);
+		return 0; // INVALID NODE TYPE
+	}
 
+	// Set the type and color
+	node->type = nodeType;
+	node->color = getColorFromType(nodeType);
+	//printf("Node set to type %d with color (%f, %f, %f, %f)\n", nodeType, node->color.x, node->color.y, node->color.z, node->color.w);
+	return 1; // SUCCESS
 }
 
-/*
- Puts the user in area muscle adjustment mode.
-*/
-void mouseAdjustMusclesAreaMode()
+
+// This function returns 1 if a node is selected base on the mouse position and the hit multiplier, and 0 if it is not selected.
+int checkIfNodeIsSelected(nodeAttributesStructure* node, float3 mousePos)
 {
+	// Input validation
+	if (!node) 
+	{
+		printf("checkIfNodeIsSelected Error: Node pointer is null.\n");
+		return 0; // Return false for now but this is technicall a NULL PTR error.
+	}
+	float dx = node->position.x - mousePos.x;
+	float dy = node->position.y - mousePos.y;
+	float dz = node->position.z - mousePos.z;
+	float distSquared = dx*dx + dy*dy + dz*dz;
+	// TODO : another location where a single radius of mouse selector would be nice.
+	if (distSquared < HitMultiplier * HitMultiplier * RadiusOfLeftAtrium * RadiusOfLeftAtrium)
+	{ // If the distance from the mouse to the node is less than the hit multiplier, we consider that a hit.
+		//printf("Node at (%f, %f, %f) is selected.\n", node->position.x, node->position.y, node->position.z);
+		return 1; // selected
+	}
+	return 0;
 }
 
-/*
- Puts the user in line muscle adjustment mode.
-*/
-void mouseAdjustMusclesLineMode()
+int assignNodes(nodeAttributesStructure* nodes, int length, float3 mousePos, int nodeType)
 {
+	// Input validation
+	if (!nodes) 
+	{
+		printf("assignNodes Error: Node pointer is null.\n");
+		return 0; // NULL PTR
+	}
+	if (length <= 0) 
+	{
+		printf("assignNodes Error: length must be greater than zero.\n");
+		return 0; // INVALID LENGTH
+	}
+	if (nodeType < 0) 
+	{
+		printf("assignNodes Error: nodeType %d is invalid. nodeType must be non-negative.\n", nodeType);
+		return 0; // INVALID NODE TYPE
+	}
+
+	for (int i = 0; i < length; i++)
+	{
+		if (checkIfNodeIsSelected(&nodes[i], mousePos))
+		{
+			if (!setNodeMode(&nodes[i], nodeType)) return 0; // Return 0 if a node failed to be assigned.
+			//printf("Node at (%f, %f, %f) is selected and set to type %d.\n", nodes[i].position.x, nodes[i].position.y, nodes[i].position.z, nodeType);
+		}
+	}
+
+	return 1; // Return Success if all nodes were assigned successfully (or not selected).
 }
 
-/*
- Puts the user in identify node mode.
-*/
-void mouseIdentifyNodeMode()
-{
-}
 
 /*
 	Calls the functions that get user inputs for modifying the refractory periods 
@@ -137,15 +196,12 @@ void mouseIdentifyNodeMode()
 // 	return(true);
 // }
 
-/*
- This function sets up a node (nodeId) to be an ectopic beat node.
-*/
 void setEctopicBeat(int nodeId)
 {
-	// TODO: the isBeatNode is now a node type, the same as the bachman's bundle nodes. So we need to change this.
+	// TODO: Do we need the beat node in this simulation or will it be set in the main program?
 	//Node[nodeId].isBeatNode = true;
 
-	// TODO: ablation is now a type 
+	// TODO: ablation is now a type, also, this logic should not be handled in this function either way.
 	/*if(!Node[nodeId].isAblated) 
 	{
 		Node[nodeId].isDrawNode = true;
@@ -210,9 +266,6 @@ string getTimeStamp()
 }
 
 
-
-
-
 /*
  This function saves all the node and muscle values set in the run to a file. This file can then be used at a
  later date to start a run with the exact settings used at the time of capture.
@@ -222,6 +275,7 @@ string getTimeStamp()
 */
 void saveSettings()
 {
+	// TODO: Implement saveSettings() function
 	/*
 	// Copying the latest node and muscle information down from the GPU.
 	
@@ -398,15 +452,14 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_Q:
 			if (mods & GLFW_MOD_ALT)
 			{
-				setMouseMode(-1);
+				setMouseMode(&Simulation, MOUSE_MODE_OFF);
 			}
 			break;
 		case GLFW_KEY_ESCAPE: // Escape key to exit
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
-			/*
 
-
+		/*
 		case GLFW_KEY_F1: // F1 key to toggle run/pause
 		case GLFW_KEY_R: // r/R key to toggle run/pause
 			if(Simulation.isPaused)
@@ -599,7 +652,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
             drawPicture();
             break;
 		
-		/* Ortho/frustum needs to be fixed/
+		*/ // Ortho/frustum needs to be fixed
 		// case GLFW_KEY_0: // Toggle orthogonal/frustum view
 		// case GLFW_KEY_KP_0:
 		// 	if (Simulation.ViewFlag == 0)
@@ -612,7 +665,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         //         Simulation.ViewFlag = 0;
         //         orthogonalView();
         //     }
-
+		/*
 		// Might make this a held key pending feedback
 		case GLFW_KEY_KP_SUBTRACT: //decrease selection radius
 		case GLFW_KEY_MINUS:
@@ -632,7 +685,6 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			{
                 Node[PulsePointNode].beatPeriod = 0;
             }
-			copyNodesToGPU();
 			break;
 
 		case GLFW_KEY_RIGHT_BRACKET: //increase beat period
@@ -987,6 +1039,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 		
 	}
 	
+	// TODO: There should probably be a slider in the GUI for this.
 	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
 	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
 	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
@@ -998,7 +1051,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 void myMouse(GLFWwindow* window, int button, int action, int mods)
 {	
 
-	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
+	// Add this if we want the GUI to only accept GUI handling until you ckick off of it
     // Get ImGui IO to check if it's capturing input
     ImGuiIO& io = ImGui::GetIO();
     
@@ -1006,187 +1059,17 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
     if (io.WantCaptureMouse) return;
 	
 	float d, dx, dy, dz;
-	float hit;
+	float radius;
 	int muscleId;
 	
 	if(action == GLFW_PRESS)
 	{
-		hit = HitMultiplier*RadiusOfLeftAtrium;
+		radius = HitMultiplier*RadiusOfLeftAtrium;
 		
 		if(button == GLFW_MOUSE_BUTTON_LEFT)
-		{	
-			/*
-			if(Simulation.isInAdjustMuscleLineMode) 
-			{
-				// Finding the two closest nodes to the mouse.
-				int nodeId1 = -1;
-				int nodeId2 = -1;
-				int connectingMuscle = -1;
-				int test = -1;
-				float minDistance = 2.0*RadiusOfLeftAtrium;
-				for(int i = 0; i < NumberOfNodes; i++)
-				{
-					dx = MouseX - Node[i].position.x;
-					dy = MouseY - Node[i].position.y;
-					dz = MouseZ - Node[i].position.z;
-					d = sqrt(dx*dx + dy*dy + dz*dz);
-					if(d < minDistance)
-					{
-						minDistance = d;
-						nodeId2 = nodeId1;
-						nodeId1 = i;
-					}
-				}
-				
-				// If for some reason two nodes were not found. Not sure how this could
-				// happen, but just to be safe we put a check in here.
-				if(nodeId2 == -1)
-				{
-					printf("\n Two nodes were not found try again.\n");
-					printf("\n MouseZ = %lf.\n", MouseZ);
-				}
-				// We got the two closest nodes to the mouse. Now see if there is a muscle that
-				// connects these two nodes. If there is a connecting muscle, adjust it.
-				else
-				{
-					if(!Node[nodeId1].isAblated)
-					{
-						Node[nodeId1].color.x = 1.0;
-						Node[nodeId1].color.y = 0.0;
-						Node[nodeId1].color.z = 1.0;
-						Node[nodeId1].isDrawNode = true;
-					}
-					
-					if(!Node[nodeId2].isAblated)
-					{
-						Node[nodeId2].color.x = 1.0;
-						Node[nodeId2].color.y = 0.0;
-						Node[nodeId2].color.z = 1.0;
-						Node[nodeId2].isDrawNode = true;
-					}
-					
-					for(int i = 0; i < MUSCLES_PER_NODE; i++) // Spinnning through muscles on node 1.
-					{
-						muscleId = Node[nodeId1].muscle[i]; 
-						if(muscleId != -1)
-						{
-							for(int j = 0; j < MUSCLES_PER_NODE; j++) // Spinnning through muscles on node 2.
-							{
-								test = Node[nodeId2].muscle[j];
-								if(muscleId == test) // Checking to see if we get a match.
-								{
-									connectingMuscle = muscleId;
-								}
-							}
-						}
-					}
-					if(connectingMuscle == -1)
-					{
-						printf("\n No connecting muscle was found try again.\n");
-					}
-					else
-					{
-						muscleId = connectingMuscle;
-						Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
-						Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
-						Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
-						Muscle[muscleId].color.x = 1.0;
-						Muscle[muscleId].color.y = 0.0;
-						Muscle[muscleId].color.z = 1.0;
-						Muscle[muscleId].color.w = 0.0;
-						
-						checkMuscle(muscleId);		
-					}
-				}
-			}
-			else
-			{
-				for(int i = 0; i < NumberOfNodes; i++)
-				{
-					dx = MouseX - Node[i].position.x;
-					dy = MouseY - Node[i].position.y;
-					dz = MouseZ - Node[i].position.z;
-					
-					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
-					{
-						if(Simulation.isInAblateMode)
-						{
-							Node[i].isAblated = true;
-							Node[i].isDrawNode = true;
-							Node[i].color.x = 1.0;
-							Node[i].color.y = 1.0;
-							Node[i].color.z = 1.0;
-						}
-						
-						if(Simulation.isInEctopicBeatMode)
-						{
-							Simulation.isPaused = true;
-							// printf("\n Node number = %d", i);
-							setEctopicBeat(i);
-						}
-						
-						if(Simulation.isInAdjustMuscleAreaMode)
-						{
-							for(int j = 0; j < MUSCLES_PER_NODE; j++)
-							{
-								muscleId = Node[i].muscle[j];
-								if(muscleId != -1)
-								{
-									// This sets the muscle to the base value then adjusts it. 
-									Muscle[muscleId].refractoryPeriod = BaseMuscleRefractoryPeriod*RefractoryPeriodAdjustmentMultiplier;
-									Muscle[muscleId].conductionVelocity = BaseMuscleConductionVelocity*MuscleConductionVelocityAdjustmentMultiplier;
-									
-									// This adjusts the muscle based on its current value.
-									//Muscle[muscleId].refractoryPeriod *= RefractoryPeriodAdjustmentMultiplier;
-									//Muscle[muscleId].conductionVelocity *= MuscleConductionVelocityAdjustmentMultiplier;
-									
-									Muscle[muscleId].conductionDuration = Muscle[muscleId].naturalLength/Muscle[muscleId].conductionVelocity;
-									Muscle[muscleId].color.x = 1.0;
-									Muscle[muscleId].color.y = 0.0;
-									Muscle[muscleId].color.z = 1.0;
-									Muscle[muscleId].color.w = 0.0;
-									
-									checkMuscle(muscleId);
-								}
-							}
-							
-							Node[i].isDrawNode = true;
-							if(!Node[i].isAblated) // If it is not ablated color it.
-							{
-								Node[i].color.x = 0.8;
-								Node[i].color.y = 0.3;
-								Node[i].color.z = 1.0;
-							}
-						}
-						
-						if(Simulation.isInEctopicEventMode)
-						{
-							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
-							cudaErrorCheck(__FILE__, __LINE__);
-							
-							Node[i].isFiring = true; // Setting the ith node to fire the next time in the next time step.
-
-							//Create a pink point sprite at the node
-							Node[i].color.x = 0.996;
-							Node[i].color.y = 0.242;
-							Node[i].color.z = 0.637;
-							Node[i].isDrawNode = true;
-							
-							cudaMemcpy( NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice );
-							cudaErrorCheck(__FILE__, __LINE__);
-						}
-						
-						if(Simulation.isInFindNodeMode)
-						{
-							Node[i].isDrawNode = true;
-							Node[i].color.x = 1.0;
-							Node[i].color.y = 0.0;
-							Node[i].color.z = 1.0;
-							// printf("\n Node number = %d", i);
-						}
-					}
-				}
-			}*/
+		{
+			if(Simulation.mouseMode == MOUSE_MODE_OFF) return; // If mouse mode is off, do nothing on left click	
+			assignNodes(Node, NumberOfNodes, (float3) {MouseX, MouseY, MouseZ}, Simulation.mouseMode);
 		}
 		else if(button == GLFW_MOUSE_BUTTON_RIGHT) // Right Mouse button down
 		{
@@ -1283,7 +1166,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 					dx = MouseX - Node[i].position.x;
 					dy = MouseY - Node[i].position.y;
 					dz = MouseZ - Node[i].position.z;
-					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+					if(sqrt(dx*dx + dy*dy + dz*dz) < radius)
 					{
 						if(Simulation.isInAblateMode)
 						{

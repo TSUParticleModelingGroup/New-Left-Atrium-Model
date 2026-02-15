@@ -79,7 +79,7 @@ void readNodesFromFile()
 		Node[i].position.z = 0.0;
 		Node[i].position.w = 0.0;
 		
-		// Setting all node colors to not ablated (green)
+		// Setting all node colors to not ablated 
 		Node[i].color.x = 0.0;
 		Node[i].color.y = 1.0;
 		Node[i].color.z = 0.0;
@@ -106,24 +106,7 @@ void readNodesFromFile()
 		Node[id].position.z = z;
 		Node[id].type = nodeType;
 		// Color nodes by type for debugging/visual validation.
-		if(nodeType == NODE_TYPE_STANDARD)
-		{
-			Node[id].color.x = 1.0f;
-			Node[id].color.y = 0.0f;
-			Node[id].color.z = 0.0f;
-		}
-		else if(nodeType == NODE_TYPE_BACHMANN_BUNDLE)
-		{
-			Node[id].color.x = 1.0f;
-			Node[id].color.y = 1.0f;
-			Node[id].color.z = 0.0f;
-		}
-		else if(nodeType == NODE_TYPE_APPENDAGE)
-		{
-			Node[id].color.x = 1.0f;
-			Node[id].color.y = 0.5f;
-			Node[id].color.z = 0.0f;
-		}
+		Node[id].color = getColorFromType(nodeType);
 	}
 	
 	fclose(inFile);
@@ -513,15 +496,15 @@ void setRemainingParameters()
 
               
 		Simulation.ViewFlag = 1;
-		Simulation.DrawNodesFlag = 0;
-		Simulation.DrawFrontHalfFlag = 0;
+		Simulation.DrawNodesFlag = 2;
+		Simulation.DrawFrontHalfFlag = 1;
 		
 		setView(6); //Set deafult view only if not loading from previous run.
 	}
-	
-	HitMultiplier = 0.5;
-	//MouseZ = RadiusOfLeftAtrium;
-	MouseZ = 35; // See the comment on the eye initialization in the SVT.cu file for why this is no longer dependent on the radius of the LA.
+
+	//TODO: It would be nice to rename this variable (HitMultipler) to something like MouseSelectionSensitivity in the future for clarity.	
+	HitMultiplier = 0.1;
+	MouseZ = RadiusOfLeftAtrium;
 	MouseX = 0.0;
 	MouseY = 0.0;
 	ScrollSpeedToggle = 1;

@@ -52,17 +52,29 @@ using namespace std;
 // This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
-//Mouse Defines
-#define MOUSE_SET_MOUSE_OFF -1
-#define MOUSE_SET_STANDARD 0
-#define MOUSE_SET_BACHMANN_BUNDLE 1
-#define MOUSE_SET_APPENDAGE 2
-//#define SET_SCAR_TISSUE 3
-
 //Node types
-#define NODE_TYPE_STANDARD 0
-#define NODE_TYPE_BACHMANN_BUNDLE 1
-#define NODE_TYPE_APPENDAGE 2
+const int NODE_TYPE_STANDARD = 0;
+const int NODE_TYPE_BACHMANN_BUNDLE = 1;
+const int NODE_TYPE_APPENDAGE = 2;
+const int NODE_TYPE_SCAR_TISSUE = 3; // This is not implemented yet but will be used to make scar tissue in the future.
+
+// Mouse modes, which will use the same int values as the node types for simplicity, but with -1 for off mode.
+const int MOUSE_MODE_OFF = -1;
+const int MOUSE_MODE_STANDARD = NODE_TYPE_STANDARD;
+const int MOUSE_MODE_BACHMANNS_BUNDLE = NODE_TYPE_BACHMANN_BUNDLE;
+const int MOUSE_MODE_APPENDAGE = NODE_TYPE_APPENDAGE;
+const int MOUSE_MODE_SCAR_TISSUE = NODE_TYPE_SCAR_TISSUE; // This is not implemented yet but will be used to make scar tissue in the future.
+
+
+const float4 COLOR_STANDARD = {1.0f, 0.0f, 0.0f, 0.0f}; // Mostly white for standard nodes (to reduce contrast)
+const float4 COLOR_BACHMANNS_BUNDLE= {0.5f, 0.5f, 1.0f, 0.0f}; // Blue for Bachmann's Bundle nodes and muscles by default.
+const float4 COLOR_APPENDAGE = {0.0f, 0.7f, 0.0f, 0.0f}; // Green for left atrial appendage nodes and muscles by default.
+const float4 COLOR_SCAR_TISSUE = {0.5f, 0.5f, 0.5f, 0.0f}; // Gray for scar tissue nodes and muscles by default.
+
+// Simulation mode defines. I am fairly sure these will not be needed but will be useful for the main program.
+const int SIM_MODE_STANDARD = 0;
+const int SIM_MODE_MUSCLE_LINE_SELECT = 1;
+const int SIM_MODE_NODE_ADJUST = 2; // Ideally this would be any mode where you are selecting nodes to adjust attributes, and then the mouse mode can narrow it down further.
 
 // Structures
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
@@ -87,7 +99,7 @@ typedef struct
 // 
 typedef struct 
 {
-	int mode;
+	int mouseMode; // can be used to set the mode of the mouse, like ablate mode, ectopic beat mode, adjust muscle area mode, or adjust muscle line mode.
 	int ViewFlag; 
 	int DrawNodesFlag; 
 	int DrawFrontHalfFlag;
@@ -237,6 +249,7 @@ double MyocyteForcePerMassFraction = -1.0; // Set to -1.0 to flag it if it is us
 
 // Variable that holds mouse locations to be translated into positions in the simulation and mouse other functionality.
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
+// TODO: Convert these to a float3 or double3
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
 float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
@@ -324,27 +337,33 @@ void drawPicture();
 void createGUI();
 
 // Functions in the callBackFunctions.h file.
- void reshape(GLFWwindow* window, int width, int height);
- void mouseFunctionsOff();
- void mouseAblateMode();
- void mouseEctopicBeatMode();
- void mouseAdjustMusclesAreaMode();
- void mouseAdjustMusclesLineMode();
- void mouseIdentifyNodeMode();
- bool setMouseMuscleAttributes();
- void setEctopicBeat(int nodeId);
- void clearStdin();
- string getTimeStamp();
- void movieOn();
- void movieOff();
- void screenShot();
- void saveSettings();
- void saveState();
- void loadState();
- void findNodes();
- void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
- void keyHeld(GLFWwindow* window);
- void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
- void myMouse(GLFWwindow* window, int button, int state, double x, double y);
- void scrollWheel(GLFWwindow*, double, double);
+void reshape(GLFWwindow* window, int width, int height);
+void toggleNodeSelector(simulationSwitchesStructure* sim, int mode);
+void setMouseMode(simulationSwitchesStructure* sim, int mode);
+float4 getColorFromType(int type);
+int setNodeMode(nodeAttributesStructure* node, int nodeType);
+int checkIfNodeIsSelected(nodeAttributesStructure* node, float3 mousePos);
+int assignNodes(nodeAttributesStructure* nodes, int length, float3 mousePos, int nodeType);
+void mouseFunctionsOff();
+void mouseAblateMode();
+void mouseEctopicBeatMode();
+void mouseAdjustMusclesAreaMode();
+void mouseAdjustMusclesLineMode();
+void mouseIdentifyNodeMode();
+bool setMouseMuscleAttributes();
+void setEctopicBeat(int nodeId);
+void clearStdin();
+string getTimeStamp();
+void movieOn();
+void movieOff();
+void screenShot();
+void saveSettings();
+void saveState();
+void loadState();
+void findNodes();
+void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+void keyHeld(GLFWwindow* window);
+void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
+void myMouse(GLFWwindow* window, int button, int state, double x, double y);
+void scrollWheel(GLFWwindow*, double, double);
 
