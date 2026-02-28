@@ -871,12 +871,9 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			}
 			break;
 
-		// ALT + q to turn mouse functions off
-		case GLFW_KEY_Q:
-			if (mods & GLFW_MOD_ALT)
-			{
-				mouseFunctionsOff();
-			}
+		// Tab to turn mouse functions off (was ALT+Q)
+		case GLFW_KEY_TAB:
+			mouseFunctionsOff();
 			break;
 
 		//view toggles -- follows numpad format and matches with GUI
@@ -1020,12 +1017,13 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			}
 			break;
 		
-		case GLFW_KEY_H: // Ctrl + h to collapse/expand GUI
-		if (mods & GLFW_MOD_CONTROL)
-		{
+		case GLFW_KEY_H: // H to collapse/expand GUI (was Ctrl+H)
 			Simulation.guiCollapsed = !Simulation.guiCollapsed;
-		}
-		break;
+			break;
+		// C to toggle contraction
+		case GLFW_KEY_C:
+			Simulation.ContractionisOn = !Simulation.ContractionisOn;
+			break;
 
 		default: // For any other key, do nothing
 			break;
