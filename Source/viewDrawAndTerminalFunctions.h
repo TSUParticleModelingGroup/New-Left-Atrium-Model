@@ -24,6 +24,16 @@
  void createGUI();
 */
 
+// Helper function to show a tooltip in ImGui
+void ShowTooltip(const char* text) 
+{
+	if (ImGui::IsItemHovered()) 
+	{
+		ImGui::BeginTooltip();
+		ImGui::TextUnformatted(text);
+		ImGui::EndTooltip();
+	}
+}
 // Add this to a utility file, only used for the mouse selection since it's just 1 object
 void renderSphere(float radius, int slices, int stacks) 
 {
@@ -654,12 +664,7 @@ void createGUI()
     {
         Simulation.isPaused = !Simulation.isPaused;
     }
-	if (ImGui::IsItemHovered())
-	{
-		ImGui::BeginTooltip();
-		ImGui::Text("(F1) or r/R");
-		ImGui::EndTooltip();
-	}
+	ShowTooltip("(F1) or r/R");
     
     // General simulation controls
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
@@ -682,12 +687,7 @@ void createGUI()
             Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
             drawPicture();
         }
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F2)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F2)");
         
         // Node display options
         const char* nodeOptions[] = { "Off", "Half", "Full" }; //array of options for the dropdown menu
@@ -702,12 +702,7 @@ void createGUI()
                 drawPicture();
             }
         }
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F3)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F3)");
         
         // Change views
         // bool frustumView = Simulation.ViewFlag == 1;
@@ -737,24 +732,14 @@ void createGUI()
 				movieOn();
 			}
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F4)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F4)");
 
         // Screenshot button
         if (ImGui::Button("Screenshot"))
         {
             screenShot();
         }
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F5)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F5)");
 	}
 
 	//Draw Rate Slider
@@ -766,12 +751,7 @@ void createGUI()
 		if (DrawRate < 1) DrawRate = 1;
 		if (DrawRate > 5000) DrawRate = 5000;
 	}
-	if(ImGui::IsItemHovered())
-	{
-		ImGui::BeginTooltip();
-		ImGui::Text("(;/')\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
-		ImGui::EndTooltip();
-	}
+	ShowTooltip("(;/')\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
 	//Input box for simulation speed
 	if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
 	{
@@ -790,12 +770,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(7)\nPosterior-Anterior View\nView from back to front");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(7)\nPosterior-Anterior View\nView from back to front");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("AP"))  
@@ -804,12 +779,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(8)\nAnterior-Posterior View\nView from front to back");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(8)\nAnterior-Posterior View\nView from front to back");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("Ref"))
@@ -818,12 +788,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(9)\nReference View\nStandard orientation with pulmonary veins visible");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(9)\nReference View\nStandard orientation with pulmonary veins visible");
 		
 		if (ImGui::Button("LAO"))
 		{ 
@@ -831,12 +796,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(4)\nLeft Anterior Oblique\nAngled view from front-left");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(4)\nLeft Anterior Oblique\nAngled view from front-left");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("RAO"))
@@ -845,12 +805,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(5)\nRight Anterior Oblique\nAngled view from front-right");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(5)\nRight Anterior Oblique\nAngled view from front-right");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("LL"))
@@ -859,12 +814,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(6)\nLeft Lateral\nDirect view from left side");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(6)\nLeft Lateral\nDirect view from left side");
 
 		if (ImGui::Button("RL"))
 		{ 
@@ -872,12 +822,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(1)\nRight Lateral\nDirect view from right side");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(1)\nRight Lateral\nDirect view from right side");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("SUP"))
@@ -886,12 +831,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(2)\nSuperior View\nView from above (top-down)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(2)\nSuperior View\nView from above (top-down)");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("INF"))
@@ -900,12 +840,7 @@ void createGUI()
 			copyNodesToGPU(); 
 			drawPicture(); 
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(3)\nInferior View\nView from below (bottom-up)");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(3)\nInferior View\nView from below (bottom-up");
 	}
     
 	// Mouse mode selection
@@ -962,12 +897,7 @@ void createGUI()
 			mouseFunctionsOff();
 			Simulation.isInMouseFunctionMode = false;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(Alt + Q)\nDisables all mouse interaction with the model");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(Alt + Q)\nDisables all mouse interaction with the model");
 
 		if (ImGui::Button("Ablate Mode")) 
 		{
@@ -975,12 +905,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAblateMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F7)\nLeft-click to ablate nodes\nRight-click to undo ablation");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F7)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 
 		if (ImGui::Button("Ectopic Beat")) 
 		{
@@ -988,12 +913,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicBeatMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
 
 		if (ImGui::Button("Ectopic Trigger")) 
 		{
@@ -1001,12 +921,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicEventMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F9)\nLeft-click to trigger a single pulse at a node");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F9)\nLeft-click to trigger a single pulse at a node");
 
 		if (ImGui::Button("Adjust Area"))
 		{
@@ -1014,12 +929,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleAreaMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F10)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F10)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Adjust Line")) 
 		{
@@ -1027,12 +937,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleLineMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F11)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F11)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Identify Node")) 
 		{
@@ -1040,12 +945,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInFindNodeMode = true;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F12)\nLeft-click to display the ID of a node");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F12)\nLeft-click to display the ID of a node");
 
 		// Display identified nodes in a window when in find node mode
 		if (Simulation.isInFindNodeMode) 
@@ -1114,12 +1014,7 @@ void createGUI()
 		{
 			HitMultiplier = hitMult;
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(-/=): decrease/increase\nAdjusts the size of the selection area\nLarger values effect more nodes");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(-/=): decrease/increase\nAdjusts the size of the selection area\nLarger values effect more nodes");
 
 		//Muscle adjustment sliders; shows when in adjust line or adjust area mode
 		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
@@ -1137,12 +1032,7 @@ void createGUI()
 			{
 				RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
 			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::BeginTooltip();
-				ImGui::Text("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
-				ImGui::EndTooltip();
-			}
+			ShowTooltip("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
 
 			//refactory period input box
 			ImGui::SameLine();
@@ -1175,12 +1065,7 @@ void createGUI()
 			{
 				MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
 			}
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::BeginTooltip();
-				ImGui::Text("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
-				ImGui::EndTooltip();
-			}
+			ShowTooltip("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
 
 			ImGui::SameLine();
 
@@ -1223,12 +1108,7 @@ void createGUI()
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("([/]): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("([/]): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
 
 		ImGui::SameLine();
 
@@ -1302,12 +1182,7 @@ void createGUI()
 						cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
 						cudaErrorCheck(__FILE__, __LINE__);
 					}
-					if (ImGui::IsItemHovered())
-					{
-						ImGui::BeginTooltip();
-						ImGui::Text("Controls how often this node beats\n\nDrag the slider or enter a precise value in the input box");
-						ImGui::EndTooltip();
-					}
+					ShowTooltip("Controls how often this node beats\n\nDrag the slider or enter a precise value in the input box");
 
 					ImGui::SameLine();
 
@@ -1341,12 +1216,7 @@ void createGUI()
 						cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
 						cudaErrorCheck(__FILE__, __LINE__);
 					}
-					if (ImGui::IsItemHovered())
-					{
-						ImGui::BeginTooltip();
-						ImGui::Text("Controls how long until this node beats\n\nDrag the slider or enter a precise value in the input box");
-						ImGui::EndTooltip();
-					}
+					ShowTooltip("Controls how long until this node beats\n\nDrag the slider or enter a precise value in the input box");
 
 					ImGui::SameLine();
 					ImGui::SetNextItemWidth(60);
@@ -1397,24 +1267,14 @@ void createGUI()
 		{
             saveSettings();
         }
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(F6)\nSave current muscle properties and simulation\nsettings to a file for later use");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(F6)\nSave current muscle properties and simulation\nsettings to a file for later use");
 
         //Find nodes button
         if (ImGui::Button("Find Nodes"))
 		{
             findNodes();
         }
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("(Alt + F) Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomended to draw nodes to see the results clearly");
-			ImGui::EndTooltip();
-		}
+		ShowTooltip("(Alt + F) Identify and highlight the front (blue) and top (purple)\nnodes in the current view orientation\n\nIt is reccomended to draw nodes to see the results clearly");
 
 		// Display the information outside the button handler so it persists (if it was in the main function it'd only show for 1 frame)
 		if (Simulation.nodesFound) 
@@ -1430,7 +1290,7 @@ void createGUI()
 		}
 		if (ImGui::IsItemHovered())
 		{
-			//tooltip here
+			ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Settings, which only saves muscle properties and general settings");
 		}
 		
 		ImGui::SameLine();
@@ -1440,7 +1300,7 @@ void createGUI()
 		}
 		if (ImGui::IsItemHovered())
 		{
-			//tooltip here
+			ShowTooltip("(Ctrl + Z)\nLoad a previously saved state of the simulation\nThis will overwrite the current state with the saved one, including all node properties and current simulation time");
 		}
     }
 
@@ -1455,7 +1315,7 @@ void createGUI()
 		ImGui::Text("Rotate Z-axis: z/Z; Shift + Left/Right");
 		ImGui::Text("Zoom In/Out: e/E; Shift + Up/Down");
 
-		ImGui::Text("Collapse/Expand GUI: Ctrl + h");
+		ImGui::Text("Collapse/Expand GUI: h/H");
 		
 	}
     

@@ -346,6 +346,7 @@ void setRemainingParameters();
 void checkMuscle(int);
  
 // Functions in the viewDrawAndTerminalFunctions.h file.
+void showTooltip(const char *);
 void renderSphere(float, int, int);
 void createSphereVBO(float, int, int);
 void renderSphereVBO();
