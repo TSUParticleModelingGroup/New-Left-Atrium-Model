@@ -748,19 +748,17 @@ void findNodes()
 */
 void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	// See if GUI wants this event (Prevents keys from being registered when doing things like typing in a text box)
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.WantCaptureKeyboard)
+		return;
 
-	//See if GUI wants this event (Prevents keys from being registered when doing things like typing in a text box)
-	    ImGuiIO& io = ImGui::GetIO();
-    if (io.WantCaptureKeyboard)
-        return;
-
-
-    // Only process key press events, not releases or repeats
-
-	if (action != GLFW_PRESS) return;
+	// Only process key press events, not releases or repeats
+	if (action != GLFW_PRESS)
+		return;
 
 	// Check for specific key presses
-	switch (key)
+	switch (key) 
 	{
 		case GLFW_KEY_ESCAPE: // Escape key to exit
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -891,9 +889,23 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			}
 			break;
 
-		// Tab to turn mouse functions off (was ALT+Q)
+		// Tab toggles between mouse mode and GUI mode
 		case GLFW_KEY_TAB:
-			mouseFunctionsOff();
+			if (Simulation.isInMouseFunctionMode) 
+			{
+				// Switch to GUI mode: collapse mouse mode, expand GUI
+				Simulation.isInMouseFunctionMode = false;
+				Simulation.guiCollapsed = false;
+				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			} 
+			else 
+			{
+				// Switch to mouse mode: collapse GUI, enable mouse mode
+				Simulation.isInMouseFunctionMode = true;
+				Simulation.guiCollapsed = true;
+				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			}
+			drawPicture();
 			break;
 
 		//view toggles -- follows numpad format and matches with GUI

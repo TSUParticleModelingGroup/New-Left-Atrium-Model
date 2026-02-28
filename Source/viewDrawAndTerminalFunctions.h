@@ -732,11 +732,11 @@ void createGUI()
     // Setup ImGui window flags
     ImGuiWindowFlags window_flags = 0; // Initialize window flags to 0, flags are used to set window properties, like size, position, etc. 0 means no flags are set
     window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
-    
 
-	// Set the collapsed state if guiCollapsed is true (toggled by ctrl + h callback)
-    ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
-
+	//comment this out if you would like to allow the user to unhide the GUI while in mouse mode, can cause problems
+	if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
+	
+	ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
 
     // Main Controls Window
     ImGui::Begin("Control Panel", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
@@ -1358,48 +1358,71 @@ void createGUI()
 		ImGui::Text("Rotate Y-axis: w/s; Up/Down");
 		ImGui::Text("Rotate Z-axis: z/Z; Shift + Left/Right");
 		ImGui::Text("Zoom In/Out: e/E; Shift + Up/Down");
-
 		ImGui::Text("Collapse/Expand GUI: h/H");
+		ImGui::Text("Toggle Mouse/GUI Mode: Tab");
 		
 	}
     
     ImGui::End(); //end the main controls window
     
-    // Beginning of stats window
+	// Beginning of stats window
 	//if there's any relevant information we should show for quick viewing, put it here., we can add toggles for what to show in the main window if we want to.
 
 	//Offset stats window by 10px from top-left edges. anchor to top left corner
 	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 10, viewport->WorkPos.y + 10),ImGuiCond_Always,ImVec2(0.0f, 0.0f));
 
-    ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
-	
-	//tell the user how to expand the GUI if it's collapsed
-	if(Simulation.guiCollapsed)
+	ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
+
+	// Show current mouse mode if in mouse mode
+	if (Simulation.isInMouseFunctionMode)
 	{
-		ImGui::Text("Ctrl + H to expand controls GUI");
+		const char* mode = NULL;
+		ImVec4 color = ImVec4(1,1,1,1);
+		if (Simulation.isInAblateMode) { mode = "Ablate"; color = ImVec4(1,0,0,1); }
+		else if (Simulation.isInEctopicBeatMode) { mode = "Ectopic Beat"; color = ImVec4(0,1,0,1); }
+		else if (Simulation.isInEctopicEventMode) { mode = "Ectopic Trigger"; color = ImVec4(0,0.5f,1,1); }
+		else if (Simulation.isInAdjustMuscleAreaMode) { mode = "Adjust Area"; color = ImVec4(1,1,0,1); }
+		else if (Simulation.isInAdjustMuscleLineMode) { mode = "Adjust Line"; color = ImVec4(1,0.5f,0,1); }
+		else if (Simulation.isInFindNodeMode) { mode = "Identify Node"; color = ImVec4(0.5f,0,1,1); }
+		else if (Simulation.isInFindMuscleMode) { mode = "Identify Muscle"; color = ImVec4(0,0.3f,1,1); }
+		if (mode)
+			ImGui::TextColored(color, "Mouse Mode: %s", mode);
+		else
+			ImGui::Text("Mouse Mode: None");
+	}
+
+	//
+	if(!Simulation.isInMouseFunctionMode)
+	{
+		ImGui::Text("H to expand/collapse controls GUI");
+		ImGui::Text("Tab to toggle mouse/GUI mode");
+	}
+	else
+	{
+		ImGui::Text("Tab to toggle mouse/GUI mode");
 	}
 
 	//Shows run time of the simulation and beat rate of the pulse node
-    ImGui::Text("Run time: %.2f ms", RunTime);
-    ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
-    
+	ImGui::Text("Run time: %.2f ms", RunTime);
+	ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
+
 	//shows our current refractory period and conduction velocity multipliers
-    if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
+	if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
 	{
-        ImGui::Separator();
-        ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
-        ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
-    }
-    
+		ImGui::Separator();
+		ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
+		ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
+	}
+
 	// Print ectopic beat nodes and their periods
-    ImGui::Separator();
-    for(int i = 0; i < NumberOfNodes; i++) 
+	ImGui::Separator();
+	for(int i = 0; i < NumberOfNodes; i++) 
 	{
-        if(Node[i].isBeatNode && i != PulsePointNode) 
+		if(Node[i].isBeatNode && i != PulsePointNode) 
 		{
-            ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
-        }
-    }
+			ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
+		}
+	}
   
     ImGui::End(); //end of stats window
 }
