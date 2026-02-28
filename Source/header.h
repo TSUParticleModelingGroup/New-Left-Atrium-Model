@@ -103,6 +103,7 @@ struct simulationSwitchesStructure
 	bool isInAdjustMuscleAreaMode;
 	bool isInAdjustMuscleLineMode;
 	bool isInFindNodeMode;
+	bool isInFindMuscleMode;
 	bool isInMouseFunctionMode;
 	bool isRecording;
 	// Turns the contractions on and off to speed up the simulation when only studying electrical activity.
@@ -119,8 +120,8 @@ struct simulationSwitchesStructure
 	// For Find Nodes functionality
 	//These need to be globals or they get wiped when the GUI redraws
 	bool nodesFound;       // Whether nodes have been identified
-        int frontNodeIndex;    // Index of the frontmost node (max Z)
-        int topNodeIndex;      // Index of the topmost node (max Y)
+	int frontNodeIndex;    // Index of the frontmost node (max Z)
+	int topNodeIndex;      // Index of the topmost node (max Y)
 	//GUI related
 	bool guiCollapsed; // for hotkey to collapse GUI
 };
@@ -372,6 +373,7 @@ void createGUI();
  void mouseAdjustMusclesAreaMode();
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
+ void mouseIdentifyMuscleMode();
  bool setMouseMuscleAttributes();
  void setEctopicBeat(int nodeId);
  void clearStdin();

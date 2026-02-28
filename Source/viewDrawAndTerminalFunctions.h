@@ -6,6 +6,9 @@
  In short this file holds the functions that present information to the user.
  
  The functions are listed below in the order they appear.
+ void ShowTooltip(const char*);
+ void ShowIdentifiedNodesBox();
+ void ShowIdentifiedMusclesBox();
  void renderSphere(float, int, int);
  void createSphereVBO(float, int, int);
  void renderSphereVBO();
@@ -34,6 +37,88 @@ void ShowTooltip(const char* text)
 		ImGui::EndTooltip();
 	}
 }
+
+// Display box for identified nodes in FindNodeMode
+void ShowIdentifiedNodesBox()
+{
+	ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), "Click on nodes to identify them");
+	ImGui::BeginChild("IdentifiedNodes", ImVec2(0, 120), true);
+	bool foundAny = false;
+	for (int i = 0; i < NumberOfNodes; i++)
+	{
+		// if the node is colored magenta, it is identified. Magenta color: (1.0, 0.0, 1.0)
+		if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f)
+		{
+			foundAny = true;
+			ImGui::Text("Node ID: %d", i);
+		}
+	}
+	if (!foundAny)
+	{
+		ImGui::TextDisabled("No nodes identified yet");
+	}
+	ImGui::EndChild();
+	if (ImGui::Button("Clear Identified Nodes"))
+	{
+		for (int i = 0; i < NumberOfNodes; i++)
+		{
+			if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f)
+			{
+				if (Node[i].isAblated)
+				{
+					Node[i].color.x = 1.0f;
+					Node[i].color.y = 1.0f;
+					Node[i].color.z = 1.0f;
+				}
+				else
+				{
+					Node[i].isDrawNode = false;
+					Node[i].color.x = 0.0f;
+					Node[i].color.y = 1.0f;
+					Node[i].color.z = 0.0f;
+				}
+			}
+		}
+		copyNodesMusclesToGPU();
+		drawPicture();
+	}
+}
+// Display box for identified muscles in FindMuscleMode
+void ShowIdentifiedMusclesBox()
+{
+	ImGui::TextColored(ImVec4(0.3f, 0.3f, 1.0f, 1.0f), "Click on muscles to identify them");
+	ImGui::BeginChild("IdentifiedMuscles", ImVec2(0, 120), true);
+	bool foundAny = false;
+	for (int i = 0; i < NumberOfMuscles; i++)
+	{
+		//if the muscle is colored blue, it is identified. Blue color: (0.0, 0.0, 0.7)
+		if (Muscle[i].color.x == 0.0f && Muscle[i].color.y == 0.0f && Muscle[i].color.z == 0.7f)
+		{
+			foundAny = true;
+			ImGui::Text("Muscle ID: %d | CV: %.3f | RP: %.3f", i, Muscle[i].conductionVelocity, Muscle[i].refractoryPeriod/300.0f);
+		}
+	}
+	if (!foundAny)
+	{
+		ImGui::TextDisabled("No muscles identified yet");
+	}
+	ImGui::EndChild();
+	if (ImGui::Button("Clear Identified Muscles"))
+	{
+		for (int i = 0; i < NumberOfMuscles; i++)
+		{
+			if (Muscle[i].color.x == 0.0f && Muscle[i].color.y == 0.0f && Muscle[i].color.z == 0.7f)
+			{
+				Muscle[i].color.x = 0.7f;
+				Muscle[i].color.y = 0.7f;
+				Muscle[i].color.z = 0.7f;
+			}
+		}
+		copyNodesMusclesToGPU();
+		drawPicture();
+	}
+}
+
 // Add this to a utility file, only used for the mouse selection since it's just 1 object
 void renderSphere(float radius, int slices, int stacks) 
 {
@@ -857,38 +942,44 @@ void createGUI()
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
 			ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
 		}
 		else if (Simulation.isInEctopicBeatMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
 		} 
 		else if (Simulation.isInEctopicEventMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
 		} 
 		else if (Simulation.isInAdjustMuscleAreaMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
 		} 
 		else if (Simulation.isInAdjustMuscleLineMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
 		} 
 		else if (Simulation.isInFindNodeMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
-			ImGui::Text("Alt + Q to exit mouse mode");
+			ImGui::Text("Tab to exit mouse mode");
+		}
+		else if (Simulation.isInFindMuscleMode)
+		{
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.0f, 0.3f, 1.0f, 1.0f), "Identify Muscle");
+			ImGui::Text("Tab to exit mouse mode");
 		}
 
 		// Mouse mode buttons
@@ -897,7 +988,7 @@ void createGUI()
 			mouseFunctionsOff();
 			Simulation.isInMouseFunctionMode = false;
 		}
-		ShowTooltip("(Alt + Q)\nDisables all mouse interaction with the model");
+		ShowTooltip("(Tab)\nDisables all mouse interaction with the model");
 
 		if (ImGui::Button("Ablate Mode")) 
 		{
@@ -947,65 +1038,24 @@ void createGUI()
 		}
 		ShowTooltip("(F12)\nLeft-click to display the ID of a node");
 
-		// Display identified nodes in a window when in find node mode
-		if (Simulation.isInFindNodeMode) 
+		ImGui::SameLine();
+
+		if (ImGui::Button("Identify Muscle")) 
 		{
-			ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), "Click on nodes to identify them");
-			
-			// A child window will be used since it allows for scrolling and  will let us dislpay as many nodes as we want
-			ImGui::BeginChild("IdentifiedNodes", ImVec2(0, 120), true); // Create a child window for displaying identified nodes, imVec2(0, 120) sets the size of the child window (0 means auto width, 120 is height), true means bordered
-			bool foundAny = false; // Flag to check if any nodes are identified
-			
-			//find identified nodes; currently displays least to greatest because of the for loop
-			for (int i = 0; i < NumberOfNodes; i++)
-			{
-				// Check if node is marked as drawn and is the purple identify color
-				if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f)
-				{
-					foundAny = true;
-					ImGui::Text("Node ID: %d", i);
-				}
-			}
-			
-			//print a message if no nodes are identified
-			if (!foundAny)
-			{
-				ImGui::TextDisabled("No nodes identified yet");
-			}
-			
-			ImGui::EndChild(); // End the child window
-			
-			//button to clear identified nodes
-			if (ImGui::Button("Clear Identified Nodes"))
-			{
-				// Reset all purple nodes back to default
-				for (int i = 0; i < NumberOfNodes; i++)
-				{
-					if (Node[i].isDrawNode && Node[i].color.x == 1.0f && Node[i].color.y == 0.0f && Node[i].color.z == 1.0f) //if the node is purple and is drawn
-					{
-						if (Node[i].isAblated) 
-						{
-							// Reset ablated nodes to ablated color (white)
-							Node[i].color.x = 1.0f;
-							Node[i].color.y = 1.0f; 
-							Node[i].color.z = 1.0f;
-							// isDrawNode stays true for ablated nodes
-						}
-						else 
-						{
-							// Reset non-ablated nodes to default color (green)
-							Node[i].isDrawNode = false;
-							Node[i].color.x = 0.0f;
-							Node[i].color.y = 1.0f; 
-							Node[i].color.z = 0.0f;
-						}
-					}
-				}
-				
-				// Update the GPU with changes
-				copyNodesMusclesToGPU();
-				drawPicture();
-			}
+			mouseIdentifyMuscleMode();
+		}
+		ShowTooltip("(Shift + F12)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
+
+		// Display identified nodes in a window when in find node mode
+		if (Simulation.isInFindNodeMode)
+		{
+			ShowIdentifiedNodesBox();
+		}
+
+		// Display identified muscles in a window when in find muscle mode
+		if (Simulation.isInFindMuscleMode)
+		{
+			ShowIdentifiedMusclesBox();
 		}
 
 		// Selection area slider
@@ -1288,20 +1338,14 @@ void createGUI()
 		{
 			saveState();
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Settings, which only saves muscle properties and general settings");
-		}
+		ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Settings, which only saves muscle properties and general settings");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("Load State"))
 		{
 			loadState();
 		}
-		if (ImGui::IsItemHovered())
-		{
-			ShowTooltip("(Ctrl + Z)\nLoad a previously saved state of the simulation\nThis will overwrite the current state with the saved one, including all node properties and current simulation time");
-		}
+		ShowTooltip("(Ctrl + Z)\nLoad a previously saved state of the simulation\nThis will overwrite the current state with the saved one, including all node properties and current simulation time");
     }
 
 	//Display movement controls

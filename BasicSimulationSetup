@@ -39,7 +39,7 @@ Cross200X200
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = TheRock
+--InputFileName = IdealLeftAtrium2.3K
 
 Name of previous run files that were stored in GitHub.
 test

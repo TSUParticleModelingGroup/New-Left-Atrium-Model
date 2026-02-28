@@ -1,11 +1,8 @@
-
 /*
- This file contains all the callBack functions and functions that it calls to do its work.
- This file contains all the ways a user can interact (Mouse and Terminal) with 
- a running simulation.
- 
- The functions in this file are listed below and in this order.
- 
+ This file contains all the callback functions and the functions they call to do their work.
+ This file contains all the ways a user can interact (Mouse and Terminal) with a running simulation.
+
+ The functions in this file are listed below and in this order:
  void reshape(GLFWwindow* window, int width, int height);
  void mouseFunctionsOff();
  void mouseAblateMode();
@@ -13,6 +10,7 @@
  void mouseAdjustMusclesAreaMode();
  void mouseAdjustMusclesLineMode();
  void mouseIdentifyNodeMode();
+ void mouseIdentifyMuscleMode();
  bool setMouseMuscleAttributes();
  void setEctopicBeat(int nodeId);
  void clearStdin();
@@ -79,6 +77,7 @@ void mouseFunctionsOff()
 	Simulation.isInAdjustMuscleAreaMode = false;
 	Simulation.isInAdjustMuscleLineMode = false;
 	Simulation.isInFindNodeMode = false;
+	Simulation.isInFindMuscleMode = false;
 	Simulation.isInMouseFunctionMode = false;
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
 	drawPicture();
@@ -176,6 +175,27 @@ void mouseIdentifyNodeMode()
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
+	drawPicture();
+}
+
+void mouseIdentifyMuscleMode()
+{
+	mouseFunctionsOff();
+	Simulation.isPaused = true;
+	Simulation.isInFindMuscleMode = true;
+	Simulation.isInMouseFunctionMode = true;
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	drawPicture();
+}
+
+// Helper for Identify Muscle mode: only one muscle can be blue at a time
+void identifyMuscleAtIndex(int muscleIndex)
+{
+	//set the selected muscle to blue (marking it as an identified muscle)
+	Muscle[muscleIndex].color.x = 0.0f;
+	Muscle[muscleIndex].color.y = 0.0f;
+	Muscle[muscleIndex].color.z = 0.7f;
+	copyNodesMusclesToGPU();
 	drawPicture();
 }
 
@@ -861,13 +881,13 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 
 		case GLFW_KEY_F12: // Toggle identify node mode
-			if(Simulation.isInFindNodeMode)
+			if(Simulation.isInFindNodeMode || Simulation.isInFindMuscleMode)
 			{
 				mouseFunctionsOff();
 			}
 			else
 			{
-				mouseIdentifyNodeMode();
+				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyMuscleMode() : mouseIdentifyNodeMode(); // Shift + F12 for muscle, F12 for node
 			}
 			break;
 
@@ -1445,6 +1465,34 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 						checkMuscle(muscleId);		
 					}
 				}
+			}
+			else if(Simulation.isInFindMuscleMode)
+			{
+				// Find the closest muscle to the mouse and identify it
+				int closestMuscle = -1;
+				float minDist = 1e9;
+				for(int m = 0; m < NumberOfMuscles; m++)
+				{
+					int a = Muscle[m].nodeA;
+					int b = Muscle[m].nodeB;
+					float mx = 0.5f * (Node[a].position.x + Node[b].position.x);
+					float my = 0.5f * (Node[a].position.y + Node[b].position.y);
+					float mz = 0.5f * (Node[a].position.z + Node[b].position.z);
+					float dx = MouseX - mx;
+					float dy = MouseY - my;
+					float dz = MouseZ - mz;
+					float dist = sqrt(dx*dx + dy*dy + dz*dz);
+					if(dist < minDist && dist < hit) // Only select if within hit radius
+					{
+						minDist = dist;
+						closestMuscle = m;
+					}
+				}
+				if(closestMuscle != -1)
+				{
+					identifyMuscleAtIndex(closestMuscle);
+				}
+				return;
 			}
 			else
 			{
