@@ -1783,13 +1783,34 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 
 void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if(yoffset > 0) // Scroll up
+    bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || 
+                     glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
+    
+    if(ctrlHeld)
     {
-        MouseZ -= ScrollSpeed;
+        // Ctrl+Scroll functionality - adjust selector size
+        if(yoffset > 0) // Scroll up - increase selector size
+        {
+            HitMultiplier += 0.025;
+            if(HitMultiplier > 0.5) HitMultiplier = 0.5;
+        }
+        else if(yoffset < 0) // Scroll down - decrease selector size
+        {
+            HitMultiplier -= 0.01;
+            if(HitMultiplier < 0.01) HitMultiplier = 0.01;
+        }
     }
-    else if(yoffset < 0) // Scroll down
+    else
     {
-        MouseZ += ScrollSpeed;
+        // Normal Scroll functionality
+        if(yoffset > 0) // Scroll up
+        {
+            MouseZ -= ScrollSpeed;
+        }
+        else if(yoffset < 0) // Scroll down
+        {
+            MouseZ += ScrollSpeed;
+        }
     }
     // printf("MouseZ = %f\n", MouseZ);
     drawPicture();
