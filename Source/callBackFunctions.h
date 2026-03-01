@@ -65,6 +65,15 @@ void reshape(GLFWwindow* window, int width, int height)
 	//glLoadIdentity(); //don't need this because it resets the camera every time we reshape
 }
 
+int centerMouse(GLFWwindow* window, double* mx, double* my, double* mz)
+{
+	*mx = 0.0f;
+	*my = 0.0f;
+	*mz = 0.0f;
+	glfwSetCursorPos(window, XWindowSize / 2.0, YWindowSize / 2.0); // Move cursor to center of screen
+	return 1;
+}
+
 /*
  Turns off all the user interactions.
 */
@@ -1390,6 +1399,12 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 	
 	if(action == GLFW_PRESS)
 	{
+		// Check for Ctrl+Click to center mouse
+		if(mods & GLFW_MOD_CONTROL)
+		{
+			centerMouse(window, &MouseX, &MouseY, &MouseZ);
+		}
+		
 		copyNodesMusclesFromGPU();
 		hit = HitMultiplier*RadiusOfLeftAtrium;
 		
