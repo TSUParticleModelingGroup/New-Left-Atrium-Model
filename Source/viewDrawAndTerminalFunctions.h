@@ -982,6 +982,7 @@ void createGUI()
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "None");
+			ImGui::Text("No mouse function mode active");
 		}
 
 		// Mouse mode buttons
@@ -1054,7 +1055,7 @@ void createGUI()
 		{
 			HitMultiplier = hitMult;
 		}
-		ShowTooltip("(-/=): decrease/increase selection area\n(Shift + -/=): decrease/increase simulation speed\n(Ctrl + -/=): decrease/increase beat period\n\nAdjusts the size of the selection area\nLarger values affect more nodes");
+		ShowTooltip("(-/=): decrease/increase selection area\nAdjusts the size of the selection area\nLarger values affect more nodes");
 
 		//Muscle adjustment sliders; shows when in adjust line or adjust area mode
 		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
