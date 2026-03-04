@@ -1,0 +1,70 @@
+New-Left-Atrium-Model: Complete Key Controls
+===========================================
+
+Last updated: March 4, 2026
+
+Pressed-key controls (single press)
+-----------------------------------
+General
+- Shift + Esc                  : Exit application
+- F1 or R                      : Run/Pause toggle
+- F2                           : Draw front half toggle
+- F3                           : Show nodes cycle (Off -> Half -> Full)
+- F4                           : Movie recording on/off
+- F5                           : Screenshot
+- F10 or C                     : Contraction toggle
+- H                            : Collapse/expand GUI
+- Tab                          : Toggle Mouse mode <-> GUI mode
+
+Mouse function modes
+- F6                           : Ablate mode toggle
+- F7                           : Adjust Area mode toggle
+- Shift + F7                   : Adjust Line mode toggle
+- F8                           : Ectopic Trigger mode toggle
+- Shift + F8                   : Ectopic Beat mode toggle
+- F9                           : Identify Muscle mode toggle
+- Shift + F9                   : Identify Node mode toggle
+
+View presets
+- 7                            : PA view
+- 8                            : AP view
+- 9                            : Reference view
+- 4                            : LAO view
+- 5                            : RAO view
+- 6                            : LL view
+- 1                            : RL view
+- 2                            : Superior view
+- 3                            : Inferior view
+
+Selection / speed / beat period
+- -/=                          : Selector size (decrease/increase)
+- Shift + -/=                  : Simulation speed (DrawRate) (decrease/increase)
+- Ctrl + -/=                   : Pulse beat period (decrease/increase)
+
+Save / load / utility
+- Alt + F                      : Find nodes (front/top orientation)
+- Ctrl + S                     : Save state
+- Ctrl + Shift + S             : Save settings
+- Ctrl + Z                     : Load state
+
+Held-key controls (continuous while held)
+-----------------------------------------
+Rotation
+- W/S or Up/Down Arrow         : Rotate X-axis (+/-)
+- A/D or Left/Right Arrow      : Rotate Y-axis (+/-)
+- Z / Shift + Z                : Rotate Z-axis (+/-)
+- Shift + Left/Right Arrow     : Rotate Z-axis (+/-)
+
+Zoom
+- E / Shift + E                : Zoom in/out
+- Shift + Up/Down Arrow        : Zoom in/out
+
+Notes
+-----
+- Held-key movement processing is disabled while Ctrl is held.
+
+Modifier + mouse input (not keyboard-only, included for completeness)
+---------------------------------------------------------------------
+- Ctrl + Click                 : Center mouse before click action
+- Ctrl + Scroll Up/Down        : Increase/decrease selector size
+- Middle Mouse Click           : Toggle scroll speed mode

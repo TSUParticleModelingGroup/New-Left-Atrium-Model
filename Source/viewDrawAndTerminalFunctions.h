@@ -734,7 +734,7 @@ void createGUI()
     window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
 
 	//comment this out if you would like to allow the user to unhide the GUI while in mouse mode, can cause problems
-	if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
+	//if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
 	
 	ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
 
@@ -761,6 +761,7 @@ void createGUI()
         {
             Simulation.ContractionisOn = contractionOn;
         }
+		ShowTooltip("(F10 or c/C)\nToggle contraction on and off.\nWhen on, the LA will contract and relax\nas it does in real life.");
         
 
 
@@ -836,7 +837,7 @@ void createGUI()
 		if (DrawRate < 1) DrawRate = 1;
 		if (DrawRate > 5000) DrawRate = 5000;
 	}
-	ShowTooltip("(;/')\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
+	ShowTooltip("(Shift + -/=)\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
 	//Input box for simulation speed
 	if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
 	{
@@ -996,7 +997,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAblateMode = true;
 		}
-		ShowTooltip("(F7)\nLeft-click to ablate nodes\nRight-click to undo ablation");
+		ShowTooltip("(F6)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 
 		if (ImGui::Button("Ectopic Beat")) 
 		{
@@ -1004,7 +1005,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicBeatMode = true;
 		}
-		ShowTooltip("(F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
+		ShowTooltip("(Shift + F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
 
 		if (ImGui::Button("Ectopic Trigger")) 
 		{
@@ -1012,7 +1013,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInEctopicEventMode = true;
 		}
-		ShowTooltip("(F9)\nLeft-click to trigger a single pulse at a node");
+		ShowTooltip("(F8)\nLeft-click to trigger a single pulse at a node");
 
 		if (ImGui::Button("Adjust Area"))
 		{
@@ -1020,7 +1021,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleAreaMode = true;
 		}
-		ShowTooltip("(F10)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
+		ShowTooltip("(F7)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Adjust Line")) 
 		{
@@ -1028,7 +1029,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInAdjustMuscleLineMode = true;
 		}
-		ShowTooltip("(F11)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
+		ShowTooltip("(Shift + F7)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Identify Node")) 
 		{
@@ -1036,7 +1037,7 @@ void createGUI()
 			Simulation.isInMouseFunctionMode = true;
 			Simulation.isInFindNodeMode = true;
 		}
-		ShowTooltip("(F12)\nLeft-click to display the ID of a node");
+		ShowTooltip("(Shift + F9)\nLeft-click to display the ID of a node");
 
 		ImGui::SameLine();
 
@@ -1044,7 +1045,7 @@ void createGUI()
 		{
 			mouseIdentifyMuscleMode();
 		}
-		ShowTooltip("(Shift + F12)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
+		ShowTooltip("(F9)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
 
 		// Display identified nodes in a window when in find node mode
 		if (Simulation.isInFindNodeMode)
@@ -1064,7 +1065,7 @@ void createGUI()
 		{
 			HitMultiplier = hitMult;
 		}
-		ShowTooltip("(-/=): decrease/increase\nAdjusts the size of the selection area\nLarger values effect more nodes");
+		ShowTooltip("(-/=): decrease/increase selection area\n(Shift + -/=): decrease/increase simulation speed\n(Ctrl + -/=): decrease/increase beat period\n\nAdjusts the size of the selection area\nLarger values affect more nodes");
 
 		//Muscle adjustment sliders; shows when in adjust line or adjust area mode
 		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
@@ -1158,7 +1159,7 @@ void createGUI()
             cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
             cudaErrorCheck(__FILE__, __LINE__);
 		}
-		ShowTooltip("([/]): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
+		ShowTooltip("(Ctrl + -/=): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
 
 		ImGui::SameLine();
 
@@ -1317,7 +1318,7 @@ void createGUI()
 		{
             saveSettings();
         }
-		ShowTooltip("(F6)\nSave current muscle properties and simulation\nsettings to a file for later use");
+		ShowTooltip("(Ctrl + Shift + S)\nSave current muscle properties and simulation\nsettings to a file for later use");
 
         //Find nodes button
         if (ImGui::Button("Find Nodes"))
@@ -1352,7 +1353,7 @@ void createGUI()
 	if (ImGui::CollapsingHeader("Keyboard Controls"))
 	{
 
-		ImGui::Text("Quit: esc");
+		ImGui::Text("Quit: Shift + Esc");
 		ImGui::NewLine(); //add a new line for spacing
 		ImGui::Text("Rotate X-axis: a/d; Left/Right");
 		ImGui::Text("Rotate Y-axis: w/s; Up/Down");

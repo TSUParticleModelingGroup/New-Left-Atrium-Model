@@ -769,8 +769,11 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 	// Check for specific key presses
 	switch (key) 
 	{
-		case GLFW_KEY_ESCAPE: // Escape key to exit
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		case GLFW_KEY_ESCAPE: // Shift + Escape to exit
+			if (mods & GLFW_MOD_SHIFT)
+			{
+				glfwSetWindowShouldClose(window, GLFW_TRUE);
+			}
 			break;
 
 		case GLFW_KEY_F1: // F1 key to toggle run/pause
@@ -828,11 +831,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			screenShot();
 			break;
 
-		case GLFW_KEY_F6: // Save settings
-			saveSettings();
-			break;
-
-		case GLFW_KEY_F7: // Toggle ablate mode
+		case GLFW_KEY_F6: // Toggle ablate mode
 			if(Simulation.isInAblateMode)
 			{
 				mouseFunctionsOff();
@@ -842,60 +841,70 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				mouseAblateMode();
 			}
 			break;
-		
-		case GLFW_KEY_F8: // Toggle ectopic beat mode
-			if(Simulation.isInEctopicBeatMode)
-			{
-				mouseFunctionsOff();
-			}
-			else
-			{
-				mouseEctopicBeatMode();
-			}
-			break;
 
-		case GLFW_KEY_F9: // Toggle ectopic event mode
-			if(Simulation.isInEctopicEventMode)
+		case GLFW_KEY_F7: // F7 adjust area, Shift + F7 adjust line
+			if (mods & GLFW_MOD_SHIFT)
 			{
-				mouseFunctionsOff();
+				if(Simulation.isInAdjustMuscleLineMode)
+				{
+					mouseFunctionsOff();
+				}
+				else
+				{
+					mouseAdjustMusclesLineMode();
+				}
 			}
 			else
 			{
-				mouseEctopicEventMode();
-			}
-			break;
-
-		case GLFW_KEY_F10: // Toggle adjust muscle area mode
-			if(Simulation.isInAdjustMuscleAreaMode)
-			{
-				mouseFunctionsOff();
-			}
-			else
-			{
-				mouseAdjustMusclesAreaMode();
+				if(Simulation.isInAdjustMuscleAreaMode)
+				{
+					mouseFunctionsOff();
+				}
+				else
+				{
+					mouseAdjustMusclesAreaMode();
+				}
 			}
 			break;
 		
-		case GLFW_KEY_F11: // Toggle adjust muscle line mode
-			if(Simulation.isInAdjustMuscleLineMode)
+		case GLFW_KEY_F8: // F8 ectopic trigger, Shift + F8 ectopic beat
+			if (mods & GLFW_MOD_SHIFT)
 			{
-				mouseFunctionsOff();
+				if(Simulation.isInEctopicBeatMode)
+				{
+					mouseFunctionsOff();
+				}
+				else
+				{
+					mouseEctopicBeatMode();
+				}
 			}
 			else
 			{
-				mouseAdjustMusclesLineMode();
+				if(Simulation.isInEctopicEventMode)
+				{
+					mouseFunctionsOff();
+				}
+				else
+				{
+					mouseEctopicEventMode();
+				}
 			}
 			break;
 
-		case GLFW_KEY_F12: // Toggle identify node mode
+		case GLFW_KEY_F9: // F9 identify muscle, Shift + F9 identify node
 			if(Simulation.isInFindNodeMode || Simulation.isInFindMuscleMode)
 			{
 				mouseFunctionsOff();
 			}
 			else
 			{
-				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyMuscleMode() : mouseIdentifyNodeMode(); // Shift + F12 for muscle, F12 for node
+				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyNodeMode() : mouseIdentifyMuscleMode();
 			}
+			break;
+
+		case GLFW_KEY_F10: // Toggle contraction
+			Simulation.ContractionisOn = !Simulation.ContractionisOn;
 			break;
 
 		// Tab toggles between mouse mode and GUI mode
@@ -997,44 +1006,50 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
         //     }
 
 		// Might make this a held key pending feedback
-		case GLFW_KEY_KP_SUBTRACT: //decrease selection radius
+		case GLFW_KEY_KP_SUBTRACT:
 		case GLFW_KEY_MINUS:
-		HitMultiplier -= 0.01;
-		if(HitMultiplier < 0.01) HitMultiplier = 0.01;
-		break;
-
-		case GLFW_KEY_KP_ADD: //increase selection radius
-		case GLFW_KEY_EQUAL:
-		HitMultiplier += 0.025;
-		if(HitMultiplier > 0.5) HitMultiplier = 0.5;
-		break;
-
-		case GLFW_KEY_LEFT_BRACKET: //decrease beat period
-			Node[PulsePointNode].beatPeriod -= 10;
-            if(Node[PulsePointNode].beatPeriod < 0) // Prevent negative beat period 
+			if (mods & GLFW_MOD_CONTROL) // Ctrl + - : decrease beat period
 			{
-                Node[PulsePointNode].beatPeriod = 0;
-            }
-			copyNodesToGPU();
-			break;
-
-		case GLFW_KEY_RIGHT_BRACKET: //increase beat period
-			Node[PulsePointNode].beatPeriod += 10;
-			if(Node[PulsePointNode].beatPeriod > 10000) // Prevent excessively large beat period
-			{
-				Node[PulsePointNode].beatPeriod = 10000;
+				Node[PulsePointNode].beatPeriod -= 10;
+				if(Node[PulsePointNode].beatPeriod < 0)
+				{
+					Node[PulsePointNode].beatPeriod = 0;
+				}
+				copyNodesToGPU();
 			}
-			copyNodesToGPU();
+			else if (mods & GLFW_MOD_SHIFT) // Shift + - : decrease simulation speed
+			{
+				DrawRate -= 50;
+				if(DrawRate < 100) DrawRate = 100;
+			}
+			else // - : decrease selection radius
+			{
+				HitMultiplier -= 0.01;
+				if(HitMultiplier < 0.01) HitMultiplier = 0.01;
+			}
 			break;
 
-		case GLFW_KEY_SEMICOLON: //decrease DrawRate
-			DrawRate -= 50;
-			if(DrawRate < 100) DrawRate = 100;
-			break;
-
-		case GLFW_KEY_APOSTROPHE: //increase DrawRate
-			DrawRate += 50;
-			if(DrawRate > 5000) DrawRate = 5000;
+		case GLFW_KEY_KP_ADD:
+		case GLFW_KEY_EQUAL:
+			if (mods & GLFW_MOD_CONTROL) // Ctrl + = : increase beat period
+			{
+				Node[PulsePointNode].beatPeriod += 10;
+				if(Node[PulsePointNode].beatPeriod > 10000)
+				{
+					Node[PulsePointNode].beatPeriod = 10000;
+				}
+				copyNodesToGPU();
+			}
+			else if (mods & GLFW_MOD_SHIFT) // Shift + = : increase simulation speed
+			{
+				DrawRate += 50;
+				if(DrawRate > 5000) DrawRate = 5000;
+			}
+			else // = : increase selection radius
+			{
+				HitMultiplier += 0.025;
+				if(HitMultiplier > 0.5) HitMultiplier = 0.5;
+			}
 			break;
 
 		case GLFW_KEY_F: //Alt + f to find nodes
@@ -1044,8 +1059,12 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			}
 			break;
 
-		case GLFW_KEY_S: // Ctrl + s to save state
-			if (mods & GLFW_MOD_CONTROL)
+		case GLFW_KEY_S: // Ctrl + S save state, Ctrl + Shift + S save settings
+			if ((mods & GLFW_MOD_CONTROL) && (mods & GLFW_MOD_SHIFT))
+			{
+				saveSettings();
+			}
+			else if (mods & GLFW_MOD_CONTROL)
 			{
 				saveState();
 			}
