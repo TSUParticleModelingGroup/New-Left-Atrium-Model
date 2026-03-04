@@ -934,12 +934,8 @@ void createGUI()
 	{
 		// Display current mouse mode
 		ImGui::Text("Current Mode: ");
-		if (!Simulation.isInMouseFunctionMode) 
-		{
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Mouse Off");
-		}
-		else if (Simulation.isInAblateMode) 
+
+		if (Simulation.isInAblateMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
@@ -982,6 +978,11 @@ void createGUI()
 			ImGui::TextColored(ImVec4(0.0f, 0.3f, 1.0f, 1.0f), "Identify Muscle");
 			ImGui::Text("Tab to exit mouse mode");
 		}
+		else //not in a mode
+		{
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "None");
+		}
 
 		// Mouse mode buttons
 		if (ImGui::Button("Mouse Off"))
@@ -994,40 +995,30 @@ void createGUI()
 		if (ImGui::Button("Ablate Mode")) 
 		{
 			mouseAblateMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInAblateMode = true;
 		}
 		ShowTooltip("(F6)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 
 		if (ImGui::Button("Adjust Area"))
 		{
 			mouseAdjustMusclesAreaMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInAdjustMuscleAreaMode = true;
 		}
 		ShowTooltip("(F7)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Adjust Line")) 
 		{
 			mouseAdjustMusclesLineMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInAdjustMuscleLineMode = true;
 		}
 		ShowTooltip("(Shift + F7)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 		if (ImGui::Button("Ectopic Trigger")) 
 		{
 			mouseEctopicEventMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInEctopicEventMode = true;
 		}
 		ShowTooltip("(F8)\nLeft-click to trigger a single pulse at a node");
 
 		if (ImGui::Button("Ectopic Beat")) 
 		{
 			mouseEctopicBeatMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInEctopicBeatMode = true;
 		}
 		ShowTooltip("(Shift + F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
 
@@ -1042,8 +1033,6 @@ void createGUI()
 		if (ImGui::Button("Identify Node")) 
 		{
 			mouseIdentifyNodeMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInFindNodeMode = true;
 		}
 		ShowTooltip("(Shift + F9)\nLeft-click to display the ID of a node");
 

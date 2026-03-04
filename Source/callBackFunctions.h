@@ -88,7 +88,8 @@ void mouseFunctionsOff()
 	Simulation.isInFindNodeMode = false;
 	Simulation.isInFindMuscleMode = false;
 	Simulation.isInMouseFunctionMode = false;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Set cursor to default arrow.
+	Simulation.guiCollapsed = false;
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	drawPicture();
 }
 
@@ -100,9 +101,8 @@ void mouseAblateMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInAblateMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -115,9 +115,8 @@ void mouseEctopicBeatMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInEctopicBeatMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -130,9 +129,8 @@ void mouseEctopicEventMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInEctopicEventMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -145,9 +143,8 @@ void mouseAdjustMusclesAreaMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleAreaMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 	
@@ -162,9 +159,8 @@ void mouseAdjustMusclesLineMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInAdjustMuscleLineMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 	
@@ -180,9 +176,8 @@ void mouseIdentifyNodeMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInFindNodeMode = true;
-	Simulation.isInMouseFunctionMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Set cursor to hidden.
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//orthogonalView();
 	drawPicture();
 }
@@ -192,8 +187,7 @@ void mouseIdentifyMuscleMode()
 	mouseFunctionsOff();
 	Simulation.isPaused = true;
 	Simulation.isInFindMuscleMode = true;
-	Simulation.isInMouseFunctionMode = true;
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	drawPicture();
 }
 
@@ -839,9 +833,9 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			else
 			{
 				mouseAblateMode();
+				Simulation.isInMouseFunctionMode = true;
 			}
 			break;
-
 		case GLFW_KEY_F7: // F7 adjust area, Shift + F7 adjust line
 			if (mods & GLFW_MOD_SHIFT)
 			{
@@ -852,6 +846,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				else
 				{
 					mouseAdjustMusclesLineMode();
+					Simulation.isInMouseFunctionMode = true;
 				}
 			}
 			else
@@ -863,6 +858,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				else
 				{
 					mouseAdjustMusclesAreaMode();
+					Simulation.isInMouseFunctionMode = true;
 				}
 			}
 			break;
@@ -877,6 +873,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				else
 				{
 					mouseEctopicBeatMode();
+					Simulation.isInMouseFunctionMode = true;
 				}
 			}
 			else
@@ -888,6 +885,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 				else
 				{
 					mouseEctopicEventMode();
+					Simulation.isInMouseFunctionMode = true;
 				}
 			}
 			break;
@@ -900,6 +898,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			else
 			{
 				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyNodeMode() : mouseIdentifyMuscleMode();
+				Simulation.isInMouseFunctionMode = true;
 			}
 			break;
 
@@ -1080,6 +1079,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_H: // H to collapse/expand GUI (was Ctrl+H)
 			Simulation.guiCollapsed = !Simulation.guiCollapsed;
 			break;
+
 		// C to toggle contraction
 		case GLFW_KEY_C:
 			Simulation.ContractionisOn = !Simulation.ContractionisOn;
@@ -1422,6 +1422,12 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 		if(mods & GLFW_MOD_CONTROL)
 		{
 			centerMouse(window, &MouseX, &MouseY, &MouseZ);
+		}
+		
+		// Only allow mode actions when in mouse function mode
+		if(!Simulation.isInMouseFunctionMode)
+		{
+			return;
 		}
 		
 		copyNodesMusclesFromGPU();
