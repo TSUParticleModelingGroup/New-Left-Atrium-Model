@@ -999,22 +999,6 @@ void createGUI()
 		}
 		ShowTooltip("(F6)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 
-		if (ImGui::Button("Ectopic Beat")) 
-		{
-			mouseEctopicBeatMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInEctopicBeatMode = true;
-		}
-		ShowTooltip("(Shift + F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
-
-		if (ImGui::Button("Ectopic Trigger")) 
-		{
-			mouseEctopicEventMode();
-			Simulation.isInMouseFunctionMode = true;
-			Simulation.isInEctopicEventMode = true;
-		}
-		ShowTooltip("(F8)\nLeft-click to trigger a single pulse at a node");
-
 		if (ImGui::Button("Adjust Area"))
 		{
 			mouseAdjustMusclesAreaMode();
@@ -1031,6 +1015,30 @@ void createGUI()
 		}
 		ShowTooltip("(Shift + F7)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
+		if (ImGui::Button("Ectopic Trigger")) 
+		{
+			mouseEctopicEventMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInEctopicEventMode = true;
+		}
+		ShowTooltip("(F8)\nLeft-click to trigger a single pulse at a node");
+
+		if (ImGui::Button("Ectopic Beat")) 
+		{
+			mouseEctopicBeatMode();
+			Simulation.isInMouseFunctionMode = true;
+			Simulation.isInEctopicBeatMode = true;
+		}
+		ShowTooltip("(Shift + F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
+
+		if (ImGui::Button("Identify Muscle")) 
+		{
+			mouseIdentifyMuscleMode();
+		}
+		ShowTooltip("(F9)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
+
+		ImGui::SameLine();
+
 		if (ImGui::Button("Identify Node")) 
 		{
 			mouseIdentifyNodeMode();
@@ -1038,14 +1046,6 @@ void createGUI()
 			Simulation.isInFindNodeMode = true;
 		}
 		ShowTooltip("(Shift + F9)\nLeft-click to display the ID of a node");
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("Identify Muscle")) 
-		{
-			mouseIdentifyMuscleMode();
-		}
-		ShowTooltip("(F9)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
 
 		// Display identified nodes in a window when in find node mode
 		if (Simulation.isInFindNodeMode)
