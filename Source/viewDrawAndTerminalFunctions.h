@@ -734,7 +734,7 @@ void createGUI()
     window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
 
 	//comment this out if you would like to allow the user to unhide the GUI while in mouse mode, can cause problems
-	//if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
+	if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
 	
 	ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
 
