@@ -95,6 +95,7 @@ typedef struct
 // Everything a muscle holds. We have 1 on the CPU and 1 on the GPU
 typedef struct 
 {
+	int type;
 	int nodeA;
 	int nodeB;    
 	float4 color;

@@ -260,7 +260,7 @@ void readBachmannBundleFromFile()
 void readMusclesFromFile()
 {	
 	FILE *inFile;
-	int id, idNode1, idNode2;
+	int id, idNode1, idNode2, muscleType;
 	char fileName[256];
     
 	// Generating the name of the file that holds the muscles.
@@ -290,6 +290,7 @@ void readMusclesFromFile()
 	// Setting all muscles to their default settings; 
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
+		Muscle[i].type = 0;
 		Muscle[i].nodeA = -1;
 		Muscle[i].nodeB = -1;
 
@@ -301,24 +302,29 @@ void readMusclesFromFile()
 	}
 	
 	// Reading in from the blender file what two nodes the muscle connects.
+	// Format: id type nodeA nodeB
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		fscanf(inFile, "%d", &id);
-		fscanf(inFile, "%d", &idNode1);
-		fscanf(inFile, "%d", &idNode2);
+		if(fscanf(inFile, "%d %d %d %d", &id, &muscleType, &idNode1, &idNode2) != 4)
+		{
+			printf("\n\n Invalid muscle format. Expected: id type nodeA nodeB.");
+			printf("\n The simulation has been terminated.\n\n");
+			exit(0);
+		}
 		
-		if(NumberOfMuscles <= id)
+		if(id < 0 || NumberOfMuscles <= id)
 		{
 			printf("\n\n You are trying to create a muscle that is out of bounds.");
 			printf("\n The simulation has been terminated.\n\n");
 			exit(0);
 		}
-		if(NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
+		if(idNode1 < 0 || idNode2 < 0 || NumberOfNodes <= idNode1 || NumberOfNodes <= idNode2)
 		{
 			printf("\n\n You are trying to connect to a node that is out of bounds.");
 			printf("\n The simulation has been terminated.\n\n");
 			exit(0);
 		}
+		Muscle[id].type = muscleType;
 		Muscle[id].nodeA = idNode1;
 		Muscle[id].nodeB = idNode2;
 	}

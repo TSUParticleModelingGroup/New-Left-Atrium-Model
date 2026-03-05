@@ -52,12 +52,12 @@ def write_muscles(edges, out_path):
     """
     Writes the Muscles file with header and edge data:
       <count>\n
-      <id> <nodeA> <nodeB>\n
+            <id> <type> <nodeA> <nodeB>\n
     """
     with open(out_path, 'w') as f:
         f.write(f"{len(edges)}\n")
         for idx, (a, b) in enumerate(edges):
-            f.write(f"{idx} {a} {b}\n")
+                        f.write(f"{idx} 0 {a} {b}\n")
 
 def main():
     # Parse command-line arguments
